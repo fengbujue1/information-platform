@@ -1,49 +1,52 @@
 # Information Platform 项目背景
 
-## 现状
+## 项目目标
 
-`collectors/boss-zhipin-scraper` 已经测试成功，可以采集 BOSS 职位信息。
+建设通用的信息采集、归档、分析、推荐和浏览平台。
 
-当前采集器主要将数据输出到本地 JSON/CSV。
+## 当前基础
 
-## 当前目标
+已经有可运行的 BOSS Python 采集器。
 
-构建一个中央信息服务，实现：
+## 核心流程
 
-1. 接收采集器提交的数据
-2. 保存原始信息
-3. 标准化职位字段
-4. 幂等更新
-5. 提供职位分页与详情查询
-6. 后续接入 AI 分析与推荐
-7. 后续通过网页浏览
-
-## Phase 1
-
-只完成：
-
-采集器
-→ HTTP 接入
+Collector
+→ Information Hub
 → MySQL
-→ 查询 API
+→ AI Analysis
+→ Recommendation
+→ Web / Notification
 
-暂不实现 AI、推荐和前端。
+## 未来信息类型
 
-## Phase 2
+- JOB
+- NEWS
+- GOVERNMENT
+- HOUSE_PRICE
+- EDUCATION
 
-实现 Vue 职位列表和详情页面。
+## 长期原则
 
-## Phase 3
+- 采集器与后端解耦
+- Job 只是 Information 的一种类型
+- 原始数据必须保留
+- AI 结果不能覆盖原始数据
+- 支持未来增加新采集器
 
-实现：
+## 当前技术方向
 
-- 规则预过滤
-- AI 分析任务
-- AI 分析结果
-- 职位质量评分
-- 远程真实性判断
-- 用户匹配评分
+- Java 21
+- Spring Boot
+- Maven
+- MySQL
+- Vue 3
+- Python Collector
+- Docker Compose
 
-## Phase 4
+## 当前暂不引入
 
-接入新的信息采集器，例如新闻 RSS。
+- 微服务
+- Kafka
+- MongoDB
+- Elasticsearch
+- Kubernetes

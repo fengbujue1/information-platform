@@ -1,52 +1,156 @@
-# AGENTS.md
+# BOSS Zhipin Scraper 开发规则
 
-指引给未来的 ZCode agent。先读这份，再动代码。
+## 一、模块定位
 
-## 这是什么
+本模块是 BOSS 职位信息采集器。
 
-`boss-zhipin-scraper` —— 通过 Chrome CDP（远程调试端口）连接**用户本人已登录的 Chrome**，抓取 BOSS直聘的公开职位数据（列表 + 详情），并可生成求职分析摘要。仅用于个人求职分析，非大规模爬虫（见 `CONTRIBUTING.md` 的合规一节）。
+当前已验证的能力包括：
 
-## 目录结构
+- 启动或连接真实 Chrome；
+- 通过 CDP 使用登录状态；
+- 请求 BOSS 职位数据；
+- 分页采集；
+- 保存本地 JSON 或 CSV；
+- 根据职位 ID 去重。
 
-```
-scripts/boss_cdp_raw.py   # 核心：抓取 + CLI 主入口（~1900 行，单文件）
-scripts/job_summary.py    # 抓取结果 → Markdown 求职分析摘要
-data/city_codes.json      # 全量城市码表（300+ 城市，外置；见下）
-tests/test_chrome_setup.py    # unittest，全 mock，不依赖真实 Chrome/网络
-tests/test_job_summary.py     # 摘要测试
-pyproject.toml            # hatchling 打包；入口 boss-scraper / boss-summary
-requirements.txt          # 仅 requests + websocket-client
-SKILL.md / README(.en).md / CHANGELOG.md / CONTRIBUTING.md
-```
+本模块是 Information Platform 的第一个 Collector。
 
-**重要边界：核心逻辑都放 `scripts/boss_cdp_raw.py`，不要随手新建文件**（见 `CONTRIBUTING.md`「单文件原则」）。`docs/` 被 `.gitignore` 忽略，是本地产物，不要提交。**例外**：`data/city_codes.json` 是城市码表数据（非逻辑代码），外置便于用户查看支持哪些城市；改它要同步跑 `tests.test_chrome_setup` 的城市码表防回归测试。
+## 二、保护规则
 
-## 环境与命令
+除非当前 TASK 明确要求，否则不得重写或大规模修改：
 
-- Python **>=3.10**，依赖只有 `requests` + `websocket-client`。用项目里的 `.venv`（`source .venv/bin/activate`），别用 pyenv 全局解释器（会缺依赖报错）。
-- 包管理用 `uv`（仓库有 `uv.lock`），也可 `pip install -r requirements.txt`。
-- 跑测试：`python3 -m unittest tests.test_chrome_setup`（无需 Chrome / 联网，全 mock）。改了 `job_summary` 再加跑 `tests.test_job_summary`。
-- 语法自检：`python3 -m py_compile scripts/boss_cdp_raw.py`。
-- 实跑抓取需要先启动带调试端口的 Chrome：`python3 scripts/boss_cdp_raw.py --setup-chrome`（开 `127.0.0.1:9222`，默认端口见 `DEFAULT_CDP_PORT`），登录后在**另一个终端**跑抓取命令。Chrome 关了端口就没了。
+- Chrome 启动逻辑；
+- CDP 连接逻辑；
+- BOSS 登录检测；
+- BOSS API 请求逻辑；
+- 翻页逻辑；
+- 现有数据去重逻辑；
+- JSON/CSV 本地输出逻辑。
 
-## 改代码时的硬规则
+接入 Information Hub 时，应优先新增独立适配层，不侵入采集核心。
 
-1. **版本号四处一致**：`scripts/boss_cdp_raw.py` 的 `__version__`（第 22 行附近）、`pyproject.toml`、`SKILL.md`、`README.md` 必须同步，否则 `VersionConsistencyTests` 会挂。改版本号时四处一起改。
-2. **异常处理**：禁止 bare `except:`，必须捕获具体类型（`requests.ConnectionError`、`json.JSONDecodeError` 等），和现有代码保持一致。
-3. **改了用户可见行为 → 更新 `README.md`；有意义变更 → `CHANGELOG.md` 顶部加一条。**
-4. **README 双语同步**：`README.md`（中文）和 `README.en.md`（英文）必须保持一致，改了其中一个就要同步另一个。
-5. **commit message 用 Conventional Commits**（`feat:` / `fix:` / `docs:` / `optimize:` / `refactor:` 等，见 `CONTRIBUTING.md`）。
+推荐目录：
 
-## 架构关键点（容易踩坑）
+integrations/
+├── config.py
+├── information_mapper.py
+├── hub_client.py
+└── outbox.py
 
-- `scripts/boss_cdp_raw.py` 是一个**长单文件**，包含：`CDPSession` 类（WebSocket 连 CDP）、各种 `EXTRACT_*_JS` 注入脚本、`scrape_jobs`（列表走 `/wapi/...` API）、`scrape_details`（详情走新开 tab 渲染）、`main`（argparse）。城市码表外置到 `data/city_codes.json`，`resolve_city` 查询链为「本地静态码表 → 运行时拉 BOSS 接口 → 原样兜底」。
-- **列表页 vs 详情页路径完全不同**：列表页通过页面内 `fetch` 调 BOSS wapi（带 token，不经页面渲染）；详情页通过 `Target.createTarget` 新开 tab → `Page.navigate` → 注入 JS 提取。改其中一条路径时，另一条不受影响。
-- **CDP target 焦点/可见性不变量**：统一通过 `create_page_session` 创建页面；自动化 target 默认后台打开并在导航前注册 visibility override，避免抢焦点且避免 `document.hidden=true` 触发 BOSS visibility 反爬（issue #18）。只有需要用户操作的 `wait_for_login` 显式传 `background=False`。不要绕过 helper 直接新增 `Target.createTarget`。
-- 同一个 Chrome 实例的默认 browser context 下，新开 target **本就共享 cookies**，不要被「新 tab 丢 cookie」的直觉误导。
-- `require_runtime_dependencies("requests", "websocket")` 在多个入口前置检查依赖，缺了会提示安装。
+##三、接入 Information Hub 的执行顺序
 
-## 提交流程
+正确顺序：
+完成当前页或当前批次采集
+→ 本地文件保存成功
+→ 映射为 InformationEnvelope
+→ 提交 Information Hub
+→ 失败时写入 Outbox
+禁止：
+先提交后端
+→ 后端失败
+→ 放弃本地保存
 
-默认分支 `master`，fork/分支工作流：从 `master` 拉新分支（`fix/...`、`feat/...`）→ 改代码补测试 → push → PR。一个 PR 只做一件事。
+Information Hub 不可用时，采集任务本身仍应继续运行。
 
-**先开 issue 再动手**：非平凡的改动（bug 修复、新功能、文档补充）按仓库 `CONTRIBUTING.md` 的规范，先在 Issues 开一条说明「改什么 / 为什么 / 怎么改」，讨论清楚后再起新分支提交。issue 正文要结构化（问题 / 现状 / 根因 / 建议 / 影响），并标注改动范围（哪些逻辑受影响、哪些不动）。
+##四、字段映射规则
+
+字段映射依据优先级：
+
+当前采集器实际返回数据；
+脱敏样例；
+协议文档；
+数据库设计文档。
+
+不得根据字段名称猜测不存在的数据。
+
+需要区分：
+
+通用 Information 字段；
+Job 扩展字段；
+仅保存在 rawPayload 中的来源专有字段。
+
+未知发布时间：
+"publishTime": null
+不得使用 collectedAt 填充 publishTime。
+
+##五、输出兼容性
+
+修改前后必须保证：
+
+原有命令仍可运行；
+原有 JSON 输出仍存在；
+原有 CSV 输出不被无意删除；
+原有字段含义不发生静默变化；
+Hub 提交功能可以通过配置关闭；
+Hub 不可用不会导致采集器崩溃。
+##六、配置
+
+Information Hub 相关配置使用环境变量，例如：
+
+INFORMATION_HUB_ENABLED=false
+INFORMATION_HUB_URL=http://localhost:8080
+INFORMATION_HUB_TOKEN=replace-me
+INFORMATION_HUB_TIMEOUT_SECONDS=15
+INFORMATION_HUB_OUTBOX_DIR=./data/outbox
+
+环境变量名称以当前协议文档和代码实际配置为准。
+
+不得把真实 Token 写入代码。
+
+##七、测试要求
+
+修改字段映射时，至少测试：
+
+正常职位数据；
+可选字段缺失；
+sourceItemId 缺失；
+publishTime 缺失；
+skills 为空；
+rawPayload 完整保留。
+
+修改 Hub Client 时，至少测试：
+
+2xx 成功；
+4xx 响应；
+5xx 响应；
+请求超时；
+连接失败。
+
+修改 Outbox 时，至少测试：
+
+写入失败记录；
+重试成功；
+重复补传；
+损坏文件处理。
+
+##八、命令
+
+在填写启动和测试命令前，必须从当前仓库实际文件确认。
+
+不得虚构命令。
+
+确认后在此记录：
+
+创建虚拟环境：
+<实际命令>
+
+安装依赖：
+<实际命令>
+
+运行测试：
+<实际命令>
+
+启动采集：
+<实际命令>
+##九、完成任务前
+
+必须确认：
+
+原有采集流程仍然可以运行；
+本地结果可以正常生成；
+Hub 关闭时功能不受影响；
+Hub 失败时数据进入 Outbox；
+测试通过；
+未提交 Cookie、Profile 和真实采集数据。
+
+其中“命令”部分暂时可以保留占位，让 Codex先检查项目真实入口后再填写，避免写错。
