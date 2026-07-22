@@ -30,18 +30,18 @@ cd boss-zhipin-scraper
 pip install -r requirements.txt          # 或 uv sync
 
 # 2. 启动隔离 Chrome 并登录（只需一次，登录态持久保存）
-python3 scripts/boss_cdp_raw.py --setup-chrome
+python scripts/boss_cdp_raw.py --setup-chrome
 
 # 3. 抓取 + 分析
-python3 scripts/boss_cdp_raw.py --keyword "AI Agent" --city 上海 --pages 3 --analysis
+python scripts/boss_cdp_raw.py --keyword "AI Agent" --city 上海 --pages 3 --analysis
 
 # 支持全国城市（含三四五线），例如：
-python3 scripts/boss_cdp_raw.py --keyword "前端" --city 赣州 --pages 3
+python scripts/boss_cdp_raw.py --keyword "前端" --city 赣州 --pages 3
 # 查看支持的城市：--list-cities [关键词]
-python3 scripts/boss_cdp_raw.py --list-cities 江
+python scripts/boss_cdp_raw.py --list-cities 江
 
 # 4. 抓取后生成聚合摘要 + 提示词（默认读取最新结果）
-python3 scripts/job_summary.py
+python scripts/job_summary.py
 ```
 
 抓完直接拿到：薪资分布、经验要求、高频技能词、求职材料优化提示词。提示词只基于岗位数据，不读取本地简历文件，也不给岗位算个人匹配分。
