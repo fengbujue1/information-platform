@@ -45,3 +45,7 @@ Thumbs.db
 !AGENTS.md
 
 ./zcode
+
+# Runtime collection results
+result/job-result/
+result/outbox/

@@ -96,6 +96,10 @@ collectors/boss-zhipin-scraper/output/
 collectors/boss-zhipin-scraper/cookies.json
 collectors/boss-zhipin-scraper/storage_state.json
 
+# BOSS collector runtime results
+collectors/boss-zhipin-scraper/result/job-result/
+collectors/boss-zhipin-scraper/result/outbox/
+
 # ==================================================
 # Local databases
 # ==================================================
