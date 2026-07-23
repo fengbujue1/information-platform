@@ -6,54 +6,45 @@
 
 ## 背景
 
-Information Platform 的目标包含“整理归档”和未来重新进行 AI 分析。
-
-同一职位的 JD、薪资、状态和福利可能发生变化。如果 Phase 1 只更新当前记录，旧版本会丢失。
+职位的 JD、薪资、福利和状态会发生变化。只保留当前记录会丢失历史信息。
 
 ## 决策
 
-Phase 1 增加 `information_snapshot` 表。
+Phase 1 创建 information_snapshot。
 
-- 首次接入保存一个快照。
-- contentHash 未变化时不新增快照。
-- contentHash 变化时新增不可变快照。
-- `information_item` 和 `job_information` 保存最新当前版本。
+- 首次接入保存版本 1。
+- 当前业务 Hash 未变化时不新增版本。
+- Hash 变化时 current_version_no 加 1，并保存不可变快照。
+- information_item 和 job_information 保存最新版本。
 
-## 备选方案
+## 版本唯一性
 
-### 后续 Phase 再增加快照
+使用：
 
-优点：
+```text
+UNIQUE (information_id, version_no)
+```
 
-- Phase 1 少一张表。
+不使用：
 
-缺点：
+```text
+UNIQUE (information_id, content_hash)
+```
 
-- 早期采集到的历史变化无法恢复。
-- 不利于后续重新分析和审计。
+原因是需要保存：
 
-### 每次采集都保存快照
+```text
+A → B → A
+```
 
-优点：
+第三次恢复为 A 仍然是一个新的历史版本。
 
-- 信息最完整。
+## 代价
 
-缺点：
-
-- 大量重复记录。
-- 采集时间变化会制造无意义版本。
-
-## 正面影响
-
-- 历史职位变化可追溯。
-- 可重新对旧版本执行 AI 分析。
-- 当前表仍保持查询简单。
-
-## 负面影响
-
-- Phase 1 数据库和事务稍复杂。
-- 需要稳定的 contentHash 规则。
+- 接入事务更复杂。
+- 需要行锁或等效并发控制生成版本号。
+- 快照表会持续增长。
 
 ## 重新评估条件
 
-数据规模导致快照表明显膨胀时，评估冷热分层、MinIO 或数据湖归档。
+快照规模影响 MySQL 时，评估冷热分层、MinIO 或数据湖归档。

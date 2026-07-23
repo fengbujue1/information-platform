@@ -8,45 +8,53 @@
 
 - TASK-002 完成。
 - TASK-003 完成。
+- DATABASE_DESIGN 1.3 已确认。
 
 ## 目标
 
-使用 Flyway 创建：
+通过 Flyway 创建：
 
-- `information_item`
-- `job_information`
-- `information_snapshot`
+- information_item
+- job_information
+- information_snapshot
 
-## 本任务范围
+## 关键字段
 
-- 配置 MySQL、Flyway、MyBatis-Plus。
-- 创建 V1 迁移。
-- 创建唯一索引、查询索引和外键。
-- 创建 Entity 和 Mapper。
-- 使用真实 MySQL 兼容测试验证 JSON 字段和迁移。
-- 验证快照唯一约束。
+information_item：
 
-## 关键规则
+- current_version_no
 
-- 时间统一存 UTC。
-- 保存 `collector_id`、`collector_version` 和可选 `collection_context`。
-- 不使用框架自动建表。
-- 已执行迁移不可修改。
-- 快照是不可变记录。
-- 快照删除策略在实施前确认，推荐 `ON DELETE RESTRICT`。
+job_information：
+
+- source_recruiter_id
+- salary_source
+- detail_status
+- detail_collected_at
+- source_tags
+- source_skill_tags
+
+information_snapshot：
+
+- version_no
+
+## 索引要求
+
+- 当前信息幂等唯一索引。
+- information_id + version_no 快照唯一索引。
+- information_id + content_hash 普通索引。
+- source_company_id 和 source_recruiter_id 索引。
+- 城市、薪资和状态查询索引。
+
+## 测试
+
+- 三张表迁移。
+- JSON 字段读写。
+- encrypt ID 中包含特殊字符。
+- 快照 A → B → A。
+- 同版本号唯一约束。
+- 外键和事务回滚。
 
 ## 不在范围
 
 - 不实现 Controller。
-- 不实现接入 Service。
-- 不创建 AI、用户、推荐或通知表。
-
-## 验收标准
-
-- [ ] Flyway 成功执行
-- [ ] 三张表创建成功
-- [ ] 幂等唯一索引有效
-- [ ] JSON 可写入读取
-- [ ] 外键行为符合设计
-- [ ] 相同 informationId + contentHash 不能重复插入快照
-- [ ] Maven 测试通过
+- 不创建 AI 表。

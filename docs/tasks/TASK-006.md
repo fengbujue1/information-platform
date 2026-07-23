@@ -10,27 +10,48 @@ TASK-002 完成。
 
 ## 目标
 
-将 BOSS 列表和详情数据映射为 InformationEnvelope V1。
+把 BOSS 列表 JSON 和详情 JSON 合并成 InformationEnvelope V1。
 
-## 本任务范围
+## 输入
 
-- 新建独立 integrations 映射模块。
-- `encrypt_job_id` 映射 sourceItemId。
-- `boss_name` 映射 companyName，不映射 recruiterName。
-- 拆分 tags、skills、job_labels、welfare。
-- 合并详情 JD。
-- 保留完整 rawPayload。
-- 增加缺失字段和异常数据测试。
+- 列表根对象。
+- jobs 数组。
+- 详情数组。
 
-## 不在范围
+## 合并规则
 
-- 不发 HTTP 请求。
-- 不改 Chrome/CDP 核心。
-- 不做 AI 判断。
+- job_id 只用于本地 Join。
+- encrypt_job_id 映射 sourceItemId。
+- 列表字段是标准化结构主要来源。
+- 详情主要补充 JD。
+- 重复字段冲突时记录警告，不静默覆盖。
+- 缺少详情时仍提交列表职位。
 
-## 验收标准
+## 字段规则
 
-- [ ] 映射与协议一致
-- [ ] rawPayload 未丢字段
-- [ ] 可选字段为空不报错
-- [ ] 单元测试通过
+- boss_name → companyName。
+- encrypt_boss_id → sourceRecruiterId。
+- boss_title → recruiterTitle。
+- job_labels 不单独标准化。
+- tags → sourceTags、experienceText、educationText。
+- skills → sourceSkillTags。
+- details.skill_tags 只保留 rawPayload。
+- security_id 和 lid 不发送 Hub。
+- 空字符串转换为 null。
+
+## 时间规则
+
+- 未来输出必须带时区。
+- 当前旧 scraped_at 通过配置时区解释。
+- 详情没有时间时 detailCollectedAt=null。
+
+## 测试
+
+- 90/25 形式的部分详情。
+- 地点 `成都··`。
+- 空 company ID。
+- 空 skills 和 welfare。
+- 重复福利。
+- 薪资带 13～16 薪。
+- 详情字段冲突。
+- security_id 清理。

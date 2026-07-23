@@ -10,54 +10,39 @@ TASK-004 完成。
 
 ## 目标
 
-实现单条 InformationEnvelope 接入、非破坏性合并、幂等归档和历史快照。
+实现 InformationEnvelope V1 的幂等接入、非破坏性合并和版本快照。
 
-## 本任务范围
+## 处理流程
 
-- `POST /api/v1/collector/items`
-- V1 协议校验
-- 静态 Collector Token
-- 请求体上限 5 MiB
-- 首次插入
-- 重复提交非破坏性合并
-- 合并后计算 contentHash
-- 首次版本和变化版本快照
-- 主表、扩展表和快照事务
-- 统一成功和错误响应
-- 集成测试
+```text
+认证
+→ 请求校验
+→ 幂等查询
+→ 非破坏性合并
+→ Canonical JSON
+→ contentHash
+→ 当前版本写入
+→ 必要时增加 versionNo 和快照
+→ 响应
+```
 
-## 更新规则
+## 必须支持
 
-- 缺失、null 和空字符串不覆盖已有有效值。
-- 空数组默认不覆盖已有非空数组。
-- V1 不支持主动清空字段。
-- rawPayload 和采集元数据更新为最近一次接收值。
-- Hash 不变时不创建快照。
-- Hash 变化时创建快照。
+- sourceItemId 中的特殊字符原样保存。
+- sourceRecruiterId。
+- detailStatus。
+- sourceTags 和 sourceSkillTags。
+- 安全 rawPayload。
+- A → B → A 三个版本。
+- content=null 不清空已有 JD。
+- Hash 未变化不增加版本号。
 
-## 错误码
+## 测试
 
-至少实现：
-
-- `INVALID_REQUEST`
-- `COLLECTOR_UNAUTHORIZED`
-- `PAYLOAD_TOO_LARGE`
-- `UNSUPPORTED_SCHEMA_VERSION`
-- `UNSUPPORTED_INFORMATION_TYPE`
-- `INTERNAL_ERROR`
-
-## 不在范围
-
-- 不实现批量接口。
-- 不实现 AI。
-- 不修改 Python Collector。
-
-## 验收标准
-
-- [ ] 首次提交返回 201
-- [ ] 重复提交返回 200 且不重复插入主记录
-- [ ] 临时 content=null 不清空旧 JD
-- [ ] 内容未变化不新增快照
-- [ ] 内容变化新增快照
-- [ ] 事务失败完整回滚
-- [ ] Token、字段校验和请求体过大有测试
+- 首次提交。
+- 完全重复提交。
+- 详情补充后内容变化。
+- 详情暂时缺失。
+- 薪资变化。
+- 来源标签顺序变化但内容等价。
+- 主表、扩展表和快照事务回滚。

@@ -4,23 +4,17 @@
 
 状态：已完成。
 
-- 创建 Monorepo。
-- 导入 BOSS 采集器。
-- 创建项目文档和 Codex 规则。
-- 建立 Git 跨电脑同步流程。
-
-## Phase 1：采集接入与归档
+## Phase 1：BOSS 采集接入与归档
 
 状态：进行中。
 
-目标：
+当前步骤：
 
 ```text
-BOSS Collector
-→ InformationEnvelope V1
-→ Information Hub
-→ MySQL 当前版本与历史快照
-→ Job Query API
+实际输出结构审计
+→ 用户确认字段映射
+→ 冻结 InformationEnvelope V1
+→ 创建 Spring Boot 和 Flyway
 ```
 
 任务：
@@ -36,42 +30,29 @@ BOSS Collector
 9. [实现职位查询 API](tasks/TASK-009.md)
 10. [完成端到端验收](tasks/TASK-010.md)
 
-完成标准：
+Phase 1 完成标准：
 
-- 原采集流程仍可运行；
-- 本地 JSON/CSV 输出未被破坏；
-- 后端不可用时数据不会丢失；
-- 相同职位重复提交不会重复入库；
-- 内容变化时保存历史快照；
-- 临时缺失字段不会破坏已有数据；
-- 可以通过 Job Query API 查询职位；
-- 自动化测试通过。
+- 列表和详情可以可靠合并。
+- sourceItemId 使用 encrypt_job_id。
+- 后端不可用时数据不丢失。
+- 重复提交不重复创建当前记录。
+- 内容变化创建递增版本快照。
+- 临时详情失败不清空旧 JD。
+- security_id、lid 和凭证不进入中央数据库。
+- 可以查询当前职位和历史版本。
+- 测试通过。
 
 ## Phase 2：Web 浏览
 
 状态：未开始。
 
-- Vue 职位列表；
-- 职位详情；
+- 职位列表与详情；
 - 搜索和筛选；
-- 原始 JSON 和版本历史查看。
+- 原始业务数据查看；
+- 历史版本查看。
 
 ## Phase 3：AI 分析
 
 状态：未开始。
 
-- 规则预过滤；
-- AI 任务和 Worker；
-- 职位质量、远程和摘要分析；
-- Prompt、模型和 Token 记录。
-
-## Phase 4：个性化推荐
-
-状态：未开始。
-
-- 用户画像；
-- 内容质量分；
-- 用户匹配分；
-- 相似 JD 去重；
-- 公司多样性；
-- 每日 Top N。
+来源标签和 AI 标准技能必须分开保存。

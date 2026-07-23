@@ -1,41 +1,44 @@
 # TASK-001：分析 BOSS 采集器输出结构
 
-状态：TODO  
+状态：DONE  
 所属阶段：Phase 1  
 优先级：P0
 
 ## 目标
 
-以实际代码和脱敏样例为依据，确认 BOSS 列表、详情和落盘文件的数据结构，形成字段映射表。
+依据实际列表和详情 JSON，形成可靠字段映射和数据库调整建议。
 
-## 本任务范围
+## 已分析样本
 
-- 定位列表结构、详情结构和落盘逻辑。
-- 确认稳定职位 ID。
-- 确认公司、薪资、地点、经验、学历、技能、福利字段。
-- 明确当前不具备的字段。
-- 更新脱敏样例和协议字段映射。
-- 评估是否需要以向后兼容方式增加独立 `experience`、`degree` 字段。
+- 列表：90 条。
+- 详情：25 条。
+- 详情均可通过 job_id 关联列表。
+- 详情主要新增 JD。
 
-## 关键已知事实
+## 已确认
 
-- `encrypt_job_id` 是当前稳定职位 ID 候选。
-- `boss_name` 实际来源是 `brandName`，表示公司品牌，不是招聘者。
-- `tags` 混合经验和学历。
-- `skills`、`job_labels`、`welfare` 是分隔字符串。
-- 招聘者姓名和活跃状态当前没有稳定输出。
-- 来源发布时间当前未知。
+- encrypt_job_id 是平台来源职位 ID。
+- job_id 是 Collector 内部 Join Key。
+- boss_name 映射 companyName。
+- encrypt_boss_id 映射 sourceRecruiterId。
+- boss_title 映射 recruiterTitle。
+- job_labels 与 tags 当前重复。
+- details.skill_tags 不作为标准技能。
+- 当前详情文件没有抓取时间和状态。
+- 当前 scraped_at 没有时区。
 
-## 不在范围
+## 产出
 
-- 不创建后端。
-- 不实现 Hub Client。
-- 不重写 Chrome/CDP 和 BOSS 请求核心。
+- `docs/DATABASE_DESIGN.md` 1.3
+- `docs/contracts/boss-job-field-mapping.md`
+- 更新后的 InformationEnvelope V1 草案
+- 脱敏列表、详情和 Envelope 样例
 
 ## 验收标准
 
-- [ ] 字段映射表基于实际代码
-- [ ] 不再错误映射 boss_name
-- [ ] 脱敏样例完成
-- [ ] 不确定字段明确标记
-- [ ] 文档更新
+- [x] 实际字段已审计
+- [x] 列表和详情关联方式已确认
+- [x] 错误的 boss_name 含义已修正
+- [x] 数据库修改建议已形成
+- [x] 用户已确认设计
+- [x] TASK 状态改为 DONE
