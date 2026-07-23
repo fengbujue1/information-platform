@@ -1,55 +1,41 @@
 # 当前开发状态
 
-更新时间：YYYY-MM-DD HH:mm
-当前分支：feature/xxx
+更新时间：2026-07-23
+当前分支：dev
 
 ## 当前阶段
 
-Phase 1：职位数据接入
-
-## 当前任务
-
-TASK-XXX：任务名称
+Phase 1：采集接入
 
 ## 已完成
 
-- 完成事项一
-- 完成事项二
+- 创建 Information Platform Monorepo
+- 通过 subtree 导入 BOSS 采集器
+- 创建根目录和模块级 AGENTS.md
+- 创建 PROJECT_CONTEXT.md
+- 创建 ARCHITECTURE.md
+- 创建 ROADMAP.md
+- 验证 BOSS 采集器可以在 Windows 上采集职位
 
 ## 正在进行
 
-- 当前正在做的最小任务
+- 准备拆分 Phase 1 开发任务
 
 ## 尚未完成
 
-- 未完成事项一
-- 未完成事项二
+- 定义 InformationEnvelope V1
+- 设计 Phase 1 数据库
+- 创建 Spring Boot 后端
+- 实现采集接入 API
+- 改造采集器提交适配层
+- 实现职位查询 API
 
 ## 当前问题
 
-1. 问题描述
-2. 问题描述
+1. DATABASE_DESIGN.md 和统一接入协议尚未创建。
+2. Phase 1 的具体 TASK 尚未拆分。
 
-## 本轮修改文件
+## 下一步最小任务
 
-- path/to/file
-- path/to/file
-
-## 测试结果
-
-执行命令：
-
-bash
-具体测试命令
-结果：
-
-成功或失败
-测试数量
-失败原因
-下一步最小任务
-下一步第一项
-下一步第二项
-##当前禁止事项
-1. 不提前开发后续 Phase
-2. 不重写 BOSS 采集核心
-3. 不引入新基础设施
+1. 分析 BOSS 实际输出字段。
+2. 定义统一信息接入协议。

@@ -36,7 +36,7 @@ BOSS 采集器
 → POST 到 Information Hub
 → MySQL 保存
 → REST API 查询
-→ 网页查看
+
 
 ## 核心设计原则
 

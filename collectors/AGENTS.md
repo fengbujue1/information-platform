@@ -35,7 +35,7 @@
 
 协议文档：
 
-- `../../docs/contracts/information-envelope-v1.md`
+- `../docs/contracts/information-envelope-v1.md`
 
 ## 三、通用数据规则
 

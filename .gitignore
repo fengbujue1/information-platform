@@ -40,6 +40,7 @@ Desktop.ini
 *.ear
 hs_err_pid*
 replay_pid*
+!**/.mvn/wrapper/maven-wrapper.jar
 
 # ==================================================
 # Gradle，暂时保留兼容
@@ -130,3 +131,12 @@ docker-data/
 # 这里只忽略本机运行状态
 # ==================================================
 .codex/
+
+# Testcontainers / local tooling
+.testcontainers.properties
+
+# Local IDE workspace
+*.code-workspace
+
+# Python local runtime
+.python-version

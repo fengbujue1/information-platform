@@ -77,8 +77,14 @@ source + informationType + sourceItemId
 
 MySQL：
 
+### 当前 Phase 1 存储
+
 - information_item
 - job_information
+
+### 后续规划存储
+
+- information_snapshot
 - analysis_task
 - analysis_result
 - user_profile
