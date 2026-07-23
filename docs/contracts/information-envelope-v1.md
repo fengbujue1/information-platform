@@ -2,7 +2,7 @@
 
 协议版本：1  
 接口版本：v1  
-状态：Draft，等待 TASK-002 最终确认
+状态：Accepted
 
 ## 1. 目的
 
@@ -200,6 +200,15 @@ jobStatus = ACTIVE（职位来自本次有效搜索结果时）
 detailStatus = UNKNOWN
 ```
 
+`detailStatus` 仅支持：
+
+```text
+UNKNOWN
+FETCHED
+FAILED
+UNAVAILABLE
+```
+
 ## 8. 数组拆分
 
 对于 `|` 分隔字符串：
@@ -210,6 +219,8 @@ detailStatus = UNKNOWN
 4. 保持首次出现顺序。
 5. 删除完全重复项。
 6. 原始字符串保留在 rawPayload。
+
+`tags` 使用规则识别经验和学历，不依赖固定位置。无法识别时，对应 `experienceText` 或 `educationText` 保持 null，仅在 `sourceTags` 中保留来源标签。
 
 ## 9. 服务端维护字段
 
@@ -244,7 +255,7 @@ source + informationType + sourceItemId
 
 ## 11. rawPayload 安全
 
-不得包含：
+以下字段必须在提交 Information Hub 前删除，`rawPayload` 不得包含：
 
 - Cookie
 - Authorization Header

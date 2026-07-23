@@ -42,3 +42,13 @@
 - [x] 数据库修改建议已形成
 - [x] 用户已确认设计
 - [x] TASK 状态改为 DONE
+
+## 实施记录
+
+2026-07-23 完成设计确认：
+
+- 审计 90 条列表和 25 条详情样本，确认使用 `job_id` 在 Collector 内部合并。
+- 确认 `encrypt_job_id` 作为平台 `sourceItemId`。
+- 确认 `boss_name` 映射 `companyName`，`encrypt_boss_id` 映射 `sourceRecruiterId`。
+- 完成数据库设计 1.3、BOSS 字段映射、InformationEnvelope V1 草案及脱敏样例。
+- 用户确认数据身份、时间、安全、详情状态、标签解析、快照版本和非破坏性更新规则。

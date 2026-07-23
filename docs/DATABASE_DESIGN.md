@@ -1,7 +1,7 @@
 # Information Platform 数据库设计
 
 设计版本：1.3  
-状态：Draft，待用户确认  
+状态：Accepted
 当前阶段：Phase 1  
 数据库：MySQL 8.x  
 字符集：utf8mb4  
@@ -47,7 +47,7 @@ boss_details_20260722_2314(2).json
 3. 首次版本和业务内容变化版本进入 `information_snapshot`。
 4. 当前表保存最新有效版本。
 5. 中央 `raw_payload` 保存经过安全清理的原始业务字段。
-6. Cookie、Token、`security_id`、浏览器凭证等安全或临时请求字段不得进入中央数据库。
+6. Cookie、Token、`security_id`、`lid`、浏览器凭证等安全或临时请求字段不得进入中央数据库。
 7. 不为所有来源字段建立数据库列。
 8. 经常筛选、排序、关联或统计的字段才标准化。
 9. 来源发布时间未知时保持 `NULL`。
@@ -347,6 +347,8 @@ education_text = "本科"
 
 Mapper 必须先验证标签是否匹配经验和学历规则，不能永久依赖固定位置。
 
+无法通过规则识别经验或学历时，对应标准字段保持 `NULL`，仅在 `source_tags` 中保留来源标签，不基于固定位置猜测。
+
 `job_labels` 在当前 90 条样本中与 `tags` 完全重复，因此不单独建立数据库字段，只保留在 `raw_payload.list` 中。
 
 ### 10.2 skills
@@ -443,6 +445,15 @@ detail_status = UNKNOWN
 
 未来 Collector 应输出明确状态。
 
+Phase 1 的 `detail_status` 仅支持：
+
+```text
+UNKNOWN
+FETCHED
+FAILED
+UNAVAILABLE
+```
+
 ## 11. information_snapshot
 
 用途：保存首次接入版本，以及当前业务内容发生变化后的不可变历史版本。
@@ -496,7 +507,7 @@ UNIQUE (information_id, content_hash)
    - 在事务和行锁保护下将 `current_version_no + 1`。
    - 插入对应版本号快照。
 4. 快照不可更新。
-5. 快照删除策略推荐 `ON DELETE RESTRICT`，防止误删历史；Flyway 实施前由用户最终确认。
+5. `information_snapshot.information_id` 外键采用 `ON DELETE RESTRICT`，防止误删历史。
 
 ## 12. rawPayload 结构
 
@@ -581,10 +592,17 @@ V3__create_user_and_recommendation_tables.sql
 V4__create_notification_tables.sql
 ```
 
-## 15. 实施前仍需确认
+## 15. 已冻结设计决策
 
-1. `information_snapshot` 外键是否最终采用 `ON DELETE RESTRICT`。
-2. `security_id` 和 `lid` 是否在发送 Hub 前删除，推荐删除。
-3. 历史无时区时间是否统一按 `Asia/Shanghai` 解释。
-4. 详情失败状态是否由 Collector 增加到输出文件。
-5. `tags` 经验与学历识别规则是否需要独立配置。
+1. `information_snapshot.information_id` 外键采用 `ON DELETE RESTRICT`。
+2. `security_id` 和 `lid` 在提交 Information Hub 前删除。
+3. 历史无时区时间按 `Asia/Shanghai` 解释，并在 `collection_context` 中记录该假设。
+4. 新采集时间必须包含明确时区。
+5. `detail_status` 仅支持 `UNKNOWN`、`FETCHED`、`FAILED`、`UNAVAILABLE`。
+6. `tags` 使用规则识别经验和学历；无法识别时只保留 `source_tags`。
+7. BOSS 的 `source_item_id` 使用 `encrypt_job_id`。
+8. `job_id` 只用于 Collector 内部合并列表和详情，不作为平台标识或标准数据库字段。
+9. `boss_name` 映射 `company_name`。
+10. `encrypt_boss_id` 映射 `source_recruiter_id`。
+11. 快照使用递增 `version_no`，支持 `A → B → A`。
+12. 重复接入采用非破坏性更新，缺失、`NULL`、空字符串或空数组不覆盖已有有效值。

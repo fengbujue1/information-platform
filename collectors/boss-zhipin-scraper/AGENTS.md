@@ -42,11 +42,11 @@ Hub 不可用时，采集任务仍应继续。
 
 ## 五、字段规则
 
-- `encrypt_job_id` 是当前 sourceItemId 候选。
+- `encrypt_job_id` 映射为 sourceItemId。
 - `boss_name` 来自 `brandName`，表示公司品牌，不是招聘者姓名。
 - `boss_title` 可以映射 recruiterTitle。
 - recruiterName 和 recruiterActiveText 当前通常为空。
-- `tags` 需要解析经验和学历。
+- `tags` 使用规则识别经验和学历；无法识别时只保留 sourceTags。
 - `skills`、`job_labels`、`welfare` 需要从分隔字符串转换为数组。
 - rawPayload 保留原始字段。
 - publishTime 当前保持 null。

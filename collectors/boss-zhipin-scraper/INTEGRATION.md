@@ -88,6 +88,8 @@ integrations/
 }
 ```
 
+新采集时间必须包含明确时区偏移或 `Z`；历史无时区时间按 `Asia/Shanghai` 解释。
+
 每个详情增加：
 
 ```json
@@ -100,7 +102,7 @@ integrations/
 
 ## 7. 安全
 
-发送 Hub 前删除或脱敏：
+发送 Hub 前删除：
 
 - security_id
 - lid
