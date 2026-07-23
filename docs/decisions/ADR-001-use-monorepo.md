@@ -1,30 +1,26 @@
-# 使用 Monorepo 管理 Information Platform
+# ADR-001：使用 Monorepo
 
-状态：Proposed  
+状态：Accepted  
 日期：2026-07-23  
 决策人：项目负责人
 
-## 1. 背景
+## 背景
 
-该决策用于约束 Information Platform 当前阶段的架构实现。
+项目同时包含 Python Collector、Java Backend、Vue Frontend、部署配置和文档，并需要在两台电脑间同步 Codex 上下文。
 
-## 2. 决策
+## 决策
 
-使用一个 Monorepo 管理 collectors、backend、frontend、deploy 和 docs。
+使用一个 Monorepo 管理 `collectors/`、`backend/`、`frontend/`、`deploy/` 和 `docs/`。
 
-## 3. 决策理由
+## 备选方案
 
-当前优先目标是以最低复杂度跑通采集、接入、归档和查询闭环。
+- 多仓库：边界清晰，但跨仓库联调和上下文恢复复杂。
+- Git submodule：保持独立历史，但个人开发的提交和同步容易出错。
 
-## 4. 正面影响
+## 理由
 
-- 降低开发与部署复杂度。
-- 方便 Codex 在一个仓库中理解完整上下文。
+当前以个人开发、快速联调和统一文档为主，Monorepo 成本最低。
 
-## 5. 负面影响和代价
+## 重新评估条件
 
-- 后续规模扩大后可能需要重新评估。
-
-## 6. 重新评估条件
-
-当数据规模、团队规模或独立扩容需求明显增加时重新评估。
+模块由独立团队维护、权限隔离或完全独立发布时重新评估。

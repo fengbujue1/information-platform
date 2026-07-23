@@ -1,0 +1,30 @@
+{
+  "title": "Java后端开发工程师",
+  "salary": "20-35K·13薪",
+  "salary_source": "api",
+  "location": "上海·浦东新区·张江",
+  "tags": "3-5年 | 本科",
+  "boss_name": "示例科技有限公司",
+  "boss_title": "招聘经理",
+  "company_scale": "100-499人",
+  "company_stage": "B轮",
+  "company_industry": "互联网",
+  "job_labels": "五险一金 | 带薪年假",
+  "skills": "Java | Spring Boot | MySQL",
+  "security_id": "sanitized-security-id",
+  "lid": "sanitized-lid",
+  "encrypt_job_id": "sanitized-encrypt-job-id",
+  "encrypt_boss_id": "sanitized-encrypt-boss-id",
+  "encrypt_brand_id": "sanitized-encrypt-brand-id",
+  "job_link": "https://www.zhipin.com/job_detail/sanitized-encrypt-job-id.html",
+  "company_link": "https://www.zhipin.com/gongsi/sanitized-encrypt-brand-id.html",
+  "welfare": "五险一金 | 带薪年假",
+  "detail": {
+    "jd": "这是脱敏后的职位描述示例，仅用于字段建模和测试。",
+    "tags": [
+      "后端开发",
+      "微服务"
+    ],
+    "url": "https://www.zhipin.com/job_detail/sanitized-encrypt-job-id.html"
+  }
+}

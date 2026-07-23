@@ -2,30 +2,37 @@
 
 状态：TODO  
 所属阶段：Phase 1  
-优先级：P0  
-负责人：User + Codex
+优先级：P0
 
-## 1. 目标
+## 前置依赖
 
-实现 BOSS 职位通过 InformationEnvelope 提交到 Information Hub。
+TASK-004 完成。
 
-## 2. 本任务范围
+## 目标
 
-- 由 Codex 在实施前根据当前仓库填写。
+实现单条 InformationEnvelope 接入和幂等归档。
 
-## 3. 不在本任务范围
+## 本任务范围
 
-- 不提前实现后续 Phase。
-- 不引入 MongoDB、Kafka 或微服务。
-- 不重写 BOSS 采集核心。
+- `POST /api/v1/collector/items`
+- V1 协议校验
+- 简单静态 Collector Token
+- 首次插入和幂等更新
+- 主表与扩展表事务
+- contentHash
+- 统一错误响应
+- 集成测试
 
-## 4. 验收标准
+## 不在范围
 
-- [ ] 任务目标已完成
-- [ ] 相关测试通过
-- [ ] 文档已同步更新
-- [ ] 未超出任务范围
+- 不实现批量接口。
+- 不实现 AI。
+- 不修改 Python Collector。
 
-## 5. 实施记录
+## 验收标准
 
-由 Codex 完成开发后填写。
+- [ ] 首次提交 201
+- [ ] 重复提交 200 且不重复插入
+- [ ] 内容变化可识别
+- [ ] 事务失败完整回滚
+- [ ] Token 和参数错误有测试

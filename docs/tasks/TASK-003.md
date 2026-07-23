@@ -2,30 +2,30 @@
 
 状态：TODO  
 所属阶段：Phase 1  
-优先级：P0  
-负责人：User + Codex
+优先级：P0
 
-## 1. 目标
+## 目标
 
-创建可以编译、测试和启动的 Maven Spring Boot 后端项目。
+创建可编译、测试和启动的 Maven Spring Boot 项目骨架。
 
-## 2. 本任务范围
+## 本任务范围
 
-- 由 Codex 在实施前根据当前仓库填写。
+- Java 21。
+- Spring Boot 3.x。
+- Maven Wrapper。
+- 基础 package：common、ingestion、information、job。
+- 基础配置和启动测试。
+- 不连接真实生产数据库。
 
-## 3. 不在本任务范围
+## 不在范围
 
-- 不提前实现后续 Phase。
-- 不引入 MongoDB、Kafka 或微服务。
-- 不重写 BOSS 采集核心。
+- 不建业务表。
+- 不实现接入 API。
+- 不接 AI。
+- 不创建前端。
 
-## 4. 验收标准
+## 验收标准
 
-- [ ] 任务目标已完成
-- [ ] 相关测试通过
-- [ ] 文档已同步更新
-- [ ] 未超出任务范围
-
-## 5. 实施记录
-
-由 Codex 完成开发后填写。
+- [ ] `mvnw.cmd test` 通过
+- [ ] 应用可启动
+- [ ] 无提前实现的业务功能
