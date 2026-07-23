@@ -1,0 +1,33 @@
+{
+  "keyword": "java",
+  "city": "成都",
+  "filters": {},
+  "filter_desc": [],
+  "scraped_at": "2026-07-22T23:14:09.656461+08:00",
+  "total": 1,
+  "jobs": [
+    {
+      "title": "Java后端开发工程师",
+      "salary": "20-35K·13薪",
+      "salary_source": "api",
+      "location": "成都·武侯区·中和",
+      "tags": "3-5年 | 本科",
+      "boss_name": "示例科技有限公司",
+      "boss_title": "招聘经理",
+      "company_scale": "100-499人",
+      "company_stage": "B轮",
+      "company_industry": "互联网",
+      "job_labels": "3-5年 | 本科",
+      "skills": "Java | Spring Boot | MySQL | 不接受居家办公",
+      "security_id": "REMOVED_BEFORE_HUB",
+      "lid": "REMOVED_BEFORE_HUB",
+      "encrypt_job_id": "sample-encrypt-job-id",
+      "encrypt_boss_id": "sample-encrypt-boss-id",
+      "encrypt_brand_id": "sample-encrypt-brand-id",
+      "job_link": "https://www.zhipin.com/job_detail/sample-encrypt-job-id.html",
+      "company_link": "https://www.zhipin.com/gongsi/sample-encrypt-brand-id.html",
+      "welfare": "五险一金 | 带薪年假",
+      "job_id": "sample-local-join-id"
+    }
+  ]
+}

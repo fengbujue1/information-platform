@@ -22,10 +22,11 @@ Phase 1：BOSS 采集接入与归档。
 - 完成 TASK-001 BOSS 输出结构审计。
 - 完成 TASK-002 并冻结 InformationEnvelope V1。
 - 接受数据库设计 1.3 和 ADR-007。
+- 完成 TASK-003，创建可编译、测试和启动的 Information Hub Spring Boot 项目骨架。
 
 ## 当前任务
 
-TASK-003：创建 Information Hub 后端项目。
+TASK-004：创建 Phase 1 数据库结构。
 
 ## 已冻结设计
 
@@ -41,4 +42,4 @@ TASK-003：创建 Information Hub 后端项目。
 
 ## 下一步
 
-创建 Information Hub 后端项目，执行 TASK-003。
+通过 Flyway 创建 Phase 1 数据库结构，执行 TASK-004。

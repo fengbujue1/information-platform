@@ -1,0 +1,22 @@
+{
+  "run_id": "sample-run-id",
+  "scraped_at": "2026-07-22T23:14:10.000000+08:00",
+  "total": 1,
+  "details": [
+    {
+      "job_id": "sample-local-join-id",
+      "title": "Java后端开发工程师",
+      "company": "示例科技有限公司",
+      "salary": "20-35K·13薪",
+      "salary_source": "api",
+      "location": "成都·武侯区·中和",
+      "tags_list": "3-5年 | 本科",
+      "job_link": "https://www.zhipin.com/job_detail/sample-encrypt-job-id.html",
+      "link": "https://www.zhipin.com/job_detail/sample-encrypt-job-id.html",
+      "skill_tags": [],
+      "detail_status": "FETCHED",
+      "detail_collected_at": "2026-07-22T23:14:10.000000+08:00",
+      "jd": "这是脱敏后的职位描述。"
+    }
+  ]
+}

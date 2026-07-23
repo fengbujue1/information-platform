@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "informationType": "JOB",
+  "source": "BOSS",
+  "sourceItemId": "sample-encrypt-job-id",
+  "sourceUrl": "https://www.zhipin.com/job_detail/sample-encrypt-job-id.html",
+  "title": "Java后端开发工程师",
+  "content": "这是脱敏后的职位描述。",
+  "publishTime": null,
+  "collectedAt": "2026-07-22T15:14:10.000Z",
+  "collector": {
+    "collectorId": "boss-collector-desktop",
+    "collectorVersion": "2.1.0"
+  },
+  "collectionContext": {
+    "runId": "sample-run-id",
+    "keyword": "java",
+    "city": "成都",
+    "queryFilters": {},
+    "filterDescriptions": [],
+    "resultTotal": 1,
+    "sourceScrapedAt": "2026-07-22T23:14:09.656461+08:00"
+  },
+  "extension": {
+    "sourceCompanyId": "sample-encrypt-brand-id",
+    "sourceRecruiterId": "sample-encrypt-boss-id",
+    "companyName": "示例科技有限公司",
+    "companyUrl": "https://www.zhipin.com/gongsi/sample-encrypt-brand-id.html",
+    "companyScaleText": "100-499人",
+    "companyStageText": "B轮",
+    "companyIndustryText": "互联网",
+    "salaryText": "20-35K·13薪",
+    "salarySource": "API",
+    "salaryMinMonthlyYuan": 20000,
+    "salaryMaxMonthlyYuan": 35000,
+    "salaryMonths": 13,
+    "locationName": "成都·武侯区·中和",
+    "cityName": "成都",
+    "areaName": "武侯区",
+    "businessDistrictName": "中和",
+    "experienceText": "3-5年",
+    "educationText": "本科",
+    "recruiterName": null,
+    "recruiterTitle": "招聘经理",
+    "recruiterActiveText": null,
+    "remoteType": "UNKNOWN",
+    "jobStatus": "ACTIVE",
+    "detailStatus": "FETCHED",
+    "detailCollectedAt": "2026-07-22T15:14:10.000Z",
+    "sourceTags": [
+      "3-5年",
+      "本科"
+    ],
+    "sourceSkillTags": [
+      "Java",
+      "Spring Boot",
+      "MySQL",
+      "不接受居家办公"
+    ],
+    "welfare": [
+      "五险一金",
+      "带薪年假"
+    ]
+  },
+  "rawPayload": {
+    "list": {
+      "job_id": "sample-local-join-id",
+      "title": "Java后端开发工程师",
+      "encrypt_job_id": "sample-encrypt-job-id",
+      "encrypt_boss_id": "sample-encrypt-boss-id",
+      "encrypt_brand_id": "sample-encrypt-brand-id"
+    },
+    "detail": {
+      "job_id": "sample-local-join-id",
+      "jd": "这是脱敏后的职位描述。",
+      "skill_tags": []
+    }
+  }
+}
