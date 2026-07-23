@@ -2,155 +2,88 @@
 
 ## 一、模块定位
 
-本模块是 BOSS 职位信息采集器。
+本模块是 BOSS 职位 Collector，已验证真实 Chrome、CDP、登录、分页、详情和本地输出可以运行。
 
-当前已验证的能力包括：
+## 二、保护区域
 
-- 启动或连接真实 Chrome；
-- 通过 CDP 使用登录状态；
-- 请求 BOSS 职位数据；
-- 分页采集；
-- 保存本地 JSON 或 CSV；
-- 根据职位 ID 去重。
+除非当前 TASK 明确要求，不得重写：
 
-本模块是 Information Platform 的第一个 Collector。
-
-## 二、保护规则
-
-除非当前 TASK 明确要求，否则不得重写或大规模修改：
-
-- Chrome 启动逻辑；
-- CDP 连接逻辑；
+- Chrome 启动；
+- CDP 连接；
 - BOSS 登录检测；
-- BOSS API 请求逻辑；
-- 翻页逻辑；
-- 现有数据去重逻辑；
-- JSON/CSV 本地输出逻辑。
+- 搜索和详情请求；
+- 翻页；
+- 现有去重；
+- JSON/CSV 本地输出。
 
-接入 Information Hub 时，应优先新增独立适配层，不侵入采集核心。
+接入 Information Hub 时通过独立 `integrations/` 模块实现。
 
-推荐目录：
+## 三、推荐目录
 
+```text
 integrations/
 ├── config.py
 ├── information_mapper.py
 ├── hub_client.py
 └── outbox.py
+```
 
-##三、接入 Information Hub 的执行顺序
+## 四、执行顺序
 
-正确顺序：
-完成当前页或当前批次采集
-→ 本地文件保存成功
-→ 映射为 InformationEnvelope
-→ 提交 Information Hub
-→ 失败时写入 Outbox
-禁止：
-先提交后端
-→ 后端失败
-→ 放弃本地保存
+```text
+采集
+→ 本地保存成功
+→ 映射 InformationEnvelope
+→ 提交 Hub
+→ 失败写 Outbox
+```
 
-Information Hub 不可用时，采集任务本身仍应继续运行。
+Hub 不可用时，采集任务仍应继续。
 
-##四、字段映射规则
+## 五、字段规则
 
-字段映射依据优先级：
+- `encrypt_job_id` 是当前 sourceItemId 候选。
+- `boss_name` 来自 `brandName`，表示公司品牌，不是招聘者姓名。
+- `boss_title` 可以映射 recruiterTitle。
+- recruiterName 和 recruiterActiveText 当前通常为空。
+- `tags` 需要解析经验和学历。
+- `skills`、`job_labels`、`welfare` 需要从分隔字符串转换为数组。
+- rawPayload 保留原始字段。
+- publishTime 当前保持 null。
 
-当前采集器实际返回数据；
-脱敏样例；
-协议文档；
-数据库设计文档。
+## 六、兼容性
 
-不得根据字段名称猜测不存在的数据。
+修改后必须保证：
 
-需要区分：
+- 原有命令仍可运行；
+- JSON/CSV 输出未被删除；
+- Hub 功能可以关闭；
+- Hub 失败不导致采集崩溃；
+- 临时缺失 JD 不会要求服务端清空旧 JD。
 
-通用 Information 字段；
-Job 扩展字段；
-仅保存在 rawPayload 中的来源专有字段。
+## 七、测试
 
-未知发布时间：
-"publishTime": null
-不得使用 collectedAt 填充 publishTime。
+Mapper 至少覆盖：
 
-##五、输出兼容性
+- 正常数据；
+- 字段缺失；
+- 空字符串；
+- 列表字段拆分；
+- rawPayload 完整性；
+- 错误的 boss_name 映射防护。
 
-修改前后必须保证：
+Client 至少覆盖：
 
-原有命令仍可运行；
-原有 JSON 输出仍存在；
-原有 CSV 输出不被无意删除；
-原有字段含义不发生静默变化；
-Hub 提交功能可以通过配置关闭；
-Hub 不可用不会导致采集器崩溃。
-##六、配置
+- 2xx；
+- 4xx；
+- 5xx；
+- 413；
+- 超时；
+- 连接失败。
 
-Information Hub 相关配置使用环境变量，例如：
+Outbox 至少覆盖：
 
-INFORMATION_HUB_ENABLED=false
-INFORMATION_HUB_URL=http://localhost:8080
-INFORMATION_HUB_TOKEN=replace-me
-INFORMATION_HUB_TIMEOUT_SECONDS=15
-INFORMATION_HUB_OUTBOX_DIR=./data/outbox
-
-环境变量名称以当前协议文档和代码实际配置为准。
-
-不得把真实 Token 写入代码。
-
-##七、测试要求
-
-修改字段映射时，至少测试：
-
-正常职位数据；
-可选字段缺失；
-sourceItemId 缺失；
-publishTime 缺失；
-skills 为空；
-rawPayload 完整保留。
-
-修改 Hub Client 时，至少测试：
-
-2xx 成功；
-4xx 响应；
-5xx 响应；
-请求超时；
-连接失败。
-
-修改 Outbox 时，至少测试：
-
-写入失败记录；
-重试成功；
-重复补传；
-损坏文件处理。
-
-##八、命令
-
-在填写启动和测试命令前，必须从当前仓库实际文件确认。
-
-不得虚构命令。
-
-确认后在此记录：
-
-创建虚拟环境：
-<实际命令>
-
-安装依赖：
-<实际命令>
-
-运行测试：
-<实际命令>
-
-启动采集：
-<实际命令>
-##九、完成任务前
-
-必须确认：
-
-原有采集流程仍然可以运行；
-本地结果可以正常生成；
-Hub 关闭时功能不受影响；
-Hub 失败时数据进入 Outbox；
-测试通过；
-未提交 Cookie、Profile 和真实采集数据。
-
-其中“命令”部分暂时可以保留占位，让 Codex先检查项目真实入口后再填写，避免写错。
+- 原子写入；
+- 补传成功；
+- 重复补传；
+- 损坏文件隔离。
