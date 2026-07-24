@@ -1,0 +1,11 @@
+# Copy this block to C:/Users/your-user/.ssh/config on each development
+# computer, then replace the documentation values locally.
+#
+# Generate a different key pair on every computer. Never commit a private key.
+
+Host information-platform-server
+    HostName 203.0.113.10
+    Port 22
+    User example_user
+    IdentityFile C:/Users/example_user/.ssh/information-platform-remote
+    IdentitiesOnly yes

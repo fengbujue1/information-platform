@@ -1,0 +1,36 @@
+name: ${COMPOSE_PROJECT_NAME:-information-platform-mysql}
+
+services:
+  mysql:
+    image: mysql:8.4.10
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD must be set}
+      INFORMATION_HUB_DEV_DATABASE: ${INFORMATION_HUB_DEV_DATABASE:-information_hub_dev}
+      INFORMATION_HUB_DEV_USER: ${INFORMATION_HUB_DEV_USER:-information_hub_dev}
+      INFORMATION_HUB_DEV_PASSWORD: ${INFORMATION_HUB_DEV_PASSWORD:?INFORMATION_HUB_DEV_PASSWORD must be set}
+      INFORMATION_HUB_TEST_DATABASE: ${INFORMATION_HUB_TEST_DATABASE:-information_hub_test}
+      INFORMATION_HUB_TEST_USER: ${INFORMATION_HUB_TEST_USER:-information_hub_test}
+      INFORMATION_HUB_TEST_PASSWORD: ${INFORMATION_HUB_TEST_PASSWORD:?INFORMATION_HUB_TEST_PASSWORD must be set}
+      TZ: UTC
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+      - --default-time-zone=+00:00
+    ports:
+      - "127.0.0.1:${MYSQL_HOST_PORT:-3306}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./mysql/init/01-create-databases.sh:/docker-entrypoint-initdb.d/01-create-databases.sh:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - mysqladmin ping --host=127.0.0.1 --silent
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+
+volumes:
+  mysql-data:
+    name: ${MYSQL_DATA_VOLUME:-information-platform-mysql-data}

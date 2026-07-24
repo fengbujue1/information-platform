@@ -123,6 +123,7 @@ collectors/boss-zhipin-scraper/result/outbox/
 # ==================================================
 deploy/data/
 deploy/mysql/data/
+deploy/mysql/backups/
 docker-data/
 
 # ==================================================

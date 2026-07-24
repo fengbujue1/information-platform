@@ -23,11 +23,12 @@ Phase 1：BOSS 采集接入与归档。
 - 完成 TASK-002 并冻结 InformationEnvelope V1。
 - 接受数据库设计 1.3 和 ADR-007。
 - 完成 TASK-003，创建可编译、测试和启动的 Information Hub Spring Boot 项目骨架。
+- 完成 TASK-004A，建立远程 Docker MySQL 开发与集成测试环境，并通过安全、权限、持久化和备份恢复验证。
 - 接受 ADR-008，确定使用远程 Docker MySQL 作为共享开发与集成测试数据库，并通过 SSH 隧道安全连接。
 
 ## 当前任务
 
-TASK-004A：建立远程 MySQL 开发与测试环境。
+TASK-004：创建 Phase 1 数据库结构。
 
 ## 已冻结设计
 
@@ -46,4 +47,4 @@ TASK-004A：建立远程 MySQL 开发与测试环境。
 
 ## 下一步
 
-实施 TASK-004A，创建可重复部署、安全连接并持久化的远程 MySQL 环境；验收通过后执行 TASK-004。
+执行 TASK-004，通过 Flyway 创建 Phase 1 数据库结构，并使用独立测试库完成迁移验证。
