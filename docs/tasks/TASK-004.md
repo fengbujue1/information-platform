@@ -8,6 +8,7 @@
 
 - TASK-002 完成。
 - TASK-003 完成。
+- TASK-004A 完成。
 - DATABASE_DESIGN 1.3 已确认。
 
 ## 目标
@@ -47,6 +48,7 @@ information_snapshot：
 
 ## 测试
 
+- 使用 TASK-004A 提供的独立集成测试库，不连接或清理共享开发库。
 - 三张表迁移。
 - JSON 字段读写。
 - encrypt ID 中包含特殊字符。

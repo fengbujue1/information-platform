@@ -14,7 +14,9 @@
 实际输出结构审计
 → 用户确认字段映射
 → 冻结 InformationEnvelope V1
-→ 创建 Spring Boot 和 Flyway
+→ 创建 Spring Boot
+→ 建立远程 MySQL 开发与测试环境
+→ 创建 Flyway 数据库结构
 ```
 
 任务：
@@ -22,13 +24,14 @@
 1. [分析 BOSS 输出结构](tasks/TASK-001.md)
 2. [确认 InformationEnvelope V1](tasks/TASK-002.md)
 3. [创建 Spring Boot 后端](tasks/TASK-003.md)
-4. [创建 Phase 1 数据库结构](tasks/TASK-004.md)
-5. [实现信息接入 API](tasks/TASK-005.md)
-6. [实现 BOSS 字段映射器](tasks/TASK-006.md)
-7. [实现 Information Hub Client](tasks/TASK-007.md)
-8. [实现本地 Outbox](tasks/TASK-008.md)
-9. [实现职位查询 API](tasks/TASK-009.md)
-10. [完成端到端验收](tasks/TASK-010.md)
+4. [建立远程 MySQL 开发与测试环境](tasks/TASK-004A.md)
+5. [创建 Phase 1 数据库结构](tasks/TASK-004.md)
+6. [实现信息接入 API](tasks/TASK-005.md)
+7. [实现 BOSS 字段映射器](tasks/TASK-006.md)
+8. [实现 Information Hub Client](tasks/TASK-007.md)
+9. [实现本地 Outbox](tasks/TASK-008.md)
+10. [实现职位查询 API](tasks/TASK-009.md)
+11. [完成端到端验收](tasks/TASK-010.md)
 
 Phase 1 完成标准：
 
