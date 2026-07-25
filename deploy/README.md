@@ -407,3 +407,6 @@ docker compose --env-file .env logs --tail 100 mysql
 ```
 
 日志可能包含数据库元数据，排查后不要把未经检查的完整日志提交到仓库或公开聊天。
+
+### mysql 密码位置
+	服务器： /information-platform/.env
