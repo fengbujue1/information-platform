@@ -122,3 +122,14 @@ A → B → A
 - 数据库结构只通过 Flyway 迁移，禁止在共享环境执行 `flyway clean`。
 - 远程共享数据库只用于开发和集成测试，生产环境必须使用独立数据库。
 - Collector 仍然只连接 Information Hub，不直接连接 MySQL。
+
+## 9. Phase 1 后端持久化
+
+- 业务表读写使用 MyBatis-Plus 3.5.17 的 Spring Boot 3 Starter。
+- `information` 模块保存 `information_item`、`information_snapshot` 的 PO 和 Mapper。
+- `job` 模块保存 `job_information` 的 PO 和 Mapper。
+- `ingestion` 基础设施适配器负责组合三个 Mapper，但事务边界仍由应用服务控制。
+- 普通单表插入和更新使用 MyBatis-Plus `BaseMapper`。
+- 幂等更新前的当前记录查询使用固定 `FOR UPDATE` 锁查询，锁定后再读取 Job 扩展。
+- 主表、Job 扩展和快照继续使用同一个 Spring 事务。
+- Flyway SQL 仍是数据库结构的最终事实来源，MyBatis-Plus 不负责自动建表。

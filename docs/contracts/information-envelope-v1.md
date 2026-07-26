@@ -31,6 +31,13 @@ Authorization: Bearer YOUR_COLLECTOR_TOKEN
 
 Phase 1 暂不实现批量接口。
 
+当前服务端约束：
+
+- 首次创建返回 HTTP `201`，幂等更新返回 HTTP `200`。
+- 请求体默认最大 `2097152` 字节（2 MiB）。
+- Collector Token 通过服务端环境变量 `INFORMATION_HUB_COLLECTOR_TOKEN` 配置。
+- 未配置 Token 时接入接口不可用，不允许匿名降级。
+
 ## 3. 请求示例
 
 ```json
@@ -266,6 +273,9 @@ source + informationType + sourceItemId
 - `security_id`
 - `lid`
 
+Information Hub 会递归检查 `rawPayload` 的字段名。发现上述敏感字段时拒绝整个请求并返回
+`UNSAFE_RAW_PAYLOAD`，不会静默删除字段后继续保存。
+
 ## 12. 成功响应
 
 首次创建：
@@ -300,7 +310,39 @@ source + informationType + sourceItemId
 }
 ```
 
-## 13. 兼容性
+## 13. 错误响应
+
+错误响应使用稳定结构：
+
+```json
+{
+  "success": false,
+  "code": "VALIDATION_FAILED",
+  "message": "Invalid request field: title"
+}
+```
+
+Phase 1 使用：
+
+| HTTP 状态 | code | 说明 |
+|---:|---|---|
+| 400 | `VALIDATION_FAILED` | 字段约束不满足 |
+| 400 | `INVALID_JSON` | 请求体不是合法 JSON |
+| 400 | `UNSUPPORTED_SCHEMA_VERSION` | 不支持的协议版本 |
+| 400 | `UNSUPPORTED_INFORMATION_TYPE` | 不支持的信息类型 |
+| 400 | `UNSUPPORTED_SOURCE` | 不支持的数据源 |
+| 400 | `INVALID_RAW_PAYLOAD` | rawPayload 不是 JSON Object |
+| 400 | `INVALID_COLLECTION_CONTEXT` | collectionContext 不是 JSON Object |
+| 400 | `UNSAFE_RAW_PAYLOAD` | rawPayload 包含禁止保存的敏感字段 |
+| 401 | `COLLECTOR_AUTHENTICATION_FAILED` | Token 缺失或不匹配 |
+| 413 | `REQUEST_TOO_LARGE` | 请求体超过配置上限 |
+| 500 | `INGESTION_PERSISTENCE_FAILED` | 数据库事务失败 |
+| 500 | `INTERNAL_ERROR` | 未预期的服务端错误 |
+| 503 | `COLLECTOR_AUTH_NOT_CONFIGURED` | 服务端尚未配置 Collector Token |
+
+错误响应不得包含 Token、完整 rawPayload、SQL 或数据库堆栈。
+
+## 14. 兼容性
 
 - 新增可选字段属于兼容变更。
 - 删除字段、修改含义、可选改必填属于不兼容变更。

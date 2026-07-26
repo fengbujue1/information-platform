@@ -17,6 +17,7 @@
 → 创建 Spring Boot
 → 建立远程 MySQL 开发与测试环境
 → 创建 Flyway 数据库结构
+→ 实现信息接入 API
 ```
 
 任务：

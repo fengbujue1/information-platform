@@ -40,10 +40,16 @@ Collector
 
 - Collector：Python
 - Backend：Java 21、Spring Boot、Maven
-- Persistence：MySQL 8、Flyway、MyBatis-Plus
+- Persistence：MySQL 8、Flyway、MyBatis-Plus 3.5.17（Spring Boot 3 Starter）
 - Frontend：Vue 3、TypeScript、Vite、Element Plus
 - Deployment：Docker Compose
 - AI：后续使用 OpenAI 兼容接口，框架在 AI Phase 再决定
+
+## Java 代码可读性约定
+
+- 新增 PO、DTO、Domain、配置对象等数据实体时，每个字段或 record 组件必须有中文注释。
+- 复杂方法在定义处说明职责和关键约束；幂等、事务、合并、版本和安全等复杂调用在调用处说明业务意图。
+- 注释保持简明并与实现同步，不逐行复述语法层面的代码行为。
 
 ## 开发与集成测试环境
 

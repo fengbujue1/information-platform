@@ -68,6 +68,7 @@ information_snapshot：
 实施内容：
 
 - 在 Information Hub 中加入 Spring JDBC、Flyway MySQL 和 MySQL Connector/J 依赖。
+  TASK-005 后续将业务持久化调整为 MyBatis-Plus Spring Boot 3 Starter，不再直接声明 Spring JDBC Starter；Flyway 和测试仍复用同一数据源基础设施。
 - 新增 Flyway V1 迁移，创建 `information_item`、`job_information`、`information_snapshot` 及设计要求的索引和外键。
 - `job_information.information_id` 使用 `ON DELETE CASCADE`，`information_snapshot.information_id` 使用 `ON DELETE RESTRICT`。
 - 数据库连接参数只通过环境变量注入；仓库未保存真实账号、密码或服务器地址。

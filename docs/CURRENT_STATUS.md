@@ -26,10 +26,11 @@ Phase 1：BOSS 采集接入与归档。
 - 完成 TASK-004A，建立远程 Docker MySQL 开发与集成测试环境，并通过安全、权限、持久化和备份恢复验证。
 - 接受 ADR-008，确定使用远程 Docker MySQL 作为共享开发与集成测试数据库，并通过 SSH 隧道安全连接。
 - 完成 TASK-004，通过 Flyway V1 创建 Phase 1 数据库结构，并在独立测试库完成迁移、约束、JSON、幂等、快照版本和事务回滚验证。
+- 完成 TASK-005，实现 InformationEnvelope V1 接入 API、Bearer Token 认证、请求校验、非破坏性合并、Canonical Hash、MyBatis-Plus 幂等归档和版本快照，补齐实体字段与关键逻辑的中文注释，并通过本地与独立测试库验证。
 
 ## 当前任务
 
-TASK-005：实现信息接入 API。
+TASK-006：实现 BOSS 字段映射器。
 
 ## 已冻结设计
 
@@ -45,7 +46,9 @@ TASK-005：实现信息接入 API。
 - 开发与集成测试使用远程 Docker MySQL，生产数据库保持独立。
 - MySQL 不向公网直接开放 `3306`，开发主机通过 SSH 隧道连接。
 - 开发库与测试库分离，并使用不同的非 root 最小权限账号。
+- Collector 接入 API 使用环境变量配置单 Bearer Token，未配置时拒绝接入。
+- 接入请求体默认最大 2 MiB，rawPayload 包含敏感字段时拒绝整个请求。
 
 ## 下一步
 
-执行 TASK-005，实现 Information Hub 信息接入 API，并完成幂等写入、快照版本和异常场景测试。
+执行 TASK-006，在不修改现有 BOSS 采集核心的前提下新增字段映射适配层，将列表和详情合并为 InformationEnvelope V1。

@@ -10,3 +10,12 @@ spring:
     locations: classpath:db/migration
     validate-on-migrate: true
     clean-disabled: true
+
+information-hub:
+  collector-api:
+    token: ${INFORMATION_HUB_COLLECTOR_TOKEN:}
+    max-request-bytes: ${INFORMATION_HUB_COLLECTOR_MAX_REQUEST_BYTES:2097152}
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
