@@ -1,3 +1,12 @@
 spring:
   application:
     name: information-hub
+  datasource:
+    url: ${INFORMATION_HUB_DB_URL:jdbc:mysql://127.0.0.1:13306/information_hub_dev?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true&useUnicode=true&characterEncoding=UTF-8}
+    username: ${INFORMATION_HUB_DB_USERNAME:information_hub_dev}
+    password: ${INFORMATION_HUB_DB_PASSWORD:}
+  flyway:
+    enabled: ${INFORMATION_HUB_FLYWAY_ENABLED:false}
+    locations: classpath:db/migration
+    validate-on-migrate: true
+    clean-disabled: true
