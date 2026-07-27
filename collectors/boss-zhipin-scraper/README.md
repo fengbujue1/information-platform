@@ -36,7 +36,7 @@ python scripts/boss_cdp_raw.py --setup-chrome
 python scripts/boss_cdp_raw.py --keyword "AI Agent" --city 上海 --pages 3 --analysis
 
 # 支持全国城市（含三四五线），例如：
-python scripts/boss_cdp_raw.py --keyword "前端" --city 赣州 --pages 3
+python scripts/boss_cdp_raw.py --keyword "java" --city 成都 --pages 1
 # 查看支持的城市：--list-cities [关键词]
 python scripts/boss_cdp_raw.py --list-cities 江
 
@@ -141,6 +141,9 @@ python3 scripts/boss_cdp_raw.py --smoke-test
 # 4. 抓取
 python3 scripts/boss_cdp_raw.py --keyword "AI Agent" --city 上海 --pages 3 --format csv --analysis
 
+# 可选：本地打印并保存职位搜索 API 原始响应（默认关闭）
+python3 scripts/boss_cdp_raw.py --keyword "AI Agent" --city 上海 --pages 1 --no-detail --capture-raw-response
+
 # 5. 抓取后摘要和提示词
 python3 scripts/job_summary.py --top 15
 ```
@@ -159,6 +162,8 @@ python3 scripts/job_summary.py --top 15
 | `--analysis` | 分析报告 |
 | `--merge FILE` | 合并已有数据（按 job_id 去重） |
 | `--allow-dom-fallback` | API 无数据时允许降级 DOM 提取；默认关闭，薪资可能不可信 |
+| `--capture-raw-response` | 打印并保存职位搜索 API 的原始响应体；仅供本地诊断，默认关闭 |
+| `--raw-response-dir DIR` | 覆盖原始响应保存目录；默认 `result/job-result/raw-responses/` |
 | `--check` | 环境检查（CDP + 依赖 + 登录态） |
 | `--smoke-test` | 用真实 Chrome/CDP 跑一次 BOSS 搜索 API smoke test，不写结果文件 |
 | `--setup-chrome` | 一键启动 Chrome CDP（持久隔离 profile） |
@@ -172,6 +177,30 @@ python3 scripts/job_summary.py --top 15
 | `--detail-output` | 详情输出路径（默认 `~/.boss-zhipin-scraper/job-result/`） |
 | `--cdp-port` | CDP 端口（默认 9222） |
 | `--scale/--salary/--experience/--degree` | 筛选条件 |
+
+## 职位搜索 API 原始响应诊断
+
+只有在核对 BOSS 来源字段或排查接口响应时才启用：
+
+```bash
+python3 scripts/boss_cdp_raw.py --keyword "java"  --city 成都 --pages 1 --no-detail --capture-raw-response
+```
+
+开启后，脚本会在字段筛选和结构化转换之前打印 `xhr.responseText`，并按运行 ID、页码、请求序号和 HTTP 状态保存到：
+
+```text
+result/job-result/raw-responses/
+```
+
+可以通过 `--raw-response-dir DIR` 指定其他本地目录。合法 JSON 保存为 `.json`，非 JSON 响应保存为 `.txt`；非 200 响应也会保留正文，但不会被当作职位数据。
+
+该功能默认关闭。原始响应可能包含 `security_id`、`lid` 和其他来源追踪字段，只能用于本地调试：
+
+- 不要提交到 Git；
+- 不要直接发送到 Information Hub；
+- 不要分享包含真实来源标识的数据文件；
+- 使用后按需清理，避免长期积累；
+- 脚本不会为此功能采集请求头、响应头、Cookie、Authorization 或 Chrome Profile。
 
 ## 抓取后摘要与提示词
 

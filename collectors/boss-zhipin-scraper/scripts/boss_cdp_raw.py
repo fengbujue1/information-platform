@@ -23,6 +23,7 @@ __version__ = "2.1.0"
 
 import json
 import time
+import uuid
 import random
 import sys
 import argparse
@@ -113,6 +114,7 @@ DEFAULT_PROFILE_DIR = get_default_profile_dir()
 
 DEFAULT_CDP_DATA_DIR = str(PROJECT_ROOT / "result" / "chrome-profile")
 DEFAULT_RESULT_DIR = str(PROJECT_ROOT / "result" / "job-result")
+DEFAULT_RAW_RESPONSE_DIR = str(Path(DEFAULT_RESULT_DIR) / "raw-responses")
 DEFAULT_CITY_INPUT = "上海"
 LOGIN_PROBE_QUERY = "Java"
 LOGIN_PROBE_CITY = "101020100"
@@ -401,10 +403,24 @@ FETCH_API_JS_TEMPLATE = """
     var xhr = new XMLHttpRequest();
     xhr.open('GET', '__API_URL__', false);
     xhr.send();
-    if (xhr.status !== 200) return JSON.stringify([{error: xhr.status}]);
-    var data = JSON.parse(xhr.responseText);
+    var responseText = xhr.responseText || '';
+    var result = {
+        http_status: xhr.status,
+        response_text: responseText,
+        jobs: []
+    };
+    if (xhr.status !== 200) return JSON.stringify(result);
+
+    var data;
+    try {
+        data = JSON.parse(responseText);
+    } catch (error) {
+        result.parse_error = String(error);
+        return JSON.stringify(result);
+    }
+
     var jobs = (data.zpData || {}).jobList || [];
-    var results = jobs.map(function(j) {
+    result.jobs = jobs.map(function(j) {
         return {
             title: j.jobName || '',
             salary: j.salaryDesc || '',
@@ -428,7 +444,7 @@ FETCH_API_JS_TEMPLATE = """
             welfare: (j.welfareList || []).join(' | ')
         };
     });
-    return JSON.stringify(results);
+    return JSON.stringify(result);
 })()
 """
 
@@ -1187,23 +1203,99 @@ def should_use_dom_fallback(jobs, allow_dom_fallback=False):
     return allow_dom_fallback and not jobs
 
 
-def parse_api_jobs_eval_value(value):
-    if not value:
-        return []
-    try:
-        parsed = json.loads(value) if isinstance(value, str) else value
-    except (json.JSONDecodeError, ValueError, TypeError):
-        return []
-    if not isinstance(parsed, list):
-        return []
+@dataclass(frozen=True)
+class ApiSearchResponse:
+    """BOSS 职位搜索接口在浏览器内返回的状态、原始正文和现有精简职位。"""
 
+    http_status: int
+    response_text: str
+    jobs: list
+
+
+class RawResponseCaptureError(RuntimeError):
+    """启用原始响应诊断后，响应正文无法可靠保存。"""
+
+
+def _valid_api_jobs(items):
+    if not isinstance(items, list):
+        return []
     jobs = []
-    for item in parsed:
+    for item in items:
         if not isinstance(item, dict) or item.get("error"):
             continue
         if item.get("title") or item.get("job_link"):
             jobs.append(item)
     return jobs
+
+
+def parse_api_search_response(value):
+    """解析页面求值结果，并兼容 TASK-006A 之前直接返回职位数组的格式。"""
+    if not value:
+        return ApiSearchResponse(0, "", [])
+    try:
+        parsed = json.loads(value) if isinstance(value, str) else value
+    except (json.JSONDecodeError, ValueError, TypeError):
+        return ApiSearchResponse(0, "", [])
+
+    if isinstance(parsed, list):
+        return ApiSearchResponse(200, "", _valid_api_jobs(parsed))
+    if not isinstance(parsed, dict):
+        return ApiSearchResponse(0, "", [])
+
+    try:
+        http_status = int(parsed.get("http_status") or 0)
+    except (TypeError, ValueError):
+        http_status = 0
+    response_text = parsed.get("response_text")
+    if not isinstance(response_text, str):
+        response_text = ""
+    jobs = _valid_api_jobs(parsed.get("jobs")) if http_status == 200 else []
+    return ApiSearchResponse(http_status, response_text, jobs)
+
+
+def parse_api_jobs_eval_value(value):
+    """保留旧调用方只读取精简职位数组的兼容入口。"""
+    return parse_api_search_response(value).jobs
+
+
+def _raw_response_extension(response_text):
+    try:
+        json.loads(response_text)
+        return "json"
+    except (json.JSONDecodeError, ValueError, TypeError):
+        return "txt"
+
+
+def maybe_capture_raw_search_response(
+        enabled, response, output_dir, run_id, page, request_sequence):
+    """仅在显式启用时打印并保存一次职位搜索接口原始响应。"""
+    if not enabled:
+        return None
+
+    extension = _raw_response_extension(response.response_text)
+    filename = (
+        f"boss_search_raw_{run_id}_page_{page:03d}_"
+        f"request_{request_sequence:03d}_status_{response.http_status}.{extension}"
+    )
+    path = os.path.join(output_dir, filename)
+    try:
+        os.makedirs(output_dir, exist_ok=True)
+        # 独占创建避免同一次或并发诊断意外覆盖已经采集的原始样本。
+        with open(path, "x", encoding="utf-8", newline="") as stream:
+            stream.write(response.response_text)
+    except (OSError, UnicodeError) as exception:
+        raise RawResponseCaptureError(
+            f"无法保存 BOSS 原始响应: {path}: {exception}"
+        ) from exception
+
+    print(
+        f"--- BOSS API 原始响应开始 "
+        f"page={page} status={response.http_status} ---"
+    )
+    print(response.response_text)
+    print(f"--- BOSS API 原始响应结束 page={page} ---")
+    print(f"原始响应已保存: {path}")
+    return path
 
 
 def build_detail_url(job):
@@ -1274,13 +1366,24 @@ def load_existing_details(input_path=None, detail_output=None, result_dir=DEFAUL
 # 抓取列表
 # ============================================================
 def scrape_list(keyword, city_input, max_pages, filters, output_path,
-                cdp_port=DEFAULT_CDP_PORT, fmt="json", allow_dom_fallback=False):
+                cdp_port=DEFAULT_CDP_PORT, fmt="json", allow_dom_fallback=False,
+                capture_raw_response=False, raw_response_dir=None):
     city_name, city_code = resolve_city(city_input)
     cdp = CDPSession(cdp_port)
     all_jobs = []
     seen = set()
     if not output_path:
         output_path = default_output_path("jobs")
+
+    raw_response_dir = raw_response_dir or DEFAULT_RAW_RESPONSE_DIR
+    raw_response_run_id = None
+    raw_response_sequence = 0
+    if capture_raw_response:
+        raw_response_run_id = (
+            f"{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}_"
+            f"{uuid.uuid4().hex[:8]}"
+        )
+        print("警告: BOSS 原始响应诊断已启用，输出仅供本地调试，不得提交 Git 或发送 Hub。")
 
     # 显示筛选条件
     filter_desc = []
@@ -1369,8 +1472,18 @@ def scrape_list(keyword, city_input, max_pages, filters, output_path,
             api_url = f"{API_JOB_LIST_PATH}?{urlencode(api_params)}"
             api_js = FETCH_API_JS_TEMPLATE.replace("__API_URL__", api_url)
             val = cdp.eval_js(api_js, sid)
+            api_response = parse_api_search_response(val)
+            raw_response_sequence += 1
+            maybe_capture_raw_search_response(
+                capture_raw_response,
+                api_response,
+                raw_response_dir,
+                raw_response_run_id,
+                pg,
+                raw_response_sequence,
+            )
 
-            jobs = parse_api_jobs_eval_value(val)
+            jobs = api_response.jobs
 
             # DOM 提取的薪资可能是加密字体，默认禁用；只有显式允许时才降级。
             if should_use_dom_fallback(jobs, allow_dom_fallback):
@@ -1827,7 +1940,7 @@ def run_smoke_test(cdp_port=DEFAULT_CDP_PORT):
         time.sleep(4)
         api_url = f"{API_JOB_LIST_PATH}?{urlencode({'scene': '1', 'query': LOGIN_PROBE_QUERY, 'city': city_code, 'page': 1, 'pageSize': 5})}"
         api_js = FETCH_API_JS_TEMPLATE.replace("__API_URL__", api_url)
-        jobs = parse_jobs_eval_value(cdp.eval_js(api_js, sid))
+        jobs = parse_api_search_response(cdp.eval_js(api_js, sid)).jobs
         cdp.send("Target.closeTarget", {"targetId": tid})
         cdp.close()
 
@@ -2271,6 +2384,9 @@ def main():
   # 浏览器/API smoke test
   %(prog)s --smoke-test
 
+  # 本地打印并保存职位搜索 API 原始响应
+  %(prog)s --keyword "Java 风控" --pages 1 --capture-raw-response --no-detail
+
   # 启动 Chrome CDP
   %(prog)s --setup-chrome
         """)
@@ -2303,6 +2419,10 @@ def main():
     p.add_argument("--input", default=None, help="从已有 JSON 文件读取（跳过抓取）")
     p.add_argument("--allow-dom-fallback", action="store_true",
                    help="API 无数据时允许降级 DOM 提取（薪资可能受字体反爬影响，默认关闭）")
+    p.add_argument("--capture-raw-response", action="store_true",
+                   help="打印并保存职位搜索 API 原始响应体（仅限本地诊断，默认关闭）")
+    p.add_argument("--raw-response-dir", default=None,
+                   help=f"原始响应保存目录（默认 {DEFAULT_RAW_RESPONSE_DIR}）")
 
     # 工具命令
     p.add_argument("--check", action="store_true", help="运行环境诊断检查")
@@ -2399,6 +2519,8 @@ def main():
             args.keyword, args.city, args.pages, filters, args.output,
             cdp_port=args.cdp_port, fmt=args.format,
             allow_dom_fallback=args.allow_dom_fallback,
+            capture_raw_response=args.capture_raw_response,
+            raw_response_dir=args.raw_response_dir,
         )
 
     # 合并外部文件
