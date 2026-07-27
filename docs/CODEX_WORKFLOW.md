@@ -51,6 +51,7 @@ git log --oneline -5
 - 数据库写入使用明确事务
 - 增加相应测试
 - 完成后更新 CURRENT_STATUS.md 和 TASK 文件
+- 有新增文件需要执行 git add
 
 开始修改前，先列出：
 

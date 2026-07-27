@@ -41,17 +41,39 @@ jobs[]
 
 ## 3. Information Platform 适配层
 
-推荐：
+TASK-006 已实现纯映射适配层：
 
 ```text
 integrations/
+├── __init__.py
 ├── config.py
-├── boss_file_loader.py
 ├── boss_job_merger.py
-├── information_mapper.py
-├── hub_client.py
-└── outbox.py
+└── information_mapper.py
 ```
+
+使用示例：
+
+```python
+from integrations import MapperConfig, map_boss_results
+
+config = MapperConfig(
+    collector_id="boss-collector-desktop",
+    collector_version="2.1.0",
+    historical_timezone="Asia/Shanghai",
+)
+envelopes = map_boss_results(list_root, detail_root_or_array, config)
+```
+
+映射器只接收已经加载的列表根对象和详情根对象/数组，返回可 JSON 序列化的 InformationEnvelope V1 字典列表。它不读取真实 Chrome Profile，不发送 HTTP，也不实现 Outbox。
+
+核心行为：
+
+- 使用 `job_id` 在 Collector 内部左连接，缺少详情仍输出列表职位。
+- 使用 `encrypt_job_id` 构建 `sourceItemId`。
+- 列表字段为标准化主来源，详情补充 JD；重复字段冲突只记录字段名和 job_id，不记录字段值。
+- 同一批次共享一个 `runId`；历史无时区 `scraped_at` 按配置时区解释。
+- `boss_online_observed_at` 只在 `boss_online` 严格为 true 且时间带时区时映射。
+- rawPayload 递归移除 Hub 禁止的敏感字段，但保留安全的列表与详情业务字段。
 
 ## 4. 执行顺序
 

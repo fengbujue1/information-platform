@@ -30,10 +30,11 @@ Phase 1：BOSS 采集接入与归档。
 - 完成 TASK-006A，为 BOSS 职位搜索接口增加默认关闭的原始响应诊断开关，可在字段转换前打印并按请求原样保存响应体；专项测试 11 项全部通过，完整回归未新增失败。
 - 接受 ADR-009，确定将 BOSS 招聘者在线状态记录为 Collector 在线观测时间，并将 `recruiterActiveText` 排除出 contentHash。
 - 完成 TASK-006B：Collector 输出严格布尔 `boss_online` 和同响应共享的 UTC `boss_online_observed_at`；Information Hub 将 `recruiterActiveText` 排除出 contentHash，并验证在线观测时间的非破坏性更新不会增加版本或快照。
+- 完成 TASK-006：新增独立 BOSS Mapper 适配层，完成列表/详情左连接、InformationEnvelope V1 字段转换、历史时区解释、招聘者在线观测映射和 rawPayload 递归安全清理；专项测试 14 项通过，完整回归未新增失败。
 
 ## 当前任务
 
-TASK-006：实现 BOSS → InformationEnvelope V1 Mapper。
+TASK-007：实现 Information Hub Client。
 
 ## 已冻结设计
 
@@ -57,4 +58,4 @@ TASK-006：实现 BOSS → InformationEnvelope V1 Mapper。
 
 ## 下一步
 
-执行 TASK-006，将 BOSS 列表与详情结果转换为 InformationEnvelope V1，并把 `boss_online_observed_at` 原样映射到 `recruiterActiveText`。
+执行 TASK-007，实现可关闭、失败不影响采集流程的 Information Hub HTTP Client。
