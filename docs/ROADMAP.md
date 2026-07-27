@@ -21,6 +21,9 @@
 → 增加 BOSS 搜索接口原始响应诊断输出
 → 接入 BOSS 招聘者在线观测时间
 → 实现 BOSS 字段映射器
+→ 实现 Information Hub Client
+→ 增加本地与服务器外部配置文件
+→ 实现本地 Outbox
 ```
 
 任务：
@@ -35,9 +38,10 @@
 8. [接入 BOSS 招聘者在线观测时间](tasks/TASK-006B.md)
 9. [实现 BOSS 字段映射器](tasks/TASK-006.md)
 10. [实现 Information Hub Client](tasks/TASK-007.md)
-11. [实现本地 Outbox](tasks/TASK-008.md)
-12. [实现职位查询 API](tasks/TASK-009.md)
-13. [完成端到端验收](tasks/TASK-010.md)
+11. [增加本地与服务器外部配置文件](tasks/TASK-007A.md)
+12. [实现本地 Outbox](tasks/TASK-008.md)
+13. [实现职位查询 API](tasks/TASK-009.md)
+14. [完成端到端验收](tasks/TASK-010.md)
 
 Phase 1 完成标准：
 

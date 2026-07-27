@@ -80,15 +80,43 @@ envelopes = map_boss_results(list_root, detail_root_or_array, config)
 
 TASK-007 已实现默认关闭的独立 HTTP Client。Collector 只在列表和详情完成本地保存后，才按单条 InformationEnvelope 调用 Hub。
 
-环境变量：
+推荐复制配置模板并填写本机或服务器配置：
+
+```powershell
+Copy-Item config/collector.ini.example config/collector.ini
+```
+
+```ini
+[collector]
+collector_id = boss-collector-desktop
+collector_version = 2.1.0
+historical_timezone = Asia/Shanghai
+
+[information_hub]
+enabled = true
+url = http://127.0.0.1:8080/api/v1/collector/items
+collector_token = replace-with-real-token
+connect_timeout_seconds = 3
+read_timeout_seconds = 10
+```
+
+默认读取项目内的 `config/collector.ini`，也可以通过命令行指定其他位置：
+
+```powershell
+python scripts/boss_cdp_raw.py --config C:\secure\collector.ini --keyword "AI Agent" --city 上海 --pages 3
+```
+
+环境变量仍然可用，并且优先级高于 INI，适合 CI 或临时覆盖：
 
 ```text
-INFORMATION_HUB_ENABLED=false
-INFORMATION_HUB_URL=http://127.0.0.1:8080/api/v1/collector/items
-INFORMATION_HUB_COLLECTOR_TOKEN=
-INFORMATION_HUB_CONNECT_TIMEOUT_SECONDS=3
-INFORMATION_HUB_READ_TIMEOUT_SECONDS=10
+INFORMATION_HUB_ENABLED
+INFORMATION_HUB_URL
+INFORMATION_HUB_COLLECTOR_TOKEN
+INFORMATION_HUB_CONNECT_TIMEOUT_SECONDS
+INFORMATION_HUB_READ_TIMEOUT_SECONDS
 ```
+
+完整优先级为：环境变量 > INI 配置 > 程序默认值。真实 `collector.ini` 已被 Git 忽略，只提交无密码的 `.example` 模板。
 
 规则：
 
@@ -107,6 +135,8 @@ from integrations import submit_boss_results_to_hub
 
 result = submit_boss_results_to_hub(list_root, detail_root_or_array)
 ```
+
+Information Hub 服务端的数据库、Token 和外部 YAML 配置参见 [Information Hub 配置说明](../../backend/information-hub/CONFIGURATION.md)。
 
 ## 5. 执行顺序
 
@@ -178,3 +208,11 @@ TASK-006B 完成后，列表职位增加：
 - 浏览器凭证
 
 本地采集结果不得提交 Git。
+
+## 9. token生成方式
+    $generator = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+    $bytes = New-Object byte[] 32
+    $generator.GetBytes($bytes)
+    $token = [Convert]::ToBase64String($bytes)
+    $generator.Dispose()
+    $token

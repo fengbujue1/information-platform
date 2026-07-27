@@ -1,0 +1,22 @@
+# Copy this file to application.yml in the same directory.
+# application.yml contains credentials and must not be committed.
+
+spring:
+  datasource:
+    url: jdbc:mysql://127.0.0.1:13306/information_hub_dev?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true&useUnicode=true&characterEncoding=UTF-8
+    username: information_hub_dev
+    password: CHANGE_ME_DEV_DATABASE_PASSWORD
+  flyway:
+    enabled: false
+    locations: classpath:db/migration
+    validate-on-migrate: true
+    clean-disabled: true
+
+information-hub:
+  collector-api:
+    token: CHANGE_ME_COLLECTOR_TOKEN
+    max-request-bytes: 2097152
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true

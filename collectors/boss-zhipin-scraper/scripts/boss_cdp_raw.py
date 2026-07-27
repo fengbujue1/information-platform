@@ -181,7 +181,7 @@ def require_runtime_dependencies(*names):
     return True
 
 
-def maybe_submit_saved_results_to_hub(list_data, details):
+def maybe_submit_saved_results_to_hub(list_data, details, config_path=None):
     """提交已落盘的采集结果；任何集成层失败都不得中断原采集流程。"""
     try:
         from integrations import submit_boss_results_to_hub
@@ -189,6 +189,7 @@ def maybe_submit_saved_results_to_hub(list_data, details):
         return submit_boss_results_to_hub(
             list_data,
             details,
+            config_path=config_path,
             logger=log,
         )
     except Exception as exception:
@@ -2493,6 +2494,13 @@ def main():
                    help="关闭 BOSS 专用 CDP Chrome（按隔离 profile 精准匹配，不影响主 Chrome）")
     p.add_argument("--close-chrome", action="store_true",
                    help="抓取正常结束后自动关闭专用 Chrome（默认不关；异常退出不触发，保留登录态）")
+    p.add_argument(
+        "--config",
+        help=(
+            "Collector INI 配置文件路径 "
+            "(默认 Collector 项目下的 config/collector.ini)"
+        ),
+    )
 
     args = p.parse_args()
 
@@ -2612,7 +2620,11 @@ def main():
                 write_detail_csv(detail_csv, details)
 
     # 列表和详情已完成本地保存后，再执行默认关闭的 Hub 提交。
-    maybe_submit_saved_results_to_hub(list_data, details)
+    maybe_submit_saved_results_to_hub(
+        list_data,
+        details,
+        config_path=args.config,
+    )
 
     # 分析
     if args.analysis:

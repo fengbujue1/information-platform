@@ -1,0 +1,14 @@
+; Copy this file to collector.ini in the same directory.
+; collector.ini contains credentials and must not be committed.
+
+[collector]
+collector_id = boss-collector-desktop
+collector_version = 2.1.0
+historical_timezone = Asia/Shanghai
+
+[information_hub]
+enabled = false
+url = http://127.0.0.1:8080/api/v1/collector/items
+collector_token = CHANGE_ME_COLLECTOR_TOKEN
+connect_timeout_seconds = 3
+read_timeout_seconds = 10

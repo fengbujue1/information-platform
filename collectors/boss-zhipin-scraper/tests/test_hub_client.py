@@ -1,9 +1,12 @@
 import logging
+import pathlib
+import tempfile
 import unittest
 from unittest import mock
 
 import requests
 
+import integrations.config as config_module
 from integrations import (
     HubClientConfig,
     HubSubmitOutcome,
@@ -45,6 +48,96 @@ class HubClientConfigTests(unittest.TestCase):
         self.assertEqual(config.connect_timeout_seconds, 1.5)
         self.assertEqual(config.read_timeout_seconds, 4.0)
         self.assertNotIn(token, repr(config))
+
+    def test_ini_file_configures_hub_and_mapper_without_environment(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = pathlib.Path(directory) / "collector.ini"
+            path.write_text(
+                """
+[collector]
+collector_id = local-collector
+collector_version = 9.1.0
+historical_timezone = UTC
+
+[information_hub]
+enabled = true
+url = http://127.0.0.1:8080/api/v1/collector/items
+collector_token = ini-token
+connect_timeout_seconds = 2.5
+read_timeout_seconds = 8
+""".strip(),
+                encoding="utf-8",
+            )
+
+            hub_config = HubClientConfig.from_sources(path, {})
+            mapper_config = MapperConfig.from_config_file(path)
+
+        self.assertTrue(hub_config.enabled)
+        self.assertEqual(
+            hub_config.url,
+            "http://127.0.0.1:8080/api/v1/collector/items",
+        )
+        self.assertEqual(hub_config.token, "ini-token")
+        self.assertEqual(hub_config.connect_timeout_seconds, 2.5)
+        self.assertEqual(hub_config.read_timeout_seconds, 8.0)
+        self.assertEqual(mapper_config.collector_id, "local-collector")
+        self.assertEqual(mapper_config.collector_version, "9.1.0")
+        self.assertEqual(mapper_config.historical_timezone, "UTC")
+
+    def test_environment_values_override_ini_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = pathlib.Path(directory) / "collector.ini"
+            path.write_text(
+                """
+[information_hub]
+enabled = true
+url = http://ini.example.test/items
+collector_token = ini-token
+connect_timeout_seconds = 2
+read_timeout_seconds = 8
+""".strip(),
+                encoding="utf-8",
+            )
+
+            config = HubClientConfig.from_sources(
+                path,
+                {
+                    "INFORMATION_HUB_URL": (
+                        "https://environment.example.test/items"
+                    ),
+                    "INFORMATION_HUB_COLLECTOR_TOKEN": "environment-token",
+                    "INFORMATION_HUB_CONNECT_TIMEOUT_SECONDS": "4",
+                    "INFORMATION_HUB_READ_TIMEOUT_SECONDS": "12",
+                },
+            )
+
+        self.assertTrue(config.enabled)
+        self.assertEqual(
+            config.url,
+            "https://environment.example.test/items",
+        )
+        self.assertEqual(config.token, "environment-token")
+        self.assertEqual(config.connect_timeout_seconds, 4.0)
+        self.assertEqual(config.read_timeout_seconds, 12.0)
+
+    def test_missing_default_file_keeps_hub_disabled(self):
+        with tempfile.TemporaryDirectory() as directory:
+            missing = pathlib.Path(directory) / "collector.ini"
+            with mock.patch.object(config_module, "DEFAULT_CONFIG_PATH", missing):
+                config = HubClientConfig.from_sources(environ={})
+
+        self.assertFalse(config.enabled)
+
+    def test_missing_explicit_or_malformed_file_fails_safely(self):
+        with tempfile.TemporaryDirectory() as directory:
+            missing = pathlib.Path(directory) / "missing.ini"
+            malformed = pathlib.Path(directory) / "malformed.ini"
+            malformed.write_text("[information_hub", encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "does not exist"):
+                HubClientConfig.from_sources(missing, {})
+            with self.assertRaisesRegex(ValueError, "could not be read"):
+                HubClientConfig.from_sources(malformed, {})
 
     def test_invalid_environment_values_fail_without_echoing_values(self):
         with self.assertRaisesRegex(ValueError, "must be a boolean"):
@@ -333,6 +426,73 @@ class HubBatchSubmissionTests(unittest.TestCase):
         self.assertFalse(invalid_config.configuration_valid)
         self.assertFalse(mapping_failure.mapping_succeeded)
         session.post.assert_not_called()
+
+    def test_explicit_missing_config_file_does_not_propagate(self):
+        session = mock.Mock()
+        missing = pathlib.Path("definitely-missing-collector-config.ini")
+
+        result = submit_boss_results_to_hub(
+            list_root(),
+            [],
+            config_path=missing,
+            environ={},
+            session=session,
+            logger=self.logger,
+        )
+
+        self.assertTrue(result.enabled)
+        self.assertFalse(result.configuration_valid)
+        session.post.assert_not_called()
+
+    def test_batch_uses_ini_config_for_mapper_and_http_client(self):
+        session = mock.Mock()
+        session.post.return_value = response(201)
+        with tempfile.TemporaryDirectory() as directory:
+            path = pathlib.Path(directory) / "collector.ini"
+            path.write_text(
+                """
+[collector]
+collector_id = ini-collector
+collector_version = 4.0.0
+historical_timezone = Asia/Shanghai
+
+[information_hub]
+enabled = true
+url = https://hub.example.test/items
+collector_token = ini-batch-token
+connect_timeout_seconds = 1
+read_timeout_seconds = 5
+""".strip(),
+                encoding="utf-8",
+            )
+
+            result = submit_boss_results_to_hub(
+                list_root(),
+                [],
+                config_path=path,
+                environ={},
+                session=session,
+                logger=self.logger,
+            )
+
+        self.assertEqual(result.succeeded, 1)
+        request = session.post.call_args
+        self.assertEqual(
+            request.args[0],
+            "https://hub.example.test/items",
+        )
+        self.assertEqual(
+            request.kwargs["json"]["collector"],
+            {
+                "collectorId": "ini-collector",
+                "collectorVersion": "4.0.0",
+            },
+        )
+        self.assertEqual(
+            request.kwargs["headers"]["Authorization"],
+            "Bearer ini-batch-token",
+        )
+        self.assertEqual(request.kwargs["timeout"], (1.0, 5.0))
 
     def test_unexpected_client_failure_does_not_propagate(self):
         session = mock.Mock()

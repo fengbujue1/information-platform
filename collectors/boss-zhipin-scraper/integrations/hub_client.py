@@ -153,6 +153,7 @@ def submit_boss_results_to_hub(
     list_root,
     detail_source=None,
     *,
+    config_path=None,
     environ=None,
     client_config=None,
     mapper_config=None,
@@ -165,6 +166,7 @@ def submit_boss_results_to_hub(
         return _submit_boss_results_to_hub(
             list_root,
             detail_source,
+            config_path=config_path,
             environ=environ,
             client_config=client_config,
             mapper_config=mapper_config,
@@ -191,6 +193,7 @@ def _submit_boss_results_to_hub(
     list_root,
     detail_source,
     *,
+    config_path,
     environ,
     client_config,
     mapper_config,
@@ -198,7 +201,10 @@ def _submit_boss_results_to_hub(
     logger,
 ):
     try:
-        config = client_config or HubClientConfig.from_environment(environ)
+        config = client_config or HubClientConfig.from_sources(
+            config_path,
+            environ,
+        )
     except ValueError:
         logger.warning("Information Hub configuration is invalid")
         return HubBatchResult(enabled=True, configuration_valid=False)
@@ -219,7 +225,7 @@ def _submit_boss_results_to_hub(
         envelopes = map_boss_results(
             list_root,
             detail_source,
-            mapper_config or MapperConfig(),
+            mapper_config or MapperConfig.from_config_file(config_path),
             logger,
         )
     except Exception as exception:

@@ -97,6 +97,10 @@ collectors/boss-zhipin-scraper/output/
 collectors/boss-zhipin-scraper/cookies.json
 collectors/boss-zhipin-scraper/storage_state.json
 
+# Private service configuration
+backend/information-hub/config/application.yml
+collectors/boss-zhipin-scraper/config/collector.ini
+
 # BOSS collector runtime results
 collectors/boss-zhipin-scraper/result/job-result/
 collectors/boss-zhipin-scraper/result/outbox/

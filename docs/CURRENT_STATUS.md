@@ -32,6 +32,7 @@ Phase 1：BOSS 采集接入与归档。
 - 完成 TASK-006B：Collector 输出严格布尔 `boss_online` 和同响应共享的 UTC `boss_online_observed_at`；Information Hub 将 `recruiterActiveText` 排除出 contentHash，并验证在线观测时间的非破坏性更新不会增加版本或快照。
 - 完成 TASK-006：新增独立 BOSS Mapper 适配层，完成列表/详情左连接、InformationEnvelope V1 字段转换、历史时区解释、招聘者在线观测映射和 rawPayload 递归安全清理；专项测试 14 项通过，完整回归未新增失败。
 - 完成 TASK-007：新增默认关闭的 Information Hub HTTP Client，从环境变量读取 URL、Bearer Token 和连接/读取超时；明确处理 2xx、4xx、413、5xx、超时和连接失败，并在本地保存完成后以不影响原采集流程的方式提交单条职位；专项测试 17 项通过，完整回归未新增失败。
+- 完成 TASK-007A：Information Hub 增加外部 `config/application.yml` 示例，Collector 增加默认 `config/collector.ini`、可选 `--config` 和环境变量覆盖；真实配置文件由 Git 忽略，专项测试 23 项通过，完整回归未新增失败。
 
 ## 当前任务
 
@@ -51,12 +52,13 @@ TASK-008：实现本地 Outbox。
 - 开发与集成测试使用远程 Docker MySQL，生产数据库保持独立。
 - MySQL 不向公网直接开放 `3306`，开发主机通过 SSH 隧道连接。
 - 开发库与测试库分离，并使用不同的非 root 最小权限账号。
-- Collector 接入 API 使用环境变量配置单 Bearer Token，未配置时拒绝接入。
+- Collector 接入 API 使用单 Bearer Token，Information Hub 可从外部 YAML 或环境变量读取，未配置时拒绝接入。
 - 接入请求体默认最大 2 MiB，rawPayload 包含敏感字段时拒绝整个请求。
 - `bossOnline=true` 时记录带时区的 Collector 在线观测时间；false 或缺失时本次映射为空。
 - `recruiterActiveText` 表示最近一次被 Collector 观察到在线的时间，不代表 BOSS 官方最后活跃时间。
 - `recruiterActiveText` 不参与 contentHash，仅该字段变化时不创建职位快照。
-- Hub Client 默认关闭，使用环境变量配置完整写入 URL、Bearer Token、连接超时和读取超时。
+- Hub Client 默认关闭，可从 Collector INI 配置完整写入 URL、Bearer Token、连接超时和读取超时；环境变量具有更高优先级。
+- Information Hub 和 Collector 的真实配置文件不纳入 Git，只提交不含秘密的 `.example` 模板。
 - Hub 单条 4xx 或 413 不阻止后续职位；5xx、非预期状态、超时或连接失败时停止本批次剩余请求。
 - TASK-007 不自动重试失败请求，失败数据继续保留在本地采集文件，持久化补传由 TASK-008 实现。
 
