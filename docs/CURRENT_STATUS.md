@@ -31,10 +31,11 @@ Phase 1：BOSS 采集接入与归档。
 - 接受 ADR-009，确定将 BOSS 招聘者在线状态记录为 Collector 在线观测时间，并将 `recruiterActiveText` 排除出 contentHash。
 - 完成 TASK-006B：Collector 输出严格布尔 `boss_online` 和同响应共享的 UTC `boss_online_observed_at`；Information Hub 将 `recruiterActiveText` 排除出 contentHash，并验证在线观测时间的非破坏性更新不会增加版本或快照。
 - 完成 TASK-006：新增独立 BOSS Mapper 适配层，完成列表/详情左连接、InformationEnvelope V1 字段转换、历史时区解释、招聘者在线观测映射和 rawPayload 递归安全清理；专项测试 14 项通过，完整回归未新增失败。
+- 完成 TASK-007：新增默认关闭的 Information Hub HTTP Client，从环境变量读取 URL、Bearer Token 和连接/读取超时；明确处理 2xx、4xx、413、5xx、超时和连接失败，并在本地保存完成后以不影响原采集流程的方式提交单条职位；专项测试 17 项通过，完整回归未新增失败。
 
 ## 当前任务
 
-TASK-007：实现 Information Hub Client。
+TASK-008：实现本地 Outbox。
 
 ## 已冻结设计
 
@@ -55,7 +56,10 @@ TASK-007：实现 Information Hub Client。
 - `bossOnline=true` 时记录带时区的 Collector 在线观测时间；false 或缺失时本次映射为空。
 - `recruiterActiveText` 表示最近一次被 Collector 观察到在线的时间，不代表 BOSS 官方最后活跃时间。
 - `recruiterActiveText` 不参与 contentHash，仅该字段变化时不创建职位快照。
+- Hub Client 默认关闭，使用环境变量配置完整写入 URL、Bearer Token、连接超时和读取超时。
+- Hub 单条 4xx 或 413 不阻止后续职位；5xx、非预期状态、超时或连接失败时停止本批次剩余请求。
+- TASK-007 不自动重试失败请求，失败数据继续保留在本地采集文件，持久化补传由 TASK-008 实现。
 
 ## 下一步
 
-执行 TASK-007，实现可关闭、失败不影响采集流程的 Information Hub HTTP Client。
+执行 TASK-008，实现 Hub 提交失败时的本地 Outbox、原子写入和补传。

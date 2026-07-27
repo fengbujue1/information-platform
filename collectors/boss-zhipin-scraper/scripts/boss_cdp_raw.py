@@ -181,6 +181,25 @@ def require_runtime_dependencies(*names):
     return True
 
 
+def maybe_submit_saved_results_to_hub(list_data, details):
+    """提交已落盘的采集结果；任何集成层失败都不得中断原采集流程。"""
+    try:
+        from integrations import submit_boss_results_to_hub
+
+        return submit_boss_results_to_hub(
+            list_data,
+            details,
+            logger=log,
+        )
+    except Exception as exception:
+        # 只记录异常类型，避免第三方异常文本携带 Token 或业务 payload。
+        log.warning(
+            "Information Hub integration is unavailable type=%s",
+            type(exception).__name__,
+        )
+        return None
+
+
 # ============================================================
 # 筛选参数映射
 # Source snapshots:
@@ -2591,6 +2610,9 @@ def main():
             if args.format == "csv":
                 detail_csv = args.detail_output.rsplit(".", 1)[0] + ".csv"
                 write_detail_csv(detail_csv, details)
+
+    # 列表和详情已完成本地保存后，再执行默认关闭的 Hub 提交。
+    maybe_submit_saved_results_to_hub(list_data, details)
 
     # 分析
     if args.analysis:
