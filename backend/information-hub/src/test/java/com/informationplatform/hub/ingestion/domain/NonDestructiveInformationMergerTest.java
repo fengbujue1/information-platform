@@ -30,8 +30,46 @@ class NonDestructiveInformationMergerTest {
         assertEquals(2, merged.information().rawPayload().get("attempt").intValue());
     }
 
+    @Test
+    void recruiterObservationRetainsOldValueWhenMissingAndAcceptsNewValue() throws Exception {
+        ArchiveContent current = content(
+                "JD",
+                List.of("Java"),
+                "FETCHED",
+                "{\"attempt\":1}",
+                "2026-07-27T05:30:00.123Z");
+        ArchiveContent missingObservation =
+                content("JD", List.of("Java"), "FETCHED", "{\"attempt\":2}", null);
+        ArchiveContent newerObservation = content(
+                "JD",
+                List.of("Java"),
+                "FETCHED",
+                "{\"attempt\":3}",
+                "2026-07-27T06:30:00.456Z");
+
+        ArchiveContent retained = merger.merge(current, missingObservation);
+        ArchiveContent replaced = merger.merge(retained, newerObservation);
+
+        assertEquals(
+                "2026-07-27T05:30:00.123Z",
+                retained.job().recruiterActiveText());
+        assertEquals(
+                "2026-07-27T06:30:00.456Z",
+                replaced.job().recruiterActiveText());
+    }
+
     private ArchiveContent content(
             String body, List<String> tags, String detailStatus, String rawPayload)
+            throws Exception {
+        return content(body, tags, detailStatus, rawPayload, null);
+    }
+
+    private ArchiveContent content(
+            String body,
+            List<String> tags,
+            String detailStatus,
+            String rawPayload,
+            String recruiterActiveText)
             throws Exception {
         InformationFields information = new InformationFields(
                 1,
@@ -68,7 +106,7 @@ class NonDestructiveInformationMergerTest {
                 null,
                 null,
                 null,
-                null,
+                recruiterActiveText,
                 "UNKNOWN",
                 "ACTIVE",
                 detailStatus,

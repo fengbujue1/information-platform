@@ -38,7 +38,7 @@ public class CanonicalContentHasher {
     /**
      * 构造参与版本比较的稳定 JSON。
      *
-     * <p>排除采集元数据、rawPayload、salarySource 和详情采集状态，数组排序去重以消除顺序噪声。
+     * <p>排除采集元数据、rawPayload、salarySource、招聘者在线观测时间和详情采集状态，数组排序去重以消除顺序噪声。
      */
     private byte[] canonicalJson(ArchiveContent content) {
         InformationFields information = content.information();
@@ -58,7 +58,6 @@ public class CanonicalContentHasher {
         values.put("experience_text", canonical(job.experienceText()));
         values.put("job_status", canonical(job.jobStatus()));
         values.put("location_name", canonical(job.locationName()));
-        values.put("recruiter_active_text", canonical(job.recruiterActiveText()));
         values.put("recruiter_name", canonical(job.recruiterName()));
         values.put("recruiter_title", canonical(job.recruiterTitle()));
         values.put("remote_type", canonical(job.remoteType()));

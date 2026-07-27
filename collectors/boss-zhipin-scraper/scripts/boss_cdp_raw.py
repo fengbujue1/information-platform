@@ -39,7 +39,7 @@ import signal
 import logging
 import ntpath
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from collections import Counter
 from enum import Enum
 from pathlib import Path
@@ -421,6 +421,7 @@ FETCH_API_JS_TEMPLATE = """
 
     var jobs = (data.zpData || {}).jobList || [];
     result.jobs = jobs.map(function(j) {
+        var bossOnline = typeof j.bossOnline === 'boolean' ? j.bossOnline : null;
         return {
             title: j.jobName || '',
             salary: j.salaryDesc || '',
@@ -429,6 +430,7 @@ FETCH_API_JS_TEMPLATE = """
             tags: [j.jobExperience || '', j.jobDegree || ''].filter(function(t){return t && t !== '\\u4e0d\\u9650';}).join(' | '),
             boss_name: j.brandName || '',
             boss_title: j.bossTitle || '',
+            boss_online: bossOnline,
             company_scale: j.brandScaleName || '',
             company_stage: j.brandStageName || '',
             company_industry: j.brandIndustry || '',
@@ -1257,6 +1259,28 @@ def parse_api_jobs_eval_value(value):
     """保留旧调用方只读取精简职位数组的兼容入口。"""
     return parse_api_search_response(value).jobs
 
+def current_utc_observation_time():
+    """生成搜索响应处理时的 UTC 在线观测时间。"""
+    return datetime.now(timezone.utc).isoformat(
+        timespec="milliseconds"
+    ).replace("+00:00", "Z")
+
+
+def add_recruiter_online_observation(jobs, observed_at):
+    """为同一次搜索响应的职位补充统一在线观测时间。"""
+    enriched = []
+    for job in jobs:
+        item = dict(job)
+        boss_online = item.get("boss_online")
+        if not isinstance(boss_online, bool):
+            boss_online = None
+        item["boss_online"] = boss_online
+        item["boss_online_observed_at"] = (
+            observed_at if boss_online is True else None
+        )
+        enriched.append(item)
+    return enriched
+
 
 def _raw_response_extension(response_text):
     try:
@@ -1473,6 +1497,12 @@ def scrape_list(keyword, city_input, max_pages, filters, output_path,
             api_js = FETCH_API_JS_TEMPLATE.replace("__API_URL__", api_url)
             val = cdp.eval_js(api_js, sid)
             api_response = parse_api_search_response(val)
+            # 同一次搜索响应只生成一个时间，避免逐职位时间漂移。
+            observed_at = current_utc_observation_time()
+            jobs = add_recruiter_online_observation(
+                api_response.jobs,
+                observed_at,
+            )
             raw_response_sequence += 1
             maybe_capture_raw_search_response(
                 capture_raw_response,
@@ -1482,8 +1512,6 @@ def scrape_list(keyword, city_input, max_pages, filters, output_path,
                 pg,
                 raw_response_sequence,
             )
-
-            jobs = api_response.jobs
 
             # DOM 提取的薪资可能是加密字体，默认禁用；只有显式允许时才降级。
             if should_use_dom_fallback(jobs, allow_dom_fallback):

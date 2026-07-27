@@ -47,5 +47,6 @@ Thumbs.db
 ./zcode
 
 # Runtime collection results
+result/chrome-profile/
 result/job-result/
 result/outbox/

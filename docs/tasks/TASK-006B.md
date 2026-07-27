@@ -1,6 +1,6 @@
 # TASK-006B：接入 BOSS 招聘者在线观测时间
 
-状态：TODO  
+状态：DONE
 所属阶段：Phase 1  
 优先级：P0
 
@@ -185,19 +185,19 @@ TASK-006 Mapper 后续至少覆盖：
 
 ## 验收标准
 
-- [ ] Collector 输出 `boss_online` 和 `boss_online_observed_at`。
-- [ ] true、false、缺失和非法类型语义明确且有测试。
-- [ ] 观测时间为 ISO-8601 带时区时间。
-- [ ] 同一次响应只生成一个观测时间。
-- [ ] 未读取或依赖 TASK-006A 诊断原始响应文件。
-- [ ] `recruiterActiveText` 从 contentHash 中排除。
-- [ ] 仅在线时间变化不创建职位快照。
-- [ ] 非破坏性更新可以保留最后一次在线观测时间。
-- [ ] 无数据库迁移、无新基础设施。
-- [ ] 未改变 BOSS 请求和详情抓取行为。
-- [ ] Chrome Profile、原始响应和运行结果未进入 Git。
-- [ ] 相关合同、设计文档、TASK 和 CURRENT_STATUS 保持一致。
-- [ ] 所有新增测试通过，完整回归未新增失败。
+- [x] Collector 输出 `boss_online` 和 `boss_online_observed_at`。
+- [x] true、false、缺失和非法类型语义明确且有测试。
+- [x] 观测时间为 ISO-8601 带时区时间。
+- [x] 同一次响应只生成一个观测时间。
+- [x] 未读取或依赖 TASK-006A 诊断原始响应文件。
+- [x] `recruiterActiveText` 从 contentHash 中排除。
+- [x] 仅在线时间变化不创建职位快照。
+- [x] 非破坏性更新可以保留最后一次在线观测时间。
+- [x] 无数据库迁移、无新基础设施。
+- [x] 未改变 BOSS 请求和详情抓取行为。
+- [x] Chrome Profile、原始响应和运行结果未进入 Git。
+- [x] 相关合同、设计文档、TASK 和 CURRENT_STATUS 保持一致。
+- [x] 所有新增测试通过，完整回归未新增失败。
 
 ## 不在本任务范围
 
@@ -221,5 +221,23 @@ TASK-006 Mapper 后续至少覆盖：
 
 ## 实施记录
 
-待实施。
+完成时间：2026-07-27
+
+- 在 BOSS 搜索响应字段选择中以严格布尔类型读取 `bossOnline`，输出 `boss_online`；字段缺失、null 或非布尔值统一归一为 null。
+- 每次搜索响应完成解析时生成一次 UTC ISO-8601 观测时间；同一响应中仅 `boss_online=true` 的职位共享该时间，false 或未知值对应的 `boss_online_observed_at` 为 null。
+- 未修改请求地址、请求参数、分页、登录检测、频率、详情抓取和 TASK-006A 原始响应诊断行为；JSON 输出保留新字段，固定列 CSV 忽略扩展字段并保持兼容。
+- 将 `result/chrome-profile/` 加入 Collector Git 忽略规则，浏览器会话数据不进入版本控制。
+- 从 Canonical Hash 输入中排除 `recruiterActiveText`，但继续在标准化快照 payload 和当前 Job 扩展记录中保留该字段。
+- 复用现有非破坏性合并与 `TransactionTemplate` 事务边界：null 保留历史观测时间，新的非空时间更新当前记录；仅该字段变化不增加版本号、不创建快照。
+- 未创建数据库迁移、数据库表、Controller 逻辑或新基础设施；TASK-006 Mapper 仍留给 TASK-006 实施。
+
+验证结果：
+
+- `python -m py_compile scripts/boss_cdp_raw.py`：通过。
+- `python -m unittest tests.test_recruiter_online_observation tests.test_raw_response_capture`：15 项通过。
+- Collector 完整回归：91 项中 86 项通过；5 项 Windows Chrome 路径/端口基线失败与 TASK-006A 前一致，本任务未新增失败。
+- `mvnw.cmd -Dtest=CanonicalContentHasherTest,NonDestructiveInformationMergerTest test`（JDK 21）：5 项通过。
+- `mvnw.cmd test`（JDK 21）：24 项、0 失败；普通运行中 11 项远程数据库条件测试按既有配置跳过。
+- 通过既有 SSH 隧道连接共享测试库执行 `InformationIngestionIntegrationTest`：5 项全部通过、0 跳过。
+- `git diff --check`：通过；Chrome Profile、原始响应和运行结果未进入 Git。
 

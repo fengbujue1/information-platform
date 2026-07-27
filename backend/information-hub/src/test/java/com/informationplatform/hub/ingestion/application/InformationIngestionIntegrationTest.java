@@ -187,6 +187,56 @@ class InformationIngestionIntegrationTest {
     }
 
     @Test
+    @Transactional
+    void recruiterObservationUpdatesCurrentValueWithoutCreatingSnapshot() {
+        String sourceItemId = uniqueSourceItemId();
+        String firstObservation = "2026-07-27T05:30:00.123Z";
+        String newerObservation = "2026-07-27T06:30:00.456Z";
+
+        IngestionResult initial = ingestionService.ingest(request(
+                sourceItemId,
+                "完整 JD",
+                20000,
+                List.of("Java"),
+                "FETCHED",
+                firstObservation));
+        IngestionResult missingObservation = ingestionService.ingest(request(
+                sourceItemId,
+                "完整 JD",
+                20000,
+                List.of("Java"),
+                "FETCHED",
+                null));
+
+        assertFalse(missingObservation.contentChanged());
+        assertEquals(1, missingObservation.versionNo());
+        assertEquals(
+                firstObservation,
+                jdbcTemplate.queryForObject(
+                        "SELECT recruiter_active_text FROM job_information WHERE information_id = ?",
+                        String.class,
+                        initial.informationId()));
+
+        IngestionResult updatedObservation = ingestionService.ingest(request(
+                sourceItemId,
+                "完整 JD",
+                20000,
+                List.of("Java"),
+                "FETCHED",
+                newerObservation));
+
+        assertFalse(updatedObservation.contentChanged());
+        assertEquals(1, updatedObservation.versionNo());
+        assertEquals(1, snapshotCount(initial.informationId()));
+        assertEquals(
+                newerObservation,
+                jdbcTemplate.queryForObject(
+                        "SELECT recruiter_active_text FROM job_information WHERE information_id = ?",
+                        String.class,
+                        initial.informationId()));
+    }
+
+    @Test
     void snapshotFailureRollsBackMainAndExtensionTables() {
         String sourceItemId = uniqueSourceItemId();
         doThrow(new IllegalStateException("simulated snapshot failure"))
@@ -223,6 +273,22 @@ class InformationIngestionIntegrationTest {
             Integer salaryMinimum,
             List<String> sourceTags,
             String detailStatus) {
+        return request(
+                sourceItemId,
+                content,
+                salaryMinimum,
+                sourceTags,
+                detailStatus,
+                null);
+    }
+
+    private InformationEnvelopeRequest request(
+            String sourceItemId,
+            String content,
+            Integer salaryMinimum,
+            List<String> sourceTags,
+            String detailStatus,
+            String recruiterActiveText) {
         try {
             return new InformationEnvelopeRequest(
                     1,
@@ -257,7 +323,7 @@ class InformationIngestionIntegrationTest {
                             "本科",
                             null,
                             "HR",
-                            null,
+                            recruiterActiveText,
                             "UNKNOWN",
                             "ACTIVE",
                             detailStatus,

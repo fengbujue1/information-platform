@@ -29,10 +29,11 @@ Phase 1：BOSS 采集接入与归档。
 - 完成 TASK-005，实现 InformationEnvelope V1 接入 API、Bearer Token 认证、请求校验、非破坏性合并、Canonical Hash、MyBatis-Plus 幂等归档和版本快照，补齐实体字段与关键逻辑的中文注释，并通过本地与独立测试库验证。
 - 完成 TASK-006A，为 BOSS 职位搜索接口增加默认关闭的原始响应诊断开关，可在字段转换前打印并按请求原样保存响应体；专项测试 11 项全部通过，完整回归未新增失败。
 - 接受 ADR-009，确定将 BOSS 招聘者在线状态记录为 Collector 在线观测时间，并将 `recruiterActiveText` 排除出 contentHash。
+- 完成 TASK-006B：Collector 输出严格布尔 `boss_online` 和同响应共享的 UTC `boss_online_observed_at`；Information Hub 将 `recruiterActiveText` 排除出 contentHash，并验证在线观测时间的非破坏性更新不会增加版本或快照。
 
 ## 当前任务
 
-TASK-006B：接入 BOSS 招聘者在线观测时间。
+TASK-006：实现 BOSS → InformationEnvelope V1 Mapper。
 
 ## 已冻结设计
 
@@ -56,4 +57,4 @@ TASK-006B：接入 BOSS 招聘者在线观测时间。
 
 ## 下一步
 
-执行 TASK-006B，最小扩展 BOSS 列表输出并调整 contentHash 语义，为 TASK-006 提供带时区的招聘者在线观测时间。
+执行 TASK-006，将 BOSS 列表与详情结果转换为 InformationEnvelope V1，并把 `boss_online_observed_at` 原样映射到 `recruiterActiveText`。

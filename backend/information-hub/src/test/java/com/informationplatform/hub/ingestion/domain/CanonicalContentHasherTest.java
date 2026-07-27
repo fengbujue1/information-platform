@@ -49,6 +49,30 @@ class CanonicalContentHasherTest {
         assertEquals(hashA, hasher.fingerprint(returnedToA).hash());
     }
 
+    @Test
+    void recruiterOnlineObservationDoesNotChangeHashButRemainsInPayload() {
+        ArchiveContent unavailable =
+                content("A", 20000, "API", "FETCHED", List.of("Java"), "{}", null);
+        ArchiveContent observed = content(
+                "A",
+                20000,
+                "API",
+                "FETCHED",
+                List.of("Java"),
+                "{}",
+                "2026-07-27T05:30:00.123Z");
+
+        ContentFingerprint observedFingerprint = hasher.fingerprint(observed);
+
+        assertEquals(hasher.fingerprint(unavailable).hash(), observedFingerprint.hash());
+        assertEquals(
+                "2026-07-27T05:30:00.123Z",
+                observedFingerprint.standardizedPayload()
+                        .path("job")
+                        .path("recruiterActiveText")
+                        .asText());
+    }
+
     private ArchiveContent content(
             String body,
             Integer minimumSalary,
@@ -56,6 +80,24 @@ class CanonicalContentHasherTest {
             String detailStatus,
             List<String> sourceTags,
             String collectionContext) {
+        return content(
+                body,
+                minimumSalary,
+                salarySource,
+                detailStatus,
+                sourceTags,
+                collectionContext,
+                null);
+    }
+
+    private ArchiveContent content(
+            String body,
+            Integer minimumSalary,
+            String salarySource,
+            String detailStatus,
+            List<String> sourceTags,
+            String collectionContext,
+            String recruiterActiveText) {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             InformationFields information = new InformationFields(
@@ -93,7 +135,7 @@ class CanonicalContentHasherTest {
                     "本科",
                     null,
                     null,
-                    null,
+                    recruiterActiveText,
                     "UNKNOWN",
                     "ACTIVE",
                     detailStatus,
