@@ -100,6 +100,17 @@ integrations/
 }
 ```
 
+TASK-006B 完成后，列表职位增加：
+
+```json
+{
+  "boss_online": true,
+  "boss_online_observed_at": "2026-07-27T05:11:12.345Z"
+}
+```
+
+`boss_online_observed_at` 只在 `boss_online=true` 时生成，表示最近一次被 Collector 观察到在线的时间，不是 BOSS 官方最后活跃时间。
+
 ## 7. 安全
 
 发送 Hub 前删除：

@@ -160,7 +160,6 @@ Hash 输入是合并完成后的 Canonical JSON。
 - `education_text`
 - `recruiter_name`
 - `recruiter_title`
-- `recruiter_active_text`
 - `remote_type`
 - `job_status`
 - `source_tags`
@@ -170,6 +169,7 @@ Hash 输入是合并完成后的 Canonical JSON。
 不参与 Hash：
 
 - `salary_source`
+- `recruiter_active_text`
 - `detail_status`
 - `detail_collected_at`
 - `collected_at`
@@ -289,7 +289,7 @@ status = ACTIVE
 | `education_text` | VARCHAR(100) | 是 | tags 第二项，需规则确认 |
 | `recruiter_name` | VARCHAR(255) | 是 | 当前输出没有稳定来源 |
 | `recruiter_title` | VARCHAR(255) | 是 | boss_title |
-| `recruiter_active_text` | VARCHAR(100) | 是 | 当前输出没有稳定来源 |
+| `recruiter_active_text` | VARCHAR(100) | 是 | BOSS 最近一次被 Collector 观察到在线的带时区 ISO-8601 时间文本；不参与 contentHash |
 | `remote_type` | VARCHAR(32) | 否 | UNKNOWN、ONSITE、HYBRID、REMOTE |
 | `job_status` | VARCHAR(32) | 否 | UNKNOWN、ACTIVE、OFFLINE |
 | `detail_status` | VARCHAR(32) | 否 | UNKNOWN、FETCHED、FAILED、UNAVAILABLE |
@@ -606,3 +606,5 @@ V4__create_notification_tables.sql
 10. `encrypt_boss_id` 映射 `source_recruiter_id`。
 11. 快照使用递增 `version_no`，支持 `A → B → A`。
 12. 重复接入采用非破坏性更新，缺失、`NULL`、空字符串或空数组不覆盖已有有效值。
+13. BOSS `bossOnline=true` 记录带时区的 Collector 在线观测时间；false 或缺失时不清空已有观测时间。
+14. `recruiter_active_text` 不参与 contentHash，仅该字段变化时不创建职位快照。

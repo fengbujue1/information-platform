@@ -59,6 +59,8 @@ Phase 1 不包含 Vue、AI、推荐、消息队列和微服务。
 → Hash 不同：更新当前版本并新增 version_no 快照
 ```
 
+招聘者在线观测时间属于高频采集元数据，不参与 contentHash。仅该字段变化时更新当前 Job 扩展记录，不增加版本号，不创建快照。
+
 快照使用版本号唯一约束，允许记录：
 
 ```text
@@ -88,14 +90,23 @@ A → B → A
 
 三者不得混用。
 
-## 7. 时间
+## 7. 招聘者在线观测
+
+- BOSS `bossOnline` 只表示搜索响应到达时的瞬时状态。
+- true 时 Collector 生成带时区的 `boss_online_observed_at`。
+- false 或缺失时不生成新的观测时间。
+- Mapper 将 `boss_online_observed_at` 映射为 `recruiterActiveText`。
+- Hub 依靠非破坏性合并保留最后一次非空观测时间。
+- 该时间不是 BOSS 官方最后活跃时间，不用于计算在线时长或活跃度评分。
+
+## 8. 时间
 
 - 新输出必须包含时区。
 - 历史无时区数据必须通过显式配置解释。
 - 所有数据库时间统一存 UTC。
 - publishTime 不得由 collectedAt 伪造。
 
-## 8. 开发与集成测试数据库
+## 9. 开发与集成测试数据库
 
 开发和集成测试使用远程服务器中的 Docker MySQL：
 
@@ -123,7 +134,7 @@ A → B → A
 - 远程共享数据库只用于开发和集成测试，生产环境必须使用独立数据库。
 - Collector 仍然只连接 Information Hub，不直接连接 MySQL。
 
-## 9. Phase 1 后端持久化
+## 10. Phase 1 后端持久化
 
 - 业务表读写使用 MyBatis-Plus 3.5.17 的 Spring Boot 3 Starter。
 - `information` 模块保存 `information_item`、`information_snapshot` 的 PO 和 Mapper。

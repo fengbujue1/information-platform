@@ -28,10 +28,11 @@ Phase 1：BOSS 采集接入与归档。
 - 完成 TASK-004，通过 Flyway V1 创建 Phase 1 数据库结构，并在独立测试库完成迁移、约束、JSON、幂等、快照版本和事务回滚验证。
 - 完成 TASK-005，实现 InformationEnvelope V1 接入 API、Bearer Token 认证、请求校验、非破坏性合并、Canonical Hash、MyBatis-Plus 幂等归档和版本快照，补齐实体字段与关键逻辑的中文注释，并通过本地与独立测试库验证。
 - 完成 TASK-006A，为 BOSS 职位搜索接口增加默认关闭的原始响应诊断开关，可在字段转换前打印并按请求原样保存响应体；专项测试 11 项全部通过，完整回归未新增失败。
+- 接受 ADR-009，确定将 BOSS 招聘者在线状态记录为 Collector 在线观测时间，并将 `recruiterActiveText` 排除出 contentHash。
 
 ## 当前任务
 
-TASK-006：实现 BOSS 字段映射器。
+TASK-006B：接入 BOSS 招聘者在线观测时间。
 
 ## 已冻结设计
 
@@ -49,7 +50,10 @@ TASK-006：实现 BOSS 字段映射器。
 - 开发库与测试库分离，并使用不同的非 root 最小权限账号。
 - Collector 接入 API 使用环境变量配置单 Bearer Token，未配置时拒绝接入。
 - 接入请求体默认最大 2 MiB，rawPayload 包含敏感字段时拒绝整个请求。
+- `bossOnline=true` 时记录带时区的 Collector 在线观测时间；false 或缺失时本次映射为空。
+- `recruiterActiveText` 表示最近一次被 Collector 观察到在线的时间，不代表 BOSS 官方最后活跃时间。
+- `recruiterActiveText` 不参与 contentHash，仅该字段变化时不创建职位快照。
 
 ## 下一步
 
-执行 TASK-006，在不修改现有 BOSS 采集核心的前提下新增字段映射适配层，将列表和详情合并为 InformationEnvelope V1。
+执行 TASK-006B，最小扩展 BOSS 列表输出并调整 contentHash 语义，为 TASK-006 提供带时区的招聘者在线观测时间。

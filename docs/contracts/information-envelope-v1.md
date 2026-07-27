@@ -86,7 +86,7 @@ Phase 1 暂不实现批量接口。
     "educationText": "本科",
     "recruiterName": null,
     "recruiterTitle": "招聘经理",
-    "recruiterActiveText": null,
+    "recruiterActiveText": "2026-07-22T15:14:09.656Z",
     "remoteType": "UNKNOWN",
     "jobStatus": "ACTIVE",
     "detailStatus": "FETCHED",
@@ -115,6 +115,8 @@ Phase 1 暂不实现批量接口。
       "tags": "3-5年 | 本科",
       "boss_name": "示例科技有限公司",
       "boss_title": "招聘经理",
+      "boss_online": true,
+      "boss_online_observed_at": "2026-07-22T15:14:09.656Z",
       "encrypt_job_id": "sample-encrypt-job-id",
       "encrypt_boss_id": "sample-encrypt-boss-id",
       "encrypt_brand_id": "sample-encrypt-brand-id"
@@ -190,7 +192,7 @@ Phase 1 暂不实现批量接口。
 | `educationText` | string/null | 否 |
 | `recruiterName` | string/null | 否 |
 | `recruiterTitle` | string/null | 否 |
-| `recruiterActiveText` | string/null | 否 |
+| `recruiterActiveText` | string/null | 否；BOSS Phase 1 保存最近一次被 Collector 观察到在线的 ISO-8601 时间文本 |
 | `remoteType` | string | 否 |
 | `jobStatus` | string | 否 |
 | `detailStatus` | string | 否 |
@@ -215,6 +217,17 @@ FETCHED
 FAILED
 UNAVAILABLE
 ```
+
+### BOSS 招聘者在线观测时间
+
+BOSS 搜索响应当前只提供瞬时布尔字段 `bossOnline`，不提供可靠的官方最后活跃时间。
+
+- `bossOnline=true`：Collector 在响应处理时生成带明确时区的观测时间，并由 Mapper 写入 `recruiterActiveText`。
+- `bossOnline=false`、缺失、null 或非法：本次 `recruiterActiveText=null`。
+- null 不覆盖 Hub 已有非空值，因此数据库保留最近一次观察到在线的时间。
+- 新的非空观测时间覆盖旧值。
+- 该字段不参与 contentHash，仅在线观测时间变化时不创建信息快照。
+- 该时间不能解释为 BOSS 官方最后活跃、登录、回复或持续在线时间。
 
 ## 8. 数组拆分
 

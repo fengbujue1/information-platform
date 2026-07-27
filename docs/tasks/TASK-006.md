@@ -8,6 +8,7 @@
 
 - TASK-002 完成。
 - TASK-006A 完成。
+- TASK-006B 完成。
 
 ## 目标
 
@@ -33,6 +34,8 @@
 - boss_name → companyName。
 - encrypt_boss_id → sourceRecruiterId。
 - boss_title → recruiterTitle。
+- boss_online_observed_at → recruiterActiveText。
+- boss_online=false、字段缺失或观测时间缺失时 recruiterActiveText=null。
 - job_labels 不单独标准化。
 - tags → sourceTags、experienceText、educationText。
 - skills → sourceSkillTags。
@@ -44,6 +47,7 @@
 
 - 未来输出必须带时区。
 - 当前旧 scraped_at 通过配置时区解释。
+- recruiterActiveText 必须使用 Collector 输出的带时区在线观测时间，不得使用 Mapper 运行时间伪造。
 - 详情没有时间时 detailCollectedAt=null。
 
 ## 测试
@@ -56,3 +60,6 @@
 - 薪资带 13～16 薪。
 - 详情字段冲突。
 - security_id 清理。
+- 招聘者在线观测时间映射。
+- boss_online=false 或缺失时 recruiterActiveText=null。
+- boss_online 和 boss_online_observed_at 保留在安全 rawPayload，recruiterActiveText 不参与 contentHash。
