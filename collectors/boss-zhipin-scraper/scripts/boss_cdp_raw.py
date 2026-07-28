@@ -63,6 +63,10 @@ CITY_GROUP_URL = "https://www.zhipin.com/wapi/zpCommon/data/cityGroup.json"
 
 # 项目根目录
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+# 直接执行脚本时 Python 只把 scripts/ 放入模块搜索路径；显式加入项目根目录，
+# 保证从任意工作目录使用绝对脚本路径时仍能加载同级 integrations 包。
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 # 请求频率保护
 MAX_PAGES = 10          # 单次最大页数
 MAX_API_REQUESTS = 500  # 单次最大 API 请求数

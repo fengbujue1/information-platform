@@ -32,11 +32,15 @@ pip install -r requirements.txt          # 或 uv sync
 # 2. 启动隔离 Chrome 并登录（只需一次，登录态持久保存）
 python scripts/boss_cdp_raw.py --setup-chrome
 
+# 检查登录及 CDP 状态
+python scripts\boss_cdp_raw.py --check
 # 3. 抓取 + 分析
 python scripts/boss_cdp_raw.py --keyword "AI Agent" --city 上海 --pages 3 --analysis
 
-# 支持全国城市（含三四五线），例如：
+# 仅抓取数据：
 python scripts/boss_cdp_raw.py --keyword "java" --city 成都 --pages 1
+# 仅抓取数据，原始报文保存在本地：
+python scripts/boss_cdp_raw.py --keyword "java" --city 成都 --pages 1 --capture-raw-response
 # 查看支持的城市：--list-cities [关键词]
 python scripts/boss_cdp_raw.py --list-cities 江
 
@@ -45,6 +49,21 @@ python scripts/job_summary.py
 ```
 
 抓完直接拿到：薪资分布、经验要求、高频技能词、求职材料优化提示词。提示词只基于岗位数据，不读取本地简历文件，也不给岗位算个人匹配分。
+
+### 从任意工作目录启动
+
+`boss_cdp_raw.py` 会根据自身绝对路径定位 Collector 项目根目录。使用脚本绝对路径时，不需要先执行 `Set-Location`，也不需要手工设置 `PYTHONPATH`：
+
+```powershell
+& 'D:\0.project\information-platform\collectors\boss-zhipin-scraper\.venv\Scripts\python.exe' `
+  'D:\0.project\information-platform\collectors\boss-zhipin-scraper\scripts\boss_cdp_raw.py' `
+  --keyword "Java" `
+  --city 成都 `
+  --pages 1 `
+  --capture-raw-response
+```
+
+以上路径仅为 Windows 示例，请按实际仓库位置调整。相对路径命令、`python -m scripts.boss_cdp_raw` 和安装后的 `boss-scraper` 命令仍然兼容。
 
 ## ✨ 特性
 

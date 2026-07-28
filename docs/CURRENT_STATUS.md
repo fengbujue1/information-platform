@@ -1,6 +1,6 @@
 # 当前开发状态
 
-更新时间：2026-07-27
+更新时间：2026-07-28
 当前分支：dev
 
 ## 当前阶段
@@ -33,6 +33,7 @@ Phase 1：BOSS 采集接入与归档。
 - 完成 TASK-006：新增独立 BOSS Mapper 适配层，完成列表/详情左连接、InformationEnvelope V1 字段转换、历史时区解释、招聘者在线观测映射和 rawPayload 递归安全清理；专项测试 14 项通过，完整回归未新增失败。
 - 完成 TASK-007：新增默认关闭的 Information Hub HTTP Client，从环境变量读取 URL、Bearer Token 和连接/读取超时；明确处理 2xx、4xx、413、5xx、超时和连接失败，并在本地保存完成后以不影响原采集流程的方式提交单条职位；专项测试 17 项通过，完整回归未新增失败。
 - 完成 TASK-007A：Information Hub 增加外部 `config/application.yml` 示例，Collector 增加默认 `config/collector.ini`、可选 `--config` 和环境变量覆盖；真实配置文件由 Git 忽略，专项测试 23 项通过，完整回归未新增失败。
+- 完成 TASK-007B：修复直接执行 `boss_cdp_raw.py` 时无法加载同级 `integrations` 包的问题；脚本现在基于自身路径初始化 Collector 根目录，支持从任意工作目录使用绝对脚本路径启动，新增无真实网络的入口子进程回归测试，专项 39 项全部通过。
 
 ## 当前任务
 

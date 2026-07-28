@@ -106,6 +106,19 @@ read_timeout_seconds = 10
 python scripts/boss_cdp_raw.py --config C:\secure\collector.ini --keyword "AI Agent" --city 上海 --pages 3
 ```
 
+脚本入口使用 `Path(__file__).resolve()` 定位 Collector 项目根目录，并在导入同级 `integrations` 包前初始化模块搜索路径。因此，也可以从任意工作目录使用解释器和脚本的绝对路径启动，不需要执行 `Set-Location` 或设置 `PYTHONPATH`：
+
+```powershell
+& 'D:\0.project\information-platform\collectors\boss-zhipin-scraper\.venv\Scripts\python.exe' `
+  'D:\0.project\information-platform\collectors\boss-zhipin-scraper\scripts\boss_cdp_raw.py' `
+  --config 'D:\0.project\information-platform\collectors\boss-zhipin-scraper\config\collector.ini' `
+  --keyword "AI Agent" `
+  --city 上海 `
+  --pages 1
+```
+
+默认配置、结果和 Chrome Profile 路径仍然相对于 Collector 项目定位，不会随终端当前目录变化。
+
 环境变量仍然可用，并且优先级高于 INI，适合 CI 或临时覆盖：
 
 ```text
