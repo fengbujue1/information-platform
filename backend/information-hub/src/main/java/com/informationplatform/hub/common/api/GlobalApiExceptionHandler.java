@@ -2,6 +2,9 @@ package com.informationplatform.hub.common.api;
 
 import com.informationplatform.hub.ingestion.api.RequestSizeLimitExceededException;
 import com.informationplatform.hub.ingestion.application.IngestionRequestException;
+import com.informationplatform.hub.job.application.JobNotFoundException;
+import com.informationplatform.hub.job.application.JobQueryPersistenceException;
+import com.informationplatform.hub.job.application.JobQueryRequestException;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +15,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @RestControllerAdvice
 public class GlobalApiExceptionHandler {
@@ -51,6 +55,40 @@ public class GlobalApiExceptionHandler {
     @ExceptionHandler(IngestionRequestException.class)
     ResponseEntity<ApiResponse<Void>> handleIngestionRequest(IngestionRequestException exception) {
         return error(HttpStatus.BAD_REQUEST, exception.getCode(), exception.getMessage());
+    }
+
+    /** 将职位分页、筛选和排序校验错误转换为稳定的 400 响应。 */
+    @ExceptionHandler(JobQueryRequestException.class)
+    ResponseEntity<ApiResponse<Void>> handleJobQueryRequest(
+            JobQueryRequestException exception) {
+        return error(HttpStatus.BAD_REQUEST, exception.getCode(), exception.getMessage());
+    }
+
+    /** 将路径参数类型错误转换为稳定的 400 响应。 */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    ResponseEntity<ApiResponse<Void>> handleTypeMismatch(
+            MethodArgumentTypeMismatchException exception) {
+        return error(
+                HttpStatus.BAD_REQUEST,
+                "INVALID_REQUEST_PARAMETER",
+                "Request parameter has an invalid type");
+    }
+
+    /** 对不存在的职位返回 404，不暴露数据库查询细节。 */
+    @ExceptionHandler(JobNotFoundException.class)
+    ResponseEntity<ApiResponse<Void>> handleJobNotFound(JobNotFoundException exception) {
+        return error(HttpStatus.NOT_FOUND, "JOB_NOT_FOUND", "Job does not exist");
+    }
+
+    /** 隐藏职位查询中的数据库或持久化 JSON 异常。 */
+    @ExceptionHandler(JobQueryPersistenceException.class)
+    ResponseEntity<ApiResponse<Void>> handleJobQueryPersistence(
+            JobQueryPersistenceException exception) {
+        LOGGER.error("Job query persistence operation failed", exception);
+        return error(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "JOB_QUERY_FAILED",
+                "Job information could not be queried");
     }
 
     /** 隐藏数据库异常细节并返回稳定错误码。 */

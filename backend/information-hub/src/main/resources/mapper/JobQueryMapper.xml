@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.informationplatform.hub.job.infrastructure.persistence.query.JobQueryMapper">
+
+    <sql id="jobFilters">
+        WHERE i.information_type = 'JOB'
+        <if test="criteria.keyword != null">
+            AND (
+                LOCATE(#{criteria.keyword}, i.title) &gt; 0
+                OR LOCATE(#{criteria.keyword}, j.company_name) &gt; 0
+                OR LOCATE(#{criteria.keyword}, i.content) &gt; 0
+            )
+        </if>
+        <if test="criteria.company != null">
+            AND LOCATE(#{criteria.company}, j.company_name) &gt; 0
+        </if>
+        <if test="criteria.city != null">
+            AND j.city_name = #{criteria.city}
+        </if>
+        <if test="criteria.salaryMin != null">
+            AND j.salary_max_monthly_yuan IS NOT NULL
+            AND j.salary_max_monthly_yuan &gt;= #{criteria.salaryMin}
+        </if>
+        <if test="criteria.salaryMax != null">
+            AND j.salary_min_monthly_yuan IS NOT NULL
+            AND j.salary_min_monthly_yuan &lt;= #{criteria.salaryMax}
+        </if>
+        <if test="criteria.source != null">
+            AND i.source = #{criteria.source}
+        </if>
+        <if test="criteria.jobStatus != null">
+            AND j.job_status = #{criteria.jobStatus}
+        </if>
+        <if test="criteria.remoteType != null">
+            AND j.remote_type = #{criteria.remoteType}
+        </if>
+    </sql>
+
+    <select id="countJobs" resultType="long">
+        SELECT COUNT(*)
+        FROM information_item i
+        INNER JOIN job_information j ON j.information_id = i.id
+        <include refid="jobFilters"/>
+    </select>
+
+    <select id="selectJobs"
+            resultType="com.informationplatform.hub.job.infrastructure.persistence.query.JobQueryRow">
+        SELECT
+            i.id,
+            i.source,
+            i.source_item_id,
+            i.source_url,
+            i.title,
+            i.publish_time,
+            i.first_seen_time,
+            i.last_seen_time,
+            i.current_version_no,
+            j.company_name,
+            j.salary_text,
+            j.salary_min_monthly_yuan,
+            j.salary_max_monthly_yuan,
+            j.salary_months,
+            j.location_name,
+            j.city_name,
+            j.experience_text,
+            j.education_text,
+            j.remote_type,
+            j.job_status
+        FROM information_item i
+        INNER JOIN job_information j ON j.information_id = i.id
+        <include refid="jobFilters"/>
+        ORDER BY
+        <choose>
+            <when test="criteria.sortField.externalName == 'lastSeenTime'">
+                i.last_seen_time
+            </when>
+            <when test="criteria.sortField.externalName == 'publishTime'">
+                i.publish_time
+            </when>
+            <when test="criteria.sortField.externalName == 'salaryMinMonthlyYuan'">
+                j.salary_min_monthly_yuan
+            </when>
+            <otherwise>
+                i.first_seen_time
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="criteria.sortDirection.ascending">ASC</when>
+            <otherwise>DESC</otherwise>
+        </choose>,
+        i.id
+        <choose>
+            <when test="criteria.sortDirection.ascending">ASC</when>
+            <otherwise>DESC</otherwise>
+        </choose>
+        LIMIT #{criteria.size} OFFSET #{criteria.offset}
+    </select>
+
+    <select id="selectJobById"
+            resultType="com.informationplatform.hub.job.infrastructure.persistence.query.JobQueryRow">
+        SELECT
+            i.id,
+            i.source,
+            i.source_item_id,
+            i.source_url,
+            i.title,
+            i.content,
+            i.publish_time,
+            i.collected_at,
+            i.first_seen_time,
+            i.last_seen_time,
+            i.current_version_no,
+            i.collector_id,
+            i.collector_version,
+            j.source_company_id,
+            j.source_recruiter_id,
+            j.company_name,
+            j.company_url,
+            j.company_scale_text,
+            j.company_stage_text,
+            j.company_industry_text,
+            j.salary_text,
+            j.salary_source,
+            j.salary_min_monthly_yuan,
+            j.salary_max_monthly_yuan,
+            j.salary_months,
+            j.location_name,
+            j.city_name,
+            j.area_name,
+            j.business_district_name,
+            j.experience_text,
+            j.education_text,
+            j.recruiter_name,
+            j.recruiter_title,
+            j.recruiter_active_text,
+            j.remote_type,
+            j.job_status,
+            j.detail_status,
+            j.detail_collected_at,
+            j.source_tags,
+            j.source_skill_tags,
+            j.welfare
+        FROM information_item i
+        INNER JOIN job_information j ON j.information_id = i.id
+        WHERE i.id = #{informationId}
+          AND i.information_type = 'JOB'
+    </select>
+
+    <select id="selectSnapshots"
+            resultType="com.informationplatform.hub.job.infrastructure.persistence.query.JobSnapshotQueryRow">
+        SELECT
+            s.id,
+            s.version_no,
+            s.content_hash,
+            s.title,
+            s.content,
+            s.standardized_payload,
+            s.collected_at,
+            s.collector_id,
+            s.collector_version,
+            s.created_at
+        FROM information_snapshot s
+        INNER JOIN information_item i ON i.id = s.information_id
+        WHERE s.information_id = #{informationId}
+          AND i.information_type = 'JOB'
+        ORDER BY s.created_at DESC, s.version_no DESC
+    </select>
+</mapper>
