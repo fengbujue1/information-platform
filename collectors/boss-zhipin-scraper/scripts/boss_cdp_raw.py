@@ -205,6 +205,41 @@ def maybe_submit_saved_results_to_hub(list_data, details, config_path=None):
         return None
 
 
+def run_flush_information_hub_outbox(config_path=None):
+    """补传本地 Outbox；该独立命令不初始化 Chrome 或访问 BOSS。"""
+    try:
+        from integrations import flush_information_hub_outbox
+
+        result = flush_information_hub_outbox(
+            config_path=config_path,
+            logger=log,
+        )
+    except Exception as exception:
+        # CLI 只报告安全异常类型，不输出配置、Token 或 Envelope。
+        log.warning(
+            "Information Hub Outbox command failed type=%s",
+            type(exception).__name__,
+        )
+        return 1
+
+    summary = result.outbox
+    print(
+        "Outbox 补传结果: "
+        f"total={summary.total} "
+        f"processed={summary.processed} "
+        f"succeeded={summary.succeeded} "
+        f"rescheduled={summary.rescheduled} "
+        f"rejected={summary.rejected} "
+        f"quarantined={summary.quarantined} "
+        f"skipped={summary.skipped}"
+    )
+    if not result.succeeded:
+        return 1
+    if summary.rescheduled or summary.rejected or summary.quarantined:
+        return 1
+    return 0
+
+
 # ============================================================
 # 筛选参数映射
 # Source snapshots:
@@ -1601,15 +1636,18 @@ def scrape_list(keyword, city_input, max_pages, filters, output_path,
     print(f"\n{'='*60}")
     print(f"完成: {len(all_jobs)} 条")
 
+    # 最终落盘与 Hub 交接共享同一个采集时间，避免内存对象缺少必填元数据。
+    final_meta = {
+        "keyword": keyword,
+        "city": city_name,
+        "filters": filters,
+        "filter_desc": filter_desc,
+        "scraped_at": datetime.now().isoformat(),
+    }
+
     if all_jobs:
         # 最终写入（含时间戳更新）
-        flush_jobs(output_path, {
-            "keyword": keyword,
-            "city": city_name,
-            "filters": filters,
-            "filter_desc": filter_desc,
-            "scraped_at": datetime.now().isoformat(),
-        }, all_jobs)
+        flush_jobs(output_path, dict(final_meta), all_jobs)
         print(f"已保存: {output_path}")
 
         # CSV 导出
@@ -1619,7 +1657,11 @@ def scrape_list(keyword, city_input, max_pages, filters, output_path,
     else:
         print("无数据")
 
-    return {"keyword": keyword, "city": city_name, "total": len(all_jobs), "jobs": all_jobs}
+    return {
+        **final_meta,
+        "total": len(all_jobs),
+        "jobs": all_jobs,
+    }
 
 
 # ============================================================
@@ -2445,6 +2487,8 @@ def main():
     p.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     p.add_argument("--keyword", default="AI Agent", help="搜索关键词")
     p.add_argument("--city", default=DEFAULT_CITY_INPUT, help=f"城市 (中文名或代码，默认 {DEFAULT_CITY_INPUT})")
+    p.add_argument("--flush-outbox", action="store_true",
+                   help="补传本地 Information Hub Outbox（不访问 Chrome 或 BOSS）")
     p.add_argument("--pages", type=int, default=3, help=f"抓取页数 (最大 {MAX_PAGES})")
     p.add_argument("--output", default=None, help="列表数据输出路径")
     p.add_argument("--detail-output", default=None, help="详情数据输出路径")
@@ -2511,6 +2555,11 @@ def main():
     # --check 模式
     if args.check:
         sys.exit(run_check(args.cdp_port))
+
+    if args.flush_outbox:
+        if not require_runtime_dependencies("requests"):
+            sys.exit(1)
+        sys.exit(run_flush_information_hub_outbox(args.config))
 
     if args.smoke_test:
         sys.exit(run_smoke_test(args.cdp_port))

@@ -139,7 +139,34 @@ INFORMATION_HUB_READ_TIMEOUT_SECONDS
 - 2xx 视为成功；4xx 和 413 记录单条失败后继续下一条。
 - 5xx、非预期状态、超时或连接失败时停止本批次剩余请求，避免累积等待。
 - 配置、映射或网络失败不会改变原采集命令的退出结果。
-- TASK-007 不重试、不写 Outbox；失败数据仍保留在本地采集文件，TASK-008 再实现持久化补传。
+- 5xx、非预期状态、超时、连接失败、请求失败和未知客户端异常属于可重试失败；当前项及本批尚未发送的 Envelope 原子写入本地 Outbox。
+- 4xx、413、配置错误和映射错误不进入 Outbox，避免无效请求无限重试。
+
+### 本地 Outbox 与补传
+
+TASK-008 使用 Collector 本地文件系统保存待补传的、已经安全清理的 InformationEnvelope：
+
+```text
+result/outbox/
+├── pending/       # 等待补传或等待退避时间到期
+├── quarantine/    # JSON 损坏或结构不合法，待人工检查
+└── rejected/      # 补传时收到 4xx/413 等永久失败响应
+```
+
+Outbox 文件不包含 Token、请求头、Cookie 或 Collector 配置。新文件通过同目录临时文件、`fsync` 和原子替换写入；初次立即可补传，后续失败采用 60 秒起步、最大 1 小时的指数退避。
+
+Information Hub 恢复并且 Collector 配置有效后，执行独立补传命令：
+
+```powershell
+python scripts/boss_cdp_raw.py --flush-outbox
+
+# 使用非默认配置文件
+python scripts/boss_cdp_raw.py --flush-outbox --config C:\secure\collector.ini
+```
+
+该命令不会初始化 Chrome，也不会访问 BOSS。它只处理已经到期的 `pending` 文件；成功后删除，损坏文件移入 `quarantine`，补传时确认无法重试的响应移入 `rejected`。某次补传再次遇到可重试失败时，会更新重试次数和下次时间并停止本轮，避免故障期间连续请求。
+
+补传可以从任意工作目录通过脚本绝对路径执行，不需要 `Set-Location`。同一业务键可能被重复补传，服务端依靠 `source + sourceItemId` 的幂等写入保证安全。
 
 也可以直接从 Python 调用：
 
@@ -161,8 +188,9 @@ Information Hub 服务端的数据库、Token 和外部 YAML 配置参见 [Infor
 → 按 job_id 合并
 → 构建 InformationEnvelope
 → 提交 Hub
-→ 失败记录安全日志并继续原流程
-→ TASK-008 再将失败请求写入 Outbox
+→ 可重试失败时将当前及剩余安全 Envelope 原子写入 Outbox
+→ 采集流程正常结束
+→ 后续通过 --flush-outbox 独立补传
 ```
 
 ## 6. 保护区域

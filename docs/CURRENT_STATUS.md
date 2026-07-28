@@ -34,10 +34,11 @@ Phase 1：BOSS 采集接入与归档。
 - 完成 TASK-007：新增默认关闭的 Information Hub HTTP Client，从环境变量读取 URL、Bearer Token 和连接/读取超时；明确处理 2xx、4xx、413、5xx、超时和连接失败，并在本地保存完成后以不影响原采集流程的方式提交单条职位；专项测试 17 项通过，完整回归未新增失败。
 - 完成 TASK-007A：Information Hub 增加外部 `config/application.yml` 示例，Collector 增加默认 `config/collector.ini`、可选 `--config` 和环境变量覆盖；真实配置文件由 Git 忽略，专项测试 23 项通过，完整回归未新增失败。
 - 完成 TASK-007B：修复直接执行 `boss_cdp_raw.py` 时无法加载同级 `integrations` 包的问题；脚本现在基于自身路径初始化 Collector 根目录，支持从任意工作目录使用绝对脚本路径启动，新增无真实网络的入口子进程回归测试，专项 39 项全部通过。
+- 完成 TASK-008：Collector 新增本地文件 Outbox，对 Hub 可重试失败原子保存当前及剩余安全 Envelope；提供不依赖 Chrome/BOSS 的独立补传命令、指数退避、损坏隔离和永久失败归档；修复新采集内存对象缺少 `scraped_at` 导致映射提前失败的问题，相关回归 49 项通过，完整回归未新增失败。
 
 ## 当前任务
 
-TASK-008：实现本地 Outbox。
+TASK-009：实现职位查询 API。
 
 ## 已冻结设计
 
@@ -61,8 +62,10 @@ TASK-008：实现本地 Outbox。
 - Hub Client 默认关闭，可从 Collector INI 配置完整写入 URL、Bearer Token、连接超时和读取超时；环境变量具有更高优先级。
 - Information Hub 和 Collector 的真实配置文件不纳入 Git，只提交不含秘密的 `.example` 模板。
 - Hub 单条 4xx 或 413 不阻止后续职位；5xx、非预期状态、超时或连接失败时停止本批次剩余请求。
-- TASK-007 不自动重试失败请求，失败数据继续保留在本地采集文件，持久化补传由 TASK-008 实现。
+- Hub 的 5xx、非预期状态、超时、连接失败、请求失败和未知客户端异常进入本地 Outbox；4xx、413、配置错误和映射错误不入队。
+- Outbox 位于 Collector 的 `result/outbox/`，只保存安全清理后的 Envelope 和重试元数据；使用独立 `--flush-outbox` 命令补传，不在采集启动时自动执行。
+- Outbox 补传失败采用 60 秒起步、最大 1 小时的指数退避；成功删除，损坏文件隔离，永久失败响应归档。
 
 ## 下一步
 
-执行 TASK-008，实现 Hub 提交失败时的本地 Outbox、原子写入和补传。
+执行 TASK-009，实现职位分页、详情和快照查询 API。

@@ -8,6 +8,11 @@ import unittest
 from contextlib import redirect_stdout
 from unittest import mock
 
+from integrations import (
+    FileOutbox,
+    HubClientConfig,
+    submit_boss_results_to_hub,
+)
 
 ROOT_PATH = pathlib.Path(__file__).resolve().parents[1]
 SCRIPT_PATH = ROOT_PATH / "scripts" / "boss_cdp_raw.py"
@@ -217,6 +222,92 @@ class RawResponseCaptureTests(unittest.TestCase):
             pathlib.Path(module.DEFAULT_RESULT_DIR),
         )
         self.assertIn("result/job-result/", gitignore)
+
+    def test_fresh_scrape_can_queue_retryable_hub_failure(self):
+        module = load_module()
+        job = {
+            "title": "Java Engineer",
+            "salary": "20-30K",
+            "location": "上海·浦东新区·张江",
+            "tags": "3-5年 | 本科",
+            "boss_name": "Example Company",
+            "boss_title": "招聘者",
+            "boss_online": False,
+            "encrypt_job_id": "encrypted-job-1",
+            "encrypt_boss_id": "encrypted-boss-1",
+            "encrypt_brand_id": "encrypted-brand-1",
+            "job_link": (
+                "https://www.zhipin.com/job_detail/"
+                "encrypted-job-1.html"
+            ),
+        }
+        cdp = mock.Mock()
+
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(
+            module,
+            "resolve_city",
+            return_value=("上海", "101020100"),
+        ), mock.patch.object(
+            module,
+            "CDPSession",
+            return_value=cdp,
+        ), mock.patch.object(
+            module,
+            "create_page_session",
+            return_value=("target-1", "session-1"),
+        ), mock.patch.object(
+            module,
+            "parse_api_search_response",
+            return_value=module.ApiSearchResponse(200, "{}", [job]),
+        ), mock.patch.object(
+            module.time,
+            "sleep",
+        ), mock.patch.object(
+            module,
+            "incr_request",
+        ), redirect_stdout(io.StringIO()):
+            output_path = pathlib.Path(tmp) / "boss_jobs.json"
+            list_result = module.scrape_list(
+                "Java",
+                "上海",
+                1,
+                {},
+                str(output_path),
+            )
+
+            session = mock.Mock()
+            response = mock.Mock()
+            response.status_code = 503
+            session.post.return_value = response
+            outbox = FileOutbox(pathlib.Path(tmp) / "outbox")
+            submit_result = submit_boss_results_to_hub(
+                list_result,
+                [],
+                client_config=HubClientConfig(
+                    enabled=True,
+                    url=(
+                        "https://hub.example.test/"
+                        "api/v1/collector/items"
+                    ),
+                    token="test-token",
+                ),
+                session=session,
+                outbox=outbox,
+            )
+
+            saved_result = json.loads(
+                output_path.read_text(encoding="utf-8")
+            )
+            pending_files = list(outbox.pending_dir.glob("*.json"))
+
+        self.assertTrue(list_result["scraped_at"])
+        self.assertEqual(
+            list_result["scraped_at"],
+            saved_result["scraped_at"],
+        )
+        self.assertTrue(submit_result.mapping_succeeded)
+        self.assertEqual(submit_result.queued, 1)
+        self.assertEqual(len(pending_files), 1)
 
 
 if __name__ == "__main__":

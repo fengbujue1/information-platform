@@ -367,6 +367,7 @@ class HubBatchSubmissionTests(unittest.TestCase):
     def test_server_error_stops_remaining_items(self):
         session = mock.Mock()
         session.post.return_value = response(503)
+        outbox = RecordingOutbox()
 
         result = submit_boss_results_to_hub(
             list_root(job_count=3),
@@ -374,6 +375,7 @@ class HubBatchSubmissionTests(unittest.TestCase):
             client_config=self.config,
             mapper_config=self.mapper_config,
             session=session,
+            outbox=outbox,
             logger=self.logger,
         )
 
@@ -381,6 +383,9 @@ class HubBatchSubmissionTests(unittest.TestCase):
         self.assertEqual(result.succeeded, 0)
         self.assertEqual(result.failed, 1)
         self.assertEqual(result.skipped, 2)
+        self.assertEqual(result.queued, 3)
+        self.assertEqual(len(outbox.entries), 3)
+        self.assertEqual(outbox.entries[0][1], "SERVER_ERROR")
         session.post.assert_called_once()
 
     def test_timeout_and_connection_failure_stop_remaining_items(self):
@@ -391,6 +396,7 @@ class HubBatchSubmissionTests(unittest.TestCase):
             with self.subTest(exception=type(exception).__name__):
                 session = mock.Mock()
                 session.post.side_effect = exception
+                outbox = RecordingOutbox()
 
                 result = submit_boss_results_to_hub(
                     list_root(job_count=3),
@@ -398,11 +404,14 @@ class HubBatchSubmissionTests(unittest.TestCase):
                     client_config=self.config,
                     mapper_config=self.mapper_config,
                     session=session,
+                    outbox=outbox,
                     logger=self.logger,
                 )
 
                 self.assertEqual(result.failed, 1)
                 self.assertEqual(result.skipped, 2)
+                self.assertEqual(result.queued, 3)
+                self.assertEqual(len(outbox.entries), 3)
                 session.post.assert_called_once()
 
     def test_invalid_configuration_and_mapping_failure_do_not_propagate(self):
@@ -499,6 +508,7 @@ read_timeout_seconds = 5
         session.post.side_effect = RuntimeError(
             "batch-secret raw-payload-secret"
         )
+        outbox = RecordingOutbox()
 
         with self.assertLogs(self.logger.name, level="WARNING") as captured:
             result = submit_boss_results_to_hub(
@@ -507,14 +517,39 @@ read_timeout_seconds = 5
                 client_config=self.config,
                 mapper_config=self.mapper_config,
                 session=session,
+                outbox=outbox,
                 logger=self.logger,
             )
 
         self.assertEqual(result.failed, 1)
         self.assertEqual(result.skipped, 1)
+        self.assertEqual(result.queued, 2)
+        self.assertEqual(len(outbox.entries), 2)
         output = "\n".join(captured.output)
         self.assertNotIn("batch-secret", output)
         self.assertNotIn("raw-payload-secret", output)
+
+    def test_outbox_write_failure_does_not_propagate_or_leak_payload(self):
+        session = mock.Mock()
+        session.post.return_value = response(503)
+
+        with self.assertLogs(self.logger.name, level="WARNING") as captured:
+            result = submit_boss_results_to_hub(
+                list_root(job_count=2),
+                [],
+                client_config=self.config,
+                mapper_config=self.mapper_config,
+                session=session,
+                outbox=FailingOutbox(),
+                logger=self.logger,
+            )
+
+        self.assertEqual(result.failed, 1)
+        self.assertEqual(result.skipped, 1)
+        self.assertEqual(result.queued, 0)
+        output = "\n".join(captured.output)
+        self.assertNotIn("batch-secret", output)
+        self.assertNotIn("rawPayload", output)
 
 
 def response(status_code, text=""):
@@ -549,6 +584,20 @@ def list_root(job_count=1):
         "total": job_count,
         "jobs": jobs,
     }
+
+
+class RecordingOutbox:
+    def __init__(self):
+        self.entries = []
+
+    def enqueue(self, envelope, *, last_outcome):
+        self.entries.append((envelope, last_outcome))
+
+
+class FailingOutbox:
+    def enqueue(self, _envelope, *, last_outcome):
+        raise OSError(f"cannot persist {last_outcome}")
+
 
 
 if __name__ == "__main__":

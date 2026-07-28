@@ -1,7 +1,7 @@
 """Best-effort Information Hub HTTP submission for mapped BOSS jobs."""
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Mapping
 
@@ -9,6 +9,7 @@ import requests
 
 from .config import HubClientConfig, MapperConfig
 from .information_mapper import map_boss_results
+from .outbox import FileOutbox, OutboxFlushResult
 
 
 LOGGER = logging.getLogger(__name__)
@@ -41,6 +42,16 @@ class HubSubmitResult:
         return self.outcome is HubSubmitOutcome.SUCCESS
 
     @property
+    def retryable(self):
+        return self.outcome in {
+            HubSubmitOutcome.SERVER_ERROR,
+            HubSubmitOutcome.HTTP_ERROR,
+            HubSubmitOutcome.TIMEOUT,
+            HubSubmitOutcome.CONNECTION_FAILED,
+            HubSubmitOutcome.REQUEST_FAILED,
+        }
+
+    @property
     def should_stop_batch(self):
         return self.outcome in {
             HubSubmitOutcome.CONFIGURATION_ERROR,
@@ -61,8 +72,27 @@ class HubBatchResult:
     succeeded: int = 0
     failed: int = 0
     skipped: int = 0
+    queued: int = 0
     configuration_valid: bool = True
     mapping_succeeded: bool = True
+
+
+@dataclass(frozen=True)
+class HubOutboxFlushResult:
+    """Configuration status plus one local Outbox flush summary."""
+
+    enabled: bool
+    configuration_valid: bool = True
+    outbox: OutboxFlushResult = field(default_factory=OutboxFlushResult)
+    flush_succeeded: bool = True
+
+    @property
+    def succeeded(self):
+        return (
+            self.enabled
+            and self.configuration_valid
+            and self.flush_succeeded
+        )
 
 
 class InformationHubClient:
@@ -158,6 +188,7 @@ def submit_boss_results_to_hub(
     client_config=None,
     mapper_config=None,
     session=None,
+    outbox=None,
     logger=None,
 ):
     """Map and submit a saved BOSS batch without interrupting collection."""
@@ -171,6 +202,7 @@ def submit_boss_results_to_hub(
             client_config=client_config,
             mapper_config=mapper_config,
             session=session,
+            outbox=outbox,
             logger=logger,
         )
     except Exception as exception:
@@ -198,6 +230,7 @@ def _submit_boss_results_to_hub(
     client_config,
     mapper_config,
     session,
+    outbox,
     logger,
 ):
     try:
@@ -239,6 +272,7 @@ def _submit_boss_results_to_hub(
     succeeded = 0
     failed = 0
     skipped = 0
+    queued = 0
     for index, envelope in enumerate(envelopes):
         try:
             result = client.submit(envelope)
@@ -249,22 +283,38 @@ def _submit_boss_results_to_hub(
             )
             failed += 1
             skipped = len(envelopes) - index - 1
+            queued += _enqueue_retryable_envelopes(
+                outbox,
+                envelopes[index:],
+                HubSubmitOutcome.REQUEST_FAILED.value,
+                logger,
+            )
             break
         if result.succeeded:
             succeeded += 1
         else:
             failed += 1
+        if result.retryable:
+            skipped = len(envelopes) - index - 1
+            queued += _enqueue_retryable_envelopes(
+                outbox,
+                envelopes[index:],
+                result.outcome.value,
+                logger,
+            )
+            break
         if result.should_stop_batch:
             skipped = len(envelopes) - index - 1
             break
 
     logger.info(
         "Information Hub submission completed total=%s succeeded=%s "
-        "failed=%s skipped=%s",
+        "failed=%s skipped=%s queued=%s",
         len(envelopes),
         succeeded,
         failed,
         skipped,
+        queued,
     )
     return HubBatchResult(
         enabled=True,
@@ -272,4 +322,88 @@ def _submit_boss_results_to_hub(
         succeeded=succeeded,
         failed=failed,
         skipped=skipped,
+        queued=queued,
     )
+
+
+def _enqueue_retryable_envelopes(outbox, envelopes, outcome, logger):
+    """Persist each retryable envelope without exposing payloads in logs."""
+    target = outbox if outbox is not None else FileOutbox(logger=logger)
+    queued = 0
+    for envelope in envelopes:
+        try:
+            # Envelope 已经过 Mapper 安全清理；Outbox 不接收 Token 或请求头。
+            target.enqueue(envelope, last_outcome=outcome)
+            queued += 1
+        except Exception as exception:
+            logger.warning(
+                "Information Hub Outbox enqueue failed type=%s",
+                type(exception).__name__,
+            )
+    return queued
+
+
+def flush_information_hub_outbox(
+    *,
+    config_path=None,
+    environ=None,
+    client_config=None,
+    session=None,
+    outbox=None,
+    logger=None,
+):
+    """Resend due Outbox entries without touching Chrome or BOSS."""
+    logger = logger or LOGGER
+    try:
+        config = client_config or HubClientConfig.from_sources(
+            config_path,
+            environ,
+        )
+    except ValueError:
+        logger.warning("Information Hub configuration is invalid")
+        return HubOutboxFlushResult(
+            enabled=True,
+            configuration_valid=False,
+        )
+
+    if not config.enabled:
+        logger.warning("Information Hub submission is disabled")
+        return HubOutboxFlushResult(enabled=False)
+
+    configuration_error = config.validation_error()
+    if configuration_error is not None:
+        logger.warning(
+            "Information Hub configuration is invalid: %s",
+            configuration_error,
+        )
+        return HubOutboxFlushResult(
+            enabled=True,
+            configuration_valid=False,
+        )
+
+    client = InformationHubClient(config, session=session, logger=logger)
+    target = outbox if outbox is not None else FileOutbox(logger=logger)
+    try:
+        summary = target.flush(client.submit)
+    except Exception as exception:
+        logger.warning(
+            "Information Hub Outbox flush failed type=%s",
+            type(exception).__name__,
+        )
+        return HubOutboxFlushResult(
+            enabled=True,
+            flush_succeeded=False,
+        )
+
+    logger.info(
+        "Information Hub Outbox flush completed total=%s processed=%s "
+        "succeeded=%s rescheduled=%s rejected=%s quarantined=%s skipped=%s",
+        summary.total,
+        summary.processed,
+        summary.succeeded,
+        summary.rescheduled,
+        summary.rejected,
+        summary.quarantined,
+        summary.skipped,
+    )
+    return HubOutboxFlushResult(enabled=True, outbox=summary)

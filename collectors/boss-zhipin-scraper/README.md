@@ -41,6 +41,8 @@ python scripts/boss_cdp_raw.py --keyword "AI Agent" --city 上海 --pages 3 --an
 python scripts/boss_cdp_raw.py --keyword "java" --city 成都 --pages 1
 # 仅抓取数据，原始报文保存在本地：
 python scripts/boss_cdp_raw.py --keyword "java" --city 成都 --pages 1 --capture-raw-response
+# Information Hub 恢复后，独立补传本地 Outbox（不访问 Chrome/BOSS）：
+python scripts/boss_cdp_raw.py --flush-outbox
 # 查看支持的城市：--list-cities [关键词]
 python scripts/boss_cdp_raw.py --list-cities 江
 
@@ -72,6 +74,7 @@ python scripts/job_summary.py
 - 详情页 JD 抓取 + 技能分析
 - 抓取后聚合摘要 + 可复制提示词
 - 增量写入（异常退出不丢数据）
+- Information Hub 失败本地 Outbox 与独立补传
 - 一键环境检查 + 持久隔离 Chrome CDP profile
 - 多维筛选（规模、融资、薪资、经验、学历、行业）
 - macOS + Linux 支持（Windows 代码分支已预留，未经实测，不保证可用）
@@ -183,6 +186,7 @@ python3 scripts/job_summary.py --top 15
 | `--allow-dom-fallback` | API 无数据时允许降级 DOM 提取；默认关闭，薪资可能不可信 |
 | `--capture-raw-response` | 打印并保存职位搜索 API 的原始响应体；仅供本地诊断，默认关闭 |
 | `--raw-response-dir DIR` | 覆盖原始响应保存目录；默认 `result/job-result/raw-responses/` |
+| `--flush-outbox` | 补传本地 Information Hub Outbox；不初始化 Chrome、不访问 BOSS |
 | `--check` | 环境检查（CDP + 依赖 + 登录态） |
 | `--smoke-test` | 用真实 Chrome/CDP 跑一次 BOSS 搜索 API smoke test，不写结果文件 |
 | `--setup-chrome` | 一键启动 Chrome CDP（持久隔离 profile） |
@@ -220,6 +224,32 @@ result/job-result/raw-responses/
 - 不要分享包含真实来源标识的数据文件；
 - 使用后按需清理，避免长期积累；
 - 脚本不会为此功能采集请求头、响应头、Cookie、Authorization 或 Chrome Profile。
+
+## Information Hub 本地 Outbox
+
+当 Hub 返回 5xx 或非预期状态，或者发生超时、连接/请求失败时，Collector 不会让已经完成的本地采集失败，而是将当前及尚未发送的安全 Envelope 原子保存到：
+
+```text
+result/outbox/pending/
+```
+
+Information Hub 恢复并且 `config/collector.ini` 中的 Hub 配置有效后执行：
+
+```powershell
+python scripts/boss_cdp_raw.py --flush-outbox
+```
+
+如果使用其他配置文件：
+
+```powershell
+python scripts/boss_cdp_raw.py --flush-outbox --config C:\secure\collector.ini
+```
+
+补传命令不需要启动 Chrome，也不会访问 BOSS；可以从任意工作目录用脚本绝对路径执行。成功项会从 `pending/` 删除，损坏文件隔离到 `result/outbox/quarantine/`，补传时收到 4xx/413 等永久失败响应的文件移到 `result/outbox/rejected/`。
+
+新入队项立即可补传。再次遇到可重试失败时，重试间隔从 60 秒开始指数增长，最大 1 小时；尚未到期的项会跳过。Outbox 只保存 Mapper 已清理的 InformationEnvelope 和重试元数据，不保存 Token、Cookie、请求头或配置内容。同一业务键重复补传由 Information Hub 的幂等写入保证安全。
+
+4xx、413、配置错误和映射错误不会自动进入 Outbox，需要根据错误原因修正请求或配置。
 
 ## 抓取后摘要与提示词
 

@@ -73,6 +73,40 @@ enabled = false
         )
         self.assertNotIn("ModuleNotFoundError", result.stderr)
 
+    def test_flush_outbox_command_does_not_require_chrome(self):
+        with tempfile.TemporaryDirectory() as working_directory:
+            config_path = Path(working_directory) / "collector.ini"
+            config_path.write_text(
+                "[information_hub]\nenabled = false\n",
+                encoding="utf-8",
+            )
+            environment = {
+                key: value
+                for key, value in os.environ.items()
+                if not key.startswith("INFORMATION_HUB_")
+            }
+            environment.pop("PYTHONPATH", None)
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT_PATH),
+                    "--flush-outbox",
+                    "--config",
+                    str(config_path),
+                ],
+                cwd=working_directory,
+                env=environment,
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Outbox 补传结果", result.stdout)
+        self.assertNotIn("检测登录状态", result.stdout)
+        self.assertNotIn("Chrome", result.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()
