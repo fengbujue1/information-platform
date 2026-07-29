@@ -7,7 +7,7 @@
 
 Phase 1 已完成。
 
-Phase 2 范围已冻结，尚未创建 Vue 业务代码。
+Phase 2 范围已冻结，Vue 3 项目骨架已创建，尚未实现职位业务页面。
 
 ## Phase 1 已完成
 
@@ -38,12 +38,13 @@ BOSS Collector
 ## Phase 2 已完成任务
 
 - 完成 TASK-011：冻结标准化职位 Web 浏览 MVP 范围，接受 Web UI Behavior V1 和 ADR-010。
+- 完成 TASK-012：创建可安装、启动、测试、类型检查和构建的 Vue 3 项目骨架，提供 `/jobs` 和 404 占位页。
 
 ## 当前任务
 
-TASK-012：创建 Vue 3 项目骨架。
+TASK-013：实现 API Client、类型与环境配置。
 
-TASK-012 只创建可安装、启动、测试和构建的前端骨架，不提前实现职位页面。
+TASK-013 将对照 Job Query API V1、后端 DTO、Controller 和真实响应，建立统一 Axios Client、强类型接口、Vite Proxy、错误映射和基础格式化函数，不创建完整职位页面。
 
 ## Phase 2 已冻结范围
 
@@ -85,4 +86,4 @@ TASK-012 只创建可安装、启动、测试和构建的前端骨架，不提�
 
 ## 下一步
 
-执行 TASK-012，创建 Vue 3 项目骨架；开始前先检查本机 Node 环境并冻结受维护的 LTS 版本。
+执行 TASK-013。开始修改前先对照 Job Query API V1、后端 DTO、Controller 和真实响应；如发现契约不一致，先汇报，不自行猜测。

@@ -168,6 +168,7 @@ git diff --check
 - 不提前进入 AI、推荐和通知；
 - 不把秘密写入前端；
 - 完成后更新 TASK 和 CURRENT_STATUS；
+- 如果涉及新增文件，需要使用 git add进行git追踪；
 - 不提交 Git。
 ```
 
