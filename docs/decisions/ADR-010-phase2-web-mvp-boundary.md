@@ -1,7 +1,7 @@
 # ADR-010：Phase 2 建设标准化职位 Web 浏览 MVP
 
-状态：Proposed  
-日期：2026-07-29  
+状态：Accepted
+日期：2026-07-29
 决策人：项目负责人
 
 ## 背景
@@ -35,7 +35,7 @@ Phase 2 建设标准化职位 Web 浏览 MVP。
 - AI、推荐和通知；
 - 公网无认证部署。
 
-前端使用现有 Job Query API V1。
+前端使用现有 Job Query API V1。列表筛选、排序和分页状态写入 URL Query；详情和快照页面使用经过校验的内部 `from` 参数恢复列表状态。快照只提供版本查看，不实现复杂 Diff。
 
 开发环境通过 Vite Proxy 调用后端，部署环境优先使用 Nginx 同源反向代理，不在后端启用宽泛 CORS。
 

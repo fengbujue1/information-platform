@@ -17,7 +17,9 @@ BOSS Collector
 → Job Query API
 ```
 
-当前正在规划 Phase 2：标准化职位 Web 浏览 MVP。
+Phase 2 范围已经冻结，当前任务为 TASK-012：创建 Vue 3 项目骨架。
+
+当前尚未创建 Vue 业务代码。
 
 ## Phase 2 目标
 

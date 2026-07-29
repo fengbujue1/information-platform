@@ -7,7 +7,7 @@
 
 Phase 1 已完成。
 
-Phase 2 正在规划，尚未创建 Vue 业务代码。
+Phase 2 范围已冻结，尚未创建 Vue 业务代码。
 
 ## Phase 1 已完成
 
@@ -35,13 +35,17 @@ BOSS Collector
 → Job Query API V1
 ```
 
+## Phase 2 已完成任务
+
+- 完成 TASK-011：冻结标准化职位 Web 浏览 MVP 范围，接受 Web UI Behavior V1 和 ADR-010。
+
 ## 当前任务
 
-TASK-011：冻结 Phase 2 标准化职位 Web 浏览 MVP 范围。
+TASK-012：创建 Vue 3 项目骨架。
 
-TASK-011 只处理范围、合同、ADR、路线图和状态文档，不创建 Vue 代码。
+TASK-012 只创建可安装、启动、测试和构建的前端骨架，不提前实现职位页面。
 
-## Phase 2 推荐范围
+## Phase 2 已冻结范围
 
 包含：
 
@@ -75,11 +79,10 @@ TASK-011 只处理范围、合同、ADR、路线图和状态文档，不创建 V
 - 未增加读取认证前，只允许受控访问。
 - 前端不保存 Collector Token。
 - 不修改 Phase 1 的幂等、快照和归档语义。
+- 列表状态写入 URL Query；详情和快照使用经过校验的内部 `from` 参数恢复列表。
+- 重置筛选时保留当前 `size`，其他状态恢复默认值。
 - 不提前进入 Phase 3。
 
 ## 下一步
 
-1. 用户确认 `docs/PHASE2_SCOPE.md`。
-2. 执行 TASK-011。
-3. 将 ADR-010 和 Web UI Behavior V1 状态改为 Accepted。
-4. TASK-011 完成后执行 TASK-012，创建 Vue 3 项目骨架。
+执行 TASK-012，创建 Vue 3 项目骨架；开始前先检查本机 Node 环境并冻结受维护的 LTS 版本。

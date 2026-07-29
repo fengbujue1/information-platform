@@ -11,7 +11,7 @@
 - [Phase 2 Codex 协作流程](CODEX_PHASE2_WORKFLOW.md)
 - [上游仓库记录](UPSTREAMS.md)
 
-## Phase 2
+## Phase 2（范围已冻结）
 
 - [Phase 2 范围](PHASE2_SCOPE.md)
 - [Web UI Behavior V1](contracts/web-ui-behavior-v1.md)
@@ -28,6 +28,8 @@
 7. [TASK-017：完善交互、响应式和健壮性](tasks/TASK-017.md)
 8. [TASK-018：建立 CI 与受控构建部署配置](tasks/TASK-018.md)
 9. [TASK-019：完成 Phase 2 端到端验收](tasks/TASK-019.md)
+
+当前任务：[TASK-012：创建 Vue 3 项目骨架](tasks/TASK-012.md)
 
 ## 接口协议
 
