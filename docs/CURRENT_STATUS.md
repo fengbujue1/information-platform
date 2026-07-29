@@ -7,7 +7,7 @@
 
 Phase 1 已完成。
 
-Phase 2 范围已冻结，Vue 3 项目骨架已创建，尚未实现职位业务页面。
+Phase 2 范围已冻结，Vue 3 项目骨架和强类型 Job Query API Client 已完成，尚未实现职位业务页面。
 
 ## Phase 1 已完成
 
@@ -39,12 +39,13 @@ BOSS Collector
 
 - 完成 TASK-011：冻结标准化职位 Web 浏览 MVP 范围，接受 Web UI Behavior V1 和 ADR-010。
 - 完成 TASK-012：创建可安装、启动、测试、类型检查和构建的 Vue 3 项目骨架，提供 `/jobs` 和 404 占位页。
+- 完成 TASK-013：实现统一 Axios Client、职位查询类型、三个只读 API 函数、错误映射、格式化工具和 Vite `/api` Proxy。
 
 ## 当前任务
 
-TASK-013：实现 API Client、类型与环境配置。
+TASK-014：实现职位列表、筛选和分页。
 
-TASK-013 将对照 Job Query API V1、后端 DTO、Controller 和真实响应，建立统一 Axios Client、强类型接口、Vite Proxy、错误映射和基础格式化函数，不创建完整职位页面。
+TASK-014 将让 `/jobs` 实际调用 `getJobs`，实现完整筛选、排序、分页、URL 状态恢复以及 Loading、Empty、Error 和重试，不实现职位详情内容和快照。
 
 ## Phase 2 已冻结范围
 
@@ -86,4 +87,4 @@ TASK-013 将对照 Job Query API V1、后端 DTO、Controller 和真实响应，
 
 ## 下一步
 
-执行 TASK-013。开始修改前先对照 Job Query API V1、后端 DTO、Controller 和真实响应；如发现契约不一致，先汇报，不自行猜测。
+执行 TASK-014。开始修改前先确定页面组件拆分、URL 参数模型、单次请求触发规则、避免重复请求方案、测试用例和窄屏展示方案。

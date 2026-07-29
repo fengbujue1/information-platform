@@ -1,0 +1,125 @@
+import axios from 'axios'
+
+import type { ApiFailureResponse } from '@/types/api'
+import { isApiFailureResponse } from '@/types/api'
+
+export type ApiErrorKind =
+  | 'business'
+  | 'network'
+  | 'timeout'
+  | 'cancelled'
+  | 'protocol'
+  | 'unexpected'
+
+const ERROR_MESSAGES: Readonly<Record<string, string>> = {
+  INVALID_JOB_PAGE: '页码必须从 1 开始',
+  INVALID_JOB_PAGE_SIZE: '每页数量必须在 1 到 100 之间',
+  INVALID_JOB_SORT_FIELD: '选择的排序字段不受支持',
+  INVALID_JOB_SORT_DIRECTION: '排序方向必须为升序或降序',
+  INVALID_JOB_SALARY: '薪资条件不能小于 0',
+  INVALID_JOB_SALARY_RANGE: '最低薪资不能高于最高薪资',
+  INVALID_JOB_FILTER: '筛选文本过长，请缩短后重试',
+  INVALID_JOB_ID: '职位 ID 必须为正整数',
+  INVALID_REQUEST_PARAMETER: '请求参数格式不正确',
+  VALIDATION_FAILED: '请求参数校验失败',
+  JOB_NOT_FOUND: '职位不存在或已不可用',
+  JOB_QUERY_FAILED: '职位信息暂时无法查询',
+  INTERNAL_ERROR: '服务暂时不可用，请稍后重试',
+}
+
+interface ApiClientErrorOptions {
+  kind: ApiErrorKind
+  code: string
+  message: string
+  status?: number | null
+}
+
+export class ApiClientError extends Error {
+  readonly kind: ApiErrorKind
+  readonly code: string
+  readonly status: number | null
+
+  constructor(options: ApiClientErrorOptions) {
+    super(options.message)
+    this.name = 'ApiClientError'
+    this.kind = options.kind
+    this.code = options.code
+    this.status = options.status ?? null
+  }
+}
+
+export function getApiErrorMessage(code: string): string {
+  return ERROR_MESSAGES[code] ?? '请求失败，请稍后重试'
+}
+
+export function createBusinessApiError(
+  failure: ApiFailureResponse,
+  status: number | null = null,
+): ApiClientError {
+  return new ApiClientError({
+    kind: 'business',
+    code: failure.code,
+    message: getApiErrorMessage(failure.code),
+    status,
+  })
+}
+
+export function createInvalidApiResponseError(): ApiClientError {
+  return new ApiClientError({
+    kind: 'protocol',
+    code: 'INVALID_API_RESPONSE',
+    message: '服务返回了无法识别的响应',
+  })
+}
+
+export function toApiClientError(error: unknown): ApiClientError {
+  if (error instanceof ApiClientError) {
+    return error
+  }
+
+  if (axios.isCancel(error)) {
+    return new ApiClientError({
+      kind: 'cancelled',
+      code: 'REQUEST_CANCELLED',
+      message: '请求已取消',
+    })
+  }
+
+  if (axios.isAxiosError(error)) {
+    if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
+      return new ApiClientError({
+        kind: 'timeout',
+        code: 'REQUEST_TIMEOUT',
+        message: '请求超时，请稍后重试',
+      })
+    }
+
+    if (error.response) {
+      if (isApiFailureResponse(error.response.data)) {
+        return createBusinessApiError(
+          error.response.data,
+          error.response.status,
+        )
+      }
+
+      return new ApiClientError({
+        kind: 'protocol',
+        code: 'INVALID_API_RESPONSE',
+        message: '服务返回了无法识别的错误响应',
+        status: error.response.status,
+      })
+    }
+
+    return new ApiClientError({
+      kind: 'network',
+      code: 'NETWORK_ERROR',
+      message: '无法连接到服务，请检查网络后重试',
+    })
+  }
+
+  return new ApiClientError({
+    kind: 'unexpected',
+    code: 'UNEXPECTED_ERROR',
+    message: '发生未知错误，请稍后重试',
+  })
+}

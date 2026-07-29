@@ -1,6 +1,6 @@
 # Information Hub Web
 
-Information Platform 的标准化信息浏览前端。当前仅包含 Vue 3 工程骨架、`/jobs` 占位页和 404 占位页，不调用真实 API。
+Information Platform 的标准化信息浏览前端。当前包含 Vue 3 工程骨架和强类型 Job Query API Client；`/jobs` 与 404 仍为占位页，页面尚未调用真实 API。
 
 ## 环境要求
 
@@ -32,6 +32,33 @@ npm.cmd run dev
 
 - `http://localhost:5173/jobs`
 - 任意不存在的前端路径将显示 404 占位页
+
+## API 开发配置
+
+复制 `.env.example` 为不提交 Git 的 `.env.local` 后，可以覆盖以下非敏感配置：
+
+```dotenv
+VITE_API_BASE_URL=/api
+INFORMATION_HUB_PROXY_TARGET=http://127.0.0.1:8080
+```
+
+- `VITE_API_BASE_URL` 是浏览器使用的同源 API 前缀，默认值为 `/api`。
+- `INFORMATION_HUB_PROXY_TARGET` 仅由 Vite 开发服务器读取，默认指向本机 `8080` 端口的 Information Hub。
+- Vite 保留 `/api` 前缀，将 `/api/v1/jobs` 等请求代理到 Information Hub。
+
+如果 Information Hub 通过 SSH 隧道映射到其他本地端口，只需在 `.env.local` 修改 Proxy Target。不要在任何 `VITE_` 变量中保存密码、Token、Cookie 或数据库连接信息。
+
+## API Client
+
+`src/api` 统一导出以下只读函数：
+
+- `getJobs`
+- `getJobById`
+- `getJobSnapshots`
+
+后续页面必须通过这些函数读取数据，不直接创建 Axios 实例。API错误统一转换为 `ApiClientError`，不会向页面暴露 Axios内部 request、response 或 config。
+
+当前页面仍为占位页，因此启动前端不会自动访问 Information Hub。TASK-014 再接入真实职位列表。
 
 ## 验证命令
 
