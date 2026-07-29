@@ -118,6 +118,7 @@ Codex 必须先对照：
 - Proxy测试覆盖自定义目标、本机默认目标和路径不重写。
 - `npm.cmd run build`：通过；主要 JS 产物约 131.84 kB，gzip 后约 49.75 kB。
 - `npm.cmd audit --audit-level=high`：通过，0 个已知漏洞。
+- 2026-07-29 交接复验：`npm.cmd run typecheck`、`npm.cmd run test` 和 `npm.cmd run build` 再次通过；测试仍为 4 个文件、18 项。
 
 ## 12. 遗留问题
 
@@ -133,4 +134,4 @@ Codex 必须先对照：
 - [ ] 用户已检查 git diff
 - [ ] 用户已确认测试结果
 - [x] 新增文件已加入 Git 追踪
-- [x] 未提交 Git，等待用户检查
+- [x] 已由用户提交为 `2a60fc2`；本轮交接未创建新提交
