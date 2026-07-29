@@ -1,9 +1,26 @@
 import { mount } from '@vue/test-utils'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createMemoryHistory } from 'vue-router'
 
 import App from '@/App.vue'
 import { createAppRouter } from '@/router'
+
+const getJobsMock = vi.hoisted(() => vi.fn())
+
+vi.mock('@/api/jobApi', () => ({
+  getJobs: getJobsMock,
+}))
+
+beforeEach(() => {
+  getJobsMock.mockReset()
+  getJobsMock.mockResolvedValue({
+    page: 1,
+    size: 20,
+    total: 0,
+    totalPages: 0,
+    items: [],
+  })
+})
 
 async function mountAt(path: string) {
   const router = createAppRouter(createMemoryHistory())
@@ -20,11 +37,11 @@ async function mountAt(path: string) {
 }
 
 describe('application routing', () => {
-  it('renders the jobs placeholder at /jobs', async () => {
+  it('renders the jobs list at /jobs', async () => {
     const { wrapper } = await mountAt('/jobs')
 
     expect(wrapper.text()).toContain('职位浏览')
-    expect(wrapper.text()).toContain('职位列表将在后续任务中实现')
+    expect(wrapper.text()).toContain('筛选职位')
   })
 
   it('redirects the root path to /jobs', async () => {
@@ -32,6 +49,16 @@ describe('application routing', () => {
 
     expect(router.currentRoute.value.fullPath).toBe('/jobs')
     expect(wrapper.text()).toContain('职位浏览')
+  })
+
+  it('renders the detail placeholder without loading detail data', async () => {
+    const { wrapper } = await mountAt(
+      '/jobs/7?from=%2Fjobs%3Fkeyword%3DJava',
+    )
+
+    expect(wrapper.text()).toContain('职位详情')
+    expect(wrapper.text()).toContain('TASK-015')
+    expect(getJobsMock).not.toHaveBeenCalled()
   })
 
   it('renders the 404 placeholder for an unknown path', async () => {
