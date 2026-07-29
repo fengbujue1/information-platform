@@ -4,43 +4,63 @@
 
 ## 当前状态
 
-当前处于 Phase 1：BOSS 职位数据接入与历史归档。
+Phase 1 已完成。
 
-当前正在确认：
-
-- BOSS 列表和详情字段映射；
-- InformationEnvelope V1；
-- Phase 1 数据库结构。
-
-## Phase 1 核心链路
+已完成链路：
 
 ```text
-BOSS 列表与详情
-→ Collector 适配层合并
+BOSS Collector
+→ 列表与详情合并
+→ InformationEnvelope V1
 → Information Hub
-→ MySQL 当前版本与历史快照
-→ Query API
+→ MySQL 幂等归档与历史快照
+→ Job Query API
 ```
+
+当前正在规划 Phase 2：标准化职位 Web 浏览 MVP。
+
+## Phase 2 目标
+
+Phase 2 将基于现有 Job Query API 建设 Vue 3 Web 前端，支持：
+
+- 职位列表；
+- 搜索、筛选、排序和分页；
+- 职位详情；
+- 历史快照查看；
+- 加载、空数据和错误状态；
+- 本地开发与受控环境构建验证。
+
+Phase 2 暂不包含：
+
+- rawPayload 查看；
+- 用户注册和登录；
+- 复杂权限；
+- 职位编辑和删除；
+- AI 分析；
+- 个性化推荐；
+- 消息通知；
+- 公网无认证部署。
 
 ## 仓库结构
 
 - `collectors`：独立采集器
-- `backend`：Spring Boot 信息中枢
-- `frontend`：Vue 信息浏览前端
-- `deploy`：Docker Compose
+- `backend`：Spring Boot Information Hub
+- `frontend`：Vue Information Hub Web
+- `deploy`：Docker Compose 和部署说明
 - `docs`：架构、协议、任务和决策
 
 ## 文档入口
 
 - [文档索引](docs/README.md)
-- [数据库设计](docs/DATABASE_DESIGN.md)
-- [InformationEnvelope V1](docs/contracts/information-envelope-v1.md)
-- [BOSS 字段映射](docs/contracts/boss-job-field-mapping.md)
+- [Phase 2 范围](docs/PHASE2_SCOPE.md)
+- [Phase 2 Codex 协作流程](docs/CODEX_PHASE2_WORKFLOW.md)
+- [路线图](docs/ROADMAP.md)
 - [当前状态](docs/CURRENT_STATUS.md)
+- [Job Query API V1](docs/contracts/job-query-api-v1.md)
 
 ## 当前限制
 
-当前不引入微服务、Kafka、MongoDB、Elasticsearch 或 Kubernetes。
+当前不引入微服务、Kafka、MongoDB、Elasticsearch、向量数据库或 Kubernetes。
 
 ## 合规说明
 
