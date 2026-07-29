@@ -1,11 +1,11 @@
 # 当前开发状态
 
-更新时间：2026-07-28
+更新时间：2026-07-29
 当前分支：dev
 
 ## 当前阶段
 
-Phase 1：BOSS 采集接入与归档。
+Phase 1：BOSS 采集接入与归档，已完成。
 
 ## 已完成
 
@@ -36,10 +36,11 @@ Phase 1：BOSS 采集接入与归档。
 - 完成 TASK-007B：修复直接执行 `boss_cdp_raw.py` 时无法加载同级 `integrations` 包的问题；脚本现在基于自身路径初始化 Collector 根目录，支持从任意工作目录使用绝对脚本路径启动，新增无真实网络的入口子进程回归测试，专项 39 项全部通过。
 - 完成 TASK-008：Collector 新增本地文件 Outbox，对 Hub 可重试失败原子保存当前及剩余安全 Envelope；提供不依赖 Chrome/BOSS 的独立补传命令、指数退避、损坏隔离和永久失败归档；修复新采集内存对象缺少 `scraped_at` 导致映射提前失败的问题，相关回归 49 项通过，完整回归未新增失败。
 - 完成 TASK-009：Information Hub 新增职位分页、当前详情和历史快照查询 API；支持参数化筛选、薪资区间、固定排序白名单和稳定分页，所有查询响应排除 rawPayload，并增加 Service、MVC、MyBatis SQL 和条件 MySQL 集成测试。
+- 完成 TASK-010：本地真实端到端验收覆盖 Collector、Outbox、Information Hub、MySQL 和职位查询 API；同步接受 BOSS 字段映射与 Job Query API V1 合同，修正新采集时间为 UTC `Z`，Phase 1 完成。
 
 ## 当前任务
 
-TASK-010：完成端到端验收。
+无。Phase 1 已完成，等待启动 Phase 2。
 
 ## 已冻结设计
 
@@ -72,4 +73,4 @@ TASK-010：完成端到端验收。
 
 ## 下一步
 
-执行 TASK-010，完成 Collector、Outbox、Information Hub、MySQL 和职位查询 API 的端到端验收。
+启动 Phase 2 前先冻结 Web 浏览范围，并创建对应的最小开发任务；未经确认不提前实现前端。

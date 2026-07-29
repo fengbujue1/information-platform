@@ -46,6 +46,18 @@ class RecruiterOnlineObservationTests(unittest.TestCase):
         self.assertIsNotNone(parsed.tzinfo)
         self.assertEqual(parsed.utcoffset().total_seconds(), 0)
 
+    def test_new_scraped_at_values_use_explicit_utc_timestamp(self):
+        module = load_module()
+
+        scraped_at = module.current_utc_timestamp()
+        parsed = datetime.fromisoformat(scraped_at.replace("Z", "+00:00"))
+        source = SCRIPT_PATH.read_text(encoding="utf-8")
+
+        self.assertTrue(scraped_at.endswith("Z"))
+        self.assertEqual(parsed.utcoffset().total_seconds(), 0)
+        self.assertNotIn('"scraped_at": datetime.now().isoformat()', source)
+        self.assertEqual(source.count('"scraped_at": current_utc_timestamp()'), 3)
+
     def test_only_true_value_receives_shared_observation_time(self):
         module = load_module()
         observed_at = "2026-07-27T05:30:00.123Z"

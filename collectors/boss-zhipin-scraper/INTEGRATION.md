@@ -204,9 +204,22 @@ Information Hub 服务端的数据库、Token 和外部 YAML 配置参见 [Infor
 - 翻页；
 - 现有本地 JSON/CSV 输出。
 
-## 7. 未来输出建议
+## 7. 当前时间输出与未来建议
 
-列表和详情都增加：
+当前新采集列表的 `scraped_at` 使用 UTC `Z` 时间；历史无时区文件仍按配置的 `Asia/Shanghai` 解释。
+
+TASK-006B 已实现为列表职位增加：
+
+```json
+{
+  "boss_online": true,
+  "boss_online_observed_at": "2026-07-27T05:11:12.345Z"
+}
+```
+
+`boss_online_observed_at` 只在 `boss_online=true` 时生成，表示最近一次被 Collector 观察到在线的时间，不是 BOSS 官方最后活跃时间。
+
+未来建议列表和详情都增加稳定批次信息：
 
 ```json
 {
@@ -226,17 +239,6 @@ Information Hub 服务端的数据库、Token 和外部 YAML 配置参见 [Infor
   "error_code": null
 }
 ```
-
-TASK-006B 完成后，列表职位增加：
-
-```json
-{
-  "boss_online": true,
-  "boss_online_observed_at": "2026-07-27T05:11:12.345Z"
-}
-```
-
-`boss_online_observed_at` 只在 `boss_online=true` 时生成，表示最近一次被 Collector 观察到在线的时间，不是 BOSS 官方最后活跃时间。
 
 ## 8. 安全
 

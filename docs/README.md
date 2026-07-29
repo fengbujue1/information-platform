@@ -12,17 +12,16 @@
 
 - [InformationEnvelope V1](contracts/information-envelope-v1.md)
 - [BOSS 职位字段映射](contracts/boss-job-field-mapping.md)
+- [Job Query API V1](contracts/job-query-api-v1.md)
 
 ## 架构决策
 
 - [ADR-006：Phase 1 信息快照](decisions/ADR-006-phase1-information-snapshot.md)
 - [ADR-007：BOSS 身份与合并](decisions/ADR-007-boss-job-identity-and-merge.md)
+- [ADR-008：远程 MySQL 开发环境](decisions/ADR-008-remote-mysql-development-environment.md)
+- [ADR-009：招聘者在线观测时间](decisions/ADR-009-boss-recruiter-online-observation.md)
 
-## 当前任务
+## 阶段状态
 
-- [TASK-001：BOSS 输出结构审计](tasks/TASK-001.md)
-- [TASK-002：冻结 V1 协议](tasks/TASK-002.md)
-- [TASK-004：数据库结构](tasks/TASK-004.md)
-- [TASK-005：接入 API](tasks/TASK-005.md)
-- [TASK-006：BOSS Mapper](tasks/TASK-006.md)
-- [TASK-010：端到端验收](tasks/TASK-010.md)
+- Phase 1 已完成，验收记录见 [TASK-010](tasks/TASK-010.md)。
+- 当前任务和下一步以 [CURRENT_STATUS](CURRENT_STATUS.md) 为准。

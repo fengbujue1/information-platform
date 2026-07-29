@@ -45,10 +45,11 @@ Hub 不可用时，采集任务仍应继续。
 - `encrypt_job_id` 映射为 sourceItemId。
 - `boss_name` 来自 `brandName`，表示公司品牌，不是招聘者姓名。
 - `boss_title` 可以映射 recruiterTitle。
-- recruiterName 和 recruiterActiveText 当前通常为空。
+- recruiterName 当前没有稳定来源，通常为空。
+- `boss_online=true` 时，`boss_online_observed_at` 映射为 recruiterActiveText；false 或缺失时本次映射为空。
 - `tags` 使用规则识别经验和学历；无法识别时只保留 sourceTags。
 - `skills`、`job_labels`、`welfare` 需要从分隔字符串转换为数组。
-- rawPayload 保留原始字段。
+- rawPayload 保留安全清理后的原始业务字段，递归移除 security_id、lid 和凭证。
 - publishTime 当前保持 null。
 
 ## 六、兼容性

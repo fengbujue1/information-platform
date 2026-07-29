@@ -31,13 +31,19 @@ class ChromeSetupTests(unittest.TestCase):
 
         self.assertNotEqual(module.DEFAULT_CDP_DATA_DIR, module.DEFAULT_PROFILE_DIR)
         self.assertNotIn("/tmp/", module.DEFAULT_CDP_DATA_DIR)
-        self.assertTrue(module.DEFAULT_CDP_DATA_DIR.endswith(".boss-zhipin-scraper/chrome-profile"))
+        self.assertEqual(
+            pathlib.Path(module.DEFAULT_CDP_DATA_DIR),
+            ROOT_PATH / "result" / "chrome-profile",
+        )
 
     def test_default_result_dir_is_persistent_user_state(self):
         module = load_module()
 
         self.assertNotIn("/tmp/", module.DEFAULT_RESULT_DIR)
-        self.assertTrue(module.DEFAULT_RESULT_DIR.endswith(".boss-zhipin-scraper/job-result"))
+        self.assertEqual(
+            pathlib.Path(module.DEFAULT_RESULT_DIR),
+            ROOT_PATH / "result" / "job-result",
+        )
         self.assertTrue(module.default_output_path("jobs").startswith(module.DEFAULT_RESULT_DIR))
         self.assertTrue(module.default_output_path("details").startswith(module.DEFAULT_RESULT_DIR))
         self.assertIn("boss_jobs_", module.default_output_path("jobs"))
@@ -908,6 +914,7 @@ class ChromeSetupTests(unittest.TestCase):
             with mock.patch.object(module, "DEFAULT_PROFILE_DIR", str(paths["source_profile"])), \
                     mock.patch.object(module, "DEFAULT_CDP_DATA_DIR", str(paths["cdp_profile"])), \
                     mock.patch.object(module, "requests", fake_requests), \
+                    mock.patch.object(module.platform, "system", return_value="Darwin"), \
                     mock.patch.object(module.shutil, "copy2", side_effect=lambda src, dst: calls["copy2"].append((src, dst))), \
                     mock.patch.object(module.subprocess, "run", side_effect=lambda *args, **kwargs: fake_run(calls, *args, **kwargs)), \
                     mock.patch.object(module.subprocess, "Popen", side_effect=lambda cmd, **kwargs: calls["popen"].append(cmd)), \
@@ -954,6 +961,7 @@ class ChromeSetupTests(unittest.TestCase):
             )
             with mock.patch.object(module, "DEFAULT_CDP_DATA_DIR", str(paths["cdp_profile"])), \
                     mock.patch.object(module, "requests", fake_requests), \
+                    mock.patch.object(module.platform, "system", return_value="Darwin"), \
                     mock.patch.object(module.subprocess, "run", return_value=type("Completed", (), {"stdout": ps_output, "returncode": 0})()), \
                     mock.patch.object(module.subprocess, "Popen") as popen:
                 self.assertEqual(module.run_setup_chrome(cdp_port=9333), 1)
@@ -972,6 +980,7 @@ class ChromeSetupTests(unittest.TestCase):
             )
             with mock.patch.object(module, "DEFAULT_CDP_DATA_DIR", str(paths["cdp_profile"])), \
                     mock.patch.object(module, "requests", fake_requests), \
+                    mock.patch.object(module.platform, "system", return_value="Darwin"), \
                     mock.patch.object(module.subprocess, "run", return_value=type("Completed", (), {"stdout": ps_output, "returncode": 0})()), \
                     mock.patch.object(module.subprocess, "Popen") as popen, \
                     mock.patch.object(module, "wait_for_login", return_value=True) as wait_login:
@@ -992,6 +1001,7 @@ class ChromeSetupTests(unittest.TestCase):
             )
             with mock.patch.object(module, "DEFAULT_CDP_DATA_DIR", str(paths["cdp_profile"])), \
                     mock.patch.object(module, "requests", fake_requests), \
+                    mock.patch.object(module.platform, "system", return_value="Darwin"), \
                     mock.patch.object(module.subprocess, "run", return_value=type("Completed", (), {"stdout": ps_output, "returncode": 0})()), \
                     mock.patch.object(module, "wait_for_login") as wait_login:
                 self.assertEqual(module.run_setup_chrome(cdp_port=9333, wait_login=False), 0)
@@ -1008,7 +1018,8 @@ class ChromeSetupTests(unittest.TestCase):
                 "456 /Applications/Google Chrome.app/Contents/MacOS/Google Chrome "
                 "--remote-debugging-port=9334 --user-data-dir=/tmp/other-profile\n"
             )
-            with mock.patch.object(module.subprocess, "run", return_value=type("Completed", (), {"stdout": ps_output, "returncode": 0})()):
+            with mock.patch.object(module.platform, "system", return_value="Darwin"), \
+                    mock.patch.object(module.subprocess, "run", return_value=type("Completed", (), {"stdout": ps_output, "returncode": 0})()):
                 self.assertEqual(module.chrome_pids_for_user_data_dir(str(paths["cdp_profile"])), [123])
                 self.assertEqual(module.chrome_user_data_dirs_for_cdp_port(9333), [str(paths["cdp_profile"])])
                 self.assertTrue(module.cdp_port_uses_profile(9333, str(paths["cdp_profile"])))

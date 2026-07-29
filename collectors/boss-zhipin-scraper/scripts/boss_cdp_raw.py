@@ -1318,11 +1318,16 @@ def parse_api_jobs_eval_value(value):
     """保留旧调用方只读取精简职位数组的兼容入口。"""
     return parse_api_search_response(value).jobs
 
-def current_utc_observation_time():
-    """生成搜索响应处理时的 UTC 在线观测时间。"""
+def current_utc_timestamp():
+    """生成带明确 UTC 时区的毫秒级采集时间。"""
     return datetime.now(timezone.utc).isoformat(
         timespec="milliseconds"
     ).replace("+00:00", "Z")
+
+
+def current_utc_observation_time():
+    """生成搜索响应处理时的 UTC 在线观测时间。"""
+    return current_utc_timestamp()
 
 
 def add_recruiter_online_observation(jobs, observed_at):
@@ -1617,7 +1622,7 @@ def scrape_list(keyword, city_input, max_pages, filters, output_path,
                     "city": city_name,
                     "filters": filters,
                     "filter_desc": filter_desc,
-                    "scraped_at": datetime.now().isoformat(),
+                    "scraped_at": current_utc_timestamp(),
                 }, all_jobs)
 
             if pg < max_pages:
@@ -1642,7 +1647,7 @@ def scrape_list(keyword, city_input, max_pages, filters, output_path,
         "city": city_name,
         "filters": filters,
         "filter_desc": filter_desc,
-        "scraped_at": datetime.now().isoformat(),
+        "scraped_at": current_utc_timestamp(),
     }
 
     if all_jobs:
@@ -2644,7 +2649,7 @@ def main():
                 "city": list_data.get("city", ""),
                 "filters": list_data.get("filters", {}),
                 "filter_desc": list_data.get("filter_desc", []),
-                "scraped_at": datetime.now().isoformat(),
+                "scraped_at": current_utc_timestamp(),
                 "merged_from": args.merge,
             }, merged_jobs)
             print(f"合并结果已保存: {args.output}")
