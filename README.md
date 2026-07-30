@@ -4,9 +4,9 @@
 
 ## 当前状态
 
-Phase 1 已完成。
+Phase 1 和 Phase 2 已完成。
 
-已完成链路：
+当前已打通：
 
 ```text
 BOSS Collector
@@ -14,25 +14,27 @@ BOSS Collector
 → InformationEnvelope V1
 → Information Hub
 → MySQL 幂等归档与历史快照
-→ Job Query API
+→ Job Query API V1
+→ Information Hub Web
 ```
 
-Phase 2 范围已经冻结，TASK-011 至 TASK-016 已完成。
+Phase 2 已完成 Vue 3 标准化职位浏览 MVP、基础 CI、受控 Web 构建部署和端到端验收。项目当前等待 Phase 3 范围规划，不提前实施 AI、推荐或通知。
 
-当前任务为 TASK-017：完善交互、响应式和健壮性。Vue 3 项目骨架、强类型 Job Query API Client、职位列表、职位详情和历史快照查看已经完成。
+## 当前可用能力
 
-## Phase 2 目标
+- BOSS 职位列表与详情采集；
+- 统一协议接入 Information Hub；
+- MySQL 幂等归档、非破坏性合并和历史快照；
+- 职位列表、详情和快照只读 API；
+- 职位搜索、筛选、排序和分页；
+- 职位详情与历史版本浏览；
+- URL 状态恢复、Loading、Empty、Error 和 404；
+- Java、Python、Vue 和浏览器 E2E 持续集成；
+- Nginx SPA 回退和 `/api` 同源代理受控部署模板。
 
-Phase 2 将基于现有 Job Query API 建设 Vue 3 Web 前端，支持：
+## Phase 2 边界
 
-- 职位列表；
-- 搜索、筛选、排序和分页；
-- 职位详情；
-- 历史快照查看；
-- 加载、空数据和错误状态；
-- 本地开发与受控环境构建验证。
-
-Phase 2 暂不包含：
+Phase 2 不包含：
 
 - rawPayload 查看；
 - 用户注册和登录；
@@ -54,15 +56,17 @@ Phase 2 暂不包含：
 ## 文档入口
 
 - [文档索引](docs/README.md)
+- [项目背景](docs/PROJECT_CONTEXT.md)
+- [架构](docs/ARCHITECTURE.md)
 - [Phase 2 范围](docs/PHASE2_SCOPE.md)
-- [Phase 2 Codex 协作流程](docs/CODEX_PHASE2_WORKFLOW.md)
 - [路线图](docs/ROADMAP.md)
 - [当前状态](docs/CURRENT_STATUS.md)
 - [Job Query API V1](docs/contracts/job-query-api-v1.md)
+- [Web UI Behavior V1](docs/contracts/web-ui-behavior-v1.md)
 
 ## 当前限制
 
-当前不引入微服务、Kafka、MongoDB、Elasticsearch、向量数据库或 Kubernetes。
+当前不引入微服务、Kafka、MongoDB、Elasticsearch、向量数据库或 Kubernetes。Phase 3 必须先完成范围、数据模型、安全边界和成本约束设计，再开始 AI 业务代码。
 
 ## 合规说明
 

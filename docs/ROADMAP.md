@@ -44,7 +44,7 @@ Phase 1 任务：
 
 ## Phase 2：标准化职位 Web 浏览 MVP
 
-状态：进行中，范围已冻结。
+状态：已完成。
 
 范围文档：
 
@@ -52,7 +52,7 @@ Phase 1 任务：
 - [Web UI Behavior V1](contracts/web-ui-behavior-v1.md)
 - [ADR-010：Phase 2 Web MVP 边界](decisions/ADR-010-phase2-web-mvp-boundary.md)
 
-目标链路：
+完成链路：
 
 ```text
 浏览器
@@ -61,6 +61,8 @@ Phase 1 任务：
 → Information Hub
 → MySQL
 ```
+
+Phase 2 已完成标准化职位列表、筛选、排序、分页、详情、历史快照、页面状态、URL 恢复、基础 CI、受控部署和自动化及人工端到端验收。
 
 Phase 2 任务：
 
@@ -86,7 +88,9 @@ Phase 2 不包含：
 
 ## Phase 3：AI 分析
 
-状态：未开始。
+状态：未开始，等待范围规划。
+
+开始实施前必须先冻结目标、输入输出协议、数据模型、安全边界、模型接入方式、成本限制和验收标准。
 
 原则：
 

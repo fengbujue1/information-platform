@@ -7,7 +7,9 @@
 
 Phase 1 已完成。
 
-Phase 2 范围已冻结，Vue 3 项目骨架、强类型 Job Query API Client、标准化职位列表页、职位详情页、历史快照页、跨页面交互与健壮性收口，以及基础 CI 和受控 Web 构建部署配置已完成。
+Phase 2 标准化职位 Web 浏览 MVP 已完成，并通过自动化浏览器测试和项目负责人的真实环境人工端到端验收。
+
+当前等待 Phase 3 范围规划，尚未开始 AI、推荐或通知实现。
 
 ## Phase 1 已完成
 
@@ -46,16 +48,15 @@ BOSS Collector
 - 完成 TASK-016：实现历史快照列表、非连续版本选择、正文和标准化 JSON 查看、返回导航、请求取消，以及 Loading、Empty、404、Error 和重试。
 - 完成 TASK-017：统一页面壳和状态反馈，完善窄屏分页、长内容保护、键盘焦点、基础 ARIA 和跨页面健壮性测试。
 - 完成 TASK-018：建立 Java、Python、Vue 基础 CI，提供固定版本 Web 镜像、Nginx SPA 回退、`/api` 同源代理、部署校验和受控访问文档。
+- 完成 TASK-019：增加稳定 Fixture 驱动的浏览器 E2E，完成真实环境人工联调和 Phase 2 文档收尾。
 
 ## 当前任务
 
-TASK-019：完成 Phase 2 端到端验收。
+当前没有活动实施任务。
 
-TASK-019 将验证浏览器、Information Hub Web、Job Query API、Information Hub 和 MySQL 的完整只读链路，并完成 Phase 2 文档收尾；不新增功能、不进入 Phase 3、不公开部署。
+项目等待 Phase 3 规划任务。开始 AI 业务代码前，必须先确定 Phase 3 的目标、范围、输入输出协议、数据模型、安全边界、模型接入方式、成本限制和验收标准。
 
-## Phase 2 已冻结范围
-
-包含：
+## Phase 2 完成能力
 
 - 职位列表；
 - 搜索、筛选、排序和分页；
@@ -63,24 +64,14 @@ TASK-019 将验证浏览器、Information Hub Web、Job Query API、Information 
 - 历史快照；
 - Loading、Empty、Error 和 404；
 - URL 状态恢复；
-- 前端测试；
-- 受控构建和部署配置。
-
-不包含：
-
-- rawPayload；
-- 用户登录和复杂权限；
-- 职位写操作；
-- Collector 管理；
-- AI；
-- 推荐；
-- 通知；
-- 公网无认证部署。
+- 前端单元、组件和浏览器 E2E；
+- 受控构建和部署配置；
+- 浏览器到真实 MySQL 的完整只读链路验收。
 
 ## 当前设计约束
 
 - 前端只调用 Information Hub API。
-- Job Query API V1 是 Phase 2 的后端数据契约。
+- Job Query API V1 是 Web 浏览的后端数据契约。
 - 列表、详情和快照不返回 rawPayload。
 - 开发环境优先使用 Vite Proxy。
 - 部署环境优先使用 Nginx 同源代理。
@@ -89,12 +80,8 @@ TASK-019 将验证浏览器、Information Hub Web、Job Query API、Information 
 - 前端不保存 Collector Token。
 - CI 不使用私人 SSH 密钥，不连接远程共享 MySQL。
 - 不修改 Phase 1 的幂等、快照和归档语义。
-- 列表状态写入 URL Query；详情和快照使用经过校验的内部 `from` 参数恢复列表。
-- 重置筛选时保留当前 `size`，其他状态恢复默认值。
-- 三个核心页面使用统一状态反馈；错误使用可读文案和显式重试操作。
-- 窄屏分页不依赖横向无限滚动，长标题、正文、标签和 JSON 必须安全换行或在局部容器内滚动。
-- 不提前进入 Phase 3。
+- Phase 3 未完成设计冻结前，不提前实现 AI、推荐或通知。
 
 ## 下一步
 
-执行 TASK-019。使用稳定 Fixture 或请求拦截完成自动化 E2E，再在受控真实环境验证浏览器到 MySQL 的完整读取链路、深层路由、来源链接、时间显示，以及 rawPayload 和 Token 不泄露。
+创建 Phase 3 规划任务。先完成需求澄清、架构影响评估和设计冻结，再拆分最小实施任务。

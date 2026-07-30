@@ -1,6 +1,6 @@
 # Information Hub Web
 
-Information Platform 的标准化信息浏览前端。当前已实现 Vue 3 工程骨架、强类型 Job Query API Client、真实职位列表、职位详情和历史快照查看。
+Information Platform 的标准化信息浏览前端。Phase 2 已完成职位列表、筛选、排序、分页、职位详情、历史快照、页面状态、受控构建部署和端到端验收。
 
 ## 环境要求
 
@@ -21,7 +21,7 @@ npm ci
 npm run dev
 ```
 
-如果 PowerShell 因执行策略禁止运行 `npm.ps1`，可直接使用 Windows 命令入口，无需放宽系统执行策略：
+如果 PowerShell 因执行策略禁止运行 `npm.ps1`，可直接使用 Windows 命令入口：
 
 ```powershell
 npm.cmd ci
@@ -33,7 +33,7 @@ npm.cmd run dev
 - `http://localhost:5173/jobs`：职位列表
 - `http://localhost:5173/jobs/{id}`：职位详情
 - `http://localhost:5173/jobs/{id}/snapshots`：历史快照列表和版本内容
-- 任意不存在的前端路径将显示 404 页面
+- 任意不存在的前端路径：404 页面
 
 ## API 开发配置
 
@@ -60,7 +60,39 @@ INFORMATION_HUB_PROXY_TARGET=http://127.0.0.1:8080
 
 页面必须通过这些函数读取数据，不直接创建 Axios 实例。API 错误统一转换为 `ApiClientError`，不会向页面暴露 Axios 内部 request、response 或 config。
 
-`/jobs` 通过 `getJobs` 加载真实职位列表，`/jobs/:id` 通过 `getJobById` 加载当前详情，`/jobs/:id/snapshots` 通过 `getJobSnapshots` 加载按后端顺序排列的历史版本。
+列表、详情和快照页面不请求或展示 rawPayload，也不保存 Collector Token。
+
+## 自动化验证
+
+首次运行浏览器 E2E 前安装与项目版本匹配的 Chromium：
+
+```powershell
+npx playwright install chromium
+```
+
+完整前端验证：
+
+```powershell
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+```
+
+`test:e2e` 使用本地稳定 Fixture 拦截 Job Query API，不访问远程 MySQL，不读取或提交真实职位数据。覆盖：
+
+- 列表加载；
+- 筛选和排序 URL；
+- 分页；
+- 列表进入详情；
+- 详情进入快照；
+- 深层路由刷新；
+- 空数据；
+- API 错误；
+- 404；
+- rawPayload 和 Collector Token 不展示。
+
+PowerShell 存在执行策略限制时，将命令中的 `npm` 和 `npx` 分别替换为 `npm.cmd` 和 `npx.cmd`。
 
 ## 生产构建与受控部署
 
@@ -77,15 +109,5 @@ npm run build
 ```text
 deploy/WEB_DEPLOYMENT.md
 ```
-
-## 验证命令
-
-```powershell
-npm run typecheck
-npm run test
-npm run build
-```
-
-PowerShell 存在上述执行策略限制时，将命令中的 `npm` 替换为 `npm.cmd`。
 
 `.env.example` 只包含非敏感的本地开发示例。只有 `VITE_` 前缀变量会进入浏览器；任何前端或 Vite 环境变量都不得保存密码、Token 或 Cookie。
