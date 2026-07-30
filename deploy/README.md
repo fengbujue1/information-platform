@@ -1,10 +1,15 @@
 # Information Platform 部署
 
-deploy/ 是 Information Platform 的项目级 Compose 入口。TASK-004A 只在其中部署共享开发和集成测试 MySQL；后续任务可以在同一 Compose 中加入 Information Hub、Web 和 Nginx。当前不部署生产数据库，不创建 Phase 1 业务表，也不允许 Collector 直接连接数据库。
+deploy/ 是 Information Platform 的项目级 Compose 入口。当前 Compose 提供共享开发和集成测试 MySQL，以及通过 `web` profile 显式启用的 Information Hub Web/Nginx 受控部署模板。当前不部署生产数据库，不创建新的业务表，也不允许 Collector 直接连接数据库。
+
+Web 生产构建、SPA 深层路由、`/api` 同源代理、健康检查和受控访问说明见 `deploy/WEB_DEPLOYMENT.md`。
 
 ## 目录内容
 
-- `docker-compose.yml`：固定版本的 MySQL Compose 配置。
+- `docker-compose.yml`：固定版本的 MySQL Compose 配置，以及可选的 `web` profile。
+- `WEB_DEPLOYMENT.md`：Web 生产构建、Nginx 同源代理和受控访问指南。
+- `web/Dockerfile`：固定版本 Node.js 构建和 Nginx 运行镜像。
+- `web/nginx/default.conf.template`：SPA 深层路由和 `/api` 代理模板。
 - `.env.example`：可以提交的环境变量模板，不包含真实密码。
 - `mysql/init/01-create-databases.sh`：首次初始化开发库、测试库及隔离账号。
 - `mysql/examples/ssh-config.example`：每台开发电脑的 OpenSSH 配置示例。

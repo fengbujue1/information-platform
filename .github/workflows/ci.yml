@@ -1,0 +1,166 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  repository-checks:
+    name: Repository checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Check changed lines for whitespace errors
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BEFORE_SHA: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            git diff --check "$BASE_SHA...$HEAD_SHA"
+          elif [[ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]]; then
+            git diff --check "$BEFORE_SHA" "$HEAD_SHA"
+          else
+            git show --check --format=fuller "$HEAD_SHA"
+          fi
+
+      - name: Verify required files and sensitive paths
+        shell: pwsh
+        run: ./scripts/verify-project.ps1
+
+  backend:
+    name: Backend tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend/information-hub
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+          cache-dependency-path: backend/information-hub/pom.xml
+
+      - name: Run Maven tests
+        shell: bash
+        run: |
+          chmod +x ./mvnw
+          ./mvnw test
+
+  collector:
+    name: Collector tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: collectors/boss-zhipin-scraper
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.10"
+          cache: pip
+          cache-dependency-path: |
+            collectors/boss-zhipin-scraper/requirements.txt
+            collectors/boss-zhipin-scraper/pyproject.toml
+
+      - name: Install Collector dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Run Collector tests
+        env:
+          PYTHONUTF8: "1"
+        run: python -m unittest discover -s tests -p "test_*.py"
+
+  frontend:
+    name: Frontend checks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend/information-hub-web
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: frontend/information-hub-web/.nvmrc
+          cache: npm
+          cache-dependency-path: frontend/information-hub-web/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Run type checks
+        run: npm run typecheck
+
+      - name: Run frontend tests
+        run: npm run test
+
+      - name: Build frontend
+        run: npm run build
+
+  web-deployment:
+    name: Web deployment configuration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Validate web deployment configuration
+        shell: pwsh
+        run: ./deploy/web/tests/validate-web-compose.ps1
+
+      - name: Build web image
+        run: docker compose --env-file deploy/.env.example --file deploy/docker-compose.yml --profile web build web
+
+      - name: Validate Nginx configuration
+        run: docker compose --env-file deploy/.env.example --file deploy/docker-compose.yml --profile web run --rm --no-deps web nginx -t
+
+      - name: Start web container
+        run: docker compose --env-file deploy/.env.example --file deploy/docker-compose.yml --profile web up -d --no-deps web
+
+      - name: Verify health and SPA deep-route fallback
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:18080/healthz | grep --quiet '^ok$'; then
+              break
+            fi
+            if [[ "$attempt" == "30" ]]; then
+              docker compose --env-file deploy/.env.example --file deploy/docker-compose.yml --profile web logs web
+              exit 1
+            fi
+            sleep 1
+          done
+          curl --fail --silent http://127.0.0.1:18080/jobs/7/snapshots | grep --quiet '<div id="app"></div>'
+
+      - name: Stop test container
+        if: always()
+        run: docker compose --env-file deploy/.env.example --file deploy/docker-compose.yml --profile web down

@@ -31,6 +31,30 @@ services:
       retries: 12
       start_period: 40s
 
+  web:
+    profiles:
+      - web
+    build:
+      context: ..
+      dockerfile: deploy/web/Dockerfile
+    image: information-hub-web:local
+    restart: unless-stopped
+    environment:
+      INFORMATION_HUB_UPSTREAM: ${INFORMATION_HUB_UPSTREAM:-http://host.docker.internal:8080}
+      NGINX_ENVSUBST_FILTER: ^INFORMATION_HUB_UPSTREAM$
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "127.0.0.1:${WEB_HOST_PORT:-18080}:8080"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget -qO- http://127.0.0.1:8080/healthz | grep -qx ok
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
 volumes:
   mysql-data:
     name: ${MYSQL_DATA_VOLUME:-information-platform-mysql-data}

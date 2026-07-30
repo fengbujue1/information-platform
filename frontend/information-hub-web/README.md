@@ -58,9 +58,25 @@ INFORMATION_HUB_PROXY_TARGET=http://127.0.0.1:8080
 - `getJobById`
 - `getJobSnapshots`
 
-后续页面必须通过这些函数读取数据，不直接创建 Axios 实例。API错误统一转换为 `ApiClientError`，不会向页面暴露 Axios内部 request、response 或 config。
+页面必须通过这些函数读取数据，不直接创建 Axios 实例。API 错误统一转换为 `ApiClientError`，不会向页面暴露 Axios 内部 request、response 或 config。
 
 `/jobs` 通过 `getJobs` 加载真实职位列表，`/jobs/:id` 通过 `getJobById` 加载当前详情，`/jobs/:id/snapshots` 通过 `getJobSnapshots` 加载按后端顺序排列的历史版本。
+
+## 生产构建与受控部署
+
+本地只生成生产静态文件：
+
+```powershell
+npm run build
+```
+
+项目级 Compose 提供可选的 `web` profile，使用固定版本 Node.js 构建静态文件，再由 Nginx 提供 SPA 深层路由回退和 `/api` 同源代理。该配置默认只绑定宿主机 `127.0.0.1:18080`，不属于公网发布方案。
+
+完整配置、健康检查、SSH 隧道访问和停止方式见：
+
+```text
+deploy/WEB_DEPLOYMENT.md
+```
 
 ## 验证命令
 

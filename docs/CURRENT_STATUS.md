@@ -7,7 +7,7 @@
 
 Phase 1 已完成。
 
-Phase 2 范围已冻结，Vue 3 项目骨架、强类型 Job Query API Client、标准化职位列表页、职位详情页、历史快照页，以及跨页面交互、响应式和健壮性收口已完成。
+Phase 2 范围已冻结，Vue 3 项目骨架、强类型 Job Query API Client、标准化职位列表页、职位详情页、历史快照页、跨页面交互与健壮性收口，以及基础 CI 和受控 Web 构建部署配置已完成。
 
 ## Phase 1 已完成
 
@@ -33,6 +33,7 @@ BOSS Collector
 → 接入 API
 → MySQL
 → Job Query API V1
+→ Information Hub Web
 ```
 
 ## Phase 2 已完成任务
@@ -44,12 +45,13 @@ BOSS Collector
 - 完成 TASK-015：实现标准化职位详情、纯文本 JD、安全来源链接、返回列表、快照入口、请求取消，以及 Loading、404、Error 和重试。
 - 完成 TASK-016：实现历史快照列表、非连续版本选择、正文和标准化 JSON 查看、返回导航、请求取消，以及 Loading、Empty、404、Error 和重试。
 - 完成 TASK-017：统一页面壳和状态反馈，完善窄屏分页、长内容保护、键盘焦点、基础 ARIA 和跨页面健壮性测试。
+- 完成 TASK-018：建立 Java、Python、Vue 基础 CI，提供固定版本 Web 镜像、Nginx SPA 回退、`/api` 同源代理、部署校验和受控访问文档。
 
 ## 当前任务
 
-TASK-018：建立 CI 与受控构建部署配置。
+TASK-019：完成 Phase 2 端到端验收。
 
-TASK-018 将为 Java、Python 和 Vue 建立基础持续集成，并提供 SPA 深层路由回退和 `/api` 同源代理模板；不部署公网、不增加认证系统、不连接私人远程开发库。
+TASK-019 将验证浏览器、Information Hub Web、Job Query API、Information Hub 和 MySQL 的完整只读链路，并完成 Phase 2 文档收尾；不新增功能、不进入 Phase 3、不公开部署。
 
 ## Phase 2 已冻结范围
 
@@ -82,8 +84,10 @@ TASK-018 将为 Java、Python 和 Vue 建立基础持续集成，并提供 SPA �
 - 列表、详情和快照不返回 rawPayload。
 - 开发环境优先使用 Vite Proxy。
 - 部署环境优先使用 Nginx 同源代理。
-- 未增加读取认证前，只允许受控访问。
+- 未增加读取认证前，只允许本机、SSH 隧道或受控网络访问。
+- Web Compose profile 默认只绑定宿主机回环地址，不公开无认证读取 API。
 - 前端不保存 Collector Token。
+- CI 不使用私人 SSH 密钥，不连接远程共享 MySQL。
 - 不修改 Phase 1 的幂等、快照和归档语义。
 - 列表状态写入 URL Query；详情和快照使用经过校验的内部 `from` 参数恢复列表。
 - 重置筛选时保留当前 `size`，其他状态恢复默认值。
@@ -93,4 +97,4 @@ TASK-018 将为 Java、Python 和 Vue 建立基础持续集成，并提供 SPA �
 
 ## 下一步
 
-执行 TASK-018。开始修改前先确定 CI 工作流拆分、Java/Python/前端命令与缓存策略、Nginx 同源代理拓扑、不可进入 CI 的私人秘密和远程资源，以及配置验证方法。
+执行 TASK-019。使用稳定 Fixture 或请求拦截完成自动化 E2E，再在受控真实环境验证浏览器到 MySQL 的完整读取链路、深层路由、来源链接、时间显示，以及 rawPayload 和 Token 不泄露。
