@@ -17,9 +17,9 @@ BOSS Collector
 → Job Query API
 ```
 
-Phase 2 范围已经冻结，TASK-011 至 TASK-015 已完成。
+Phase 2 范围已经冻结，TASK-011 至 TASK-016 已完成。
 
-当前任务为 TASK-016：实现历史快照查看。Vue 3 项目骨架、强类型 Job Query API Client、职位列表页和职位详情页已经完成。
+当前任务为 TASK-017：完善交互、响应式和健壮性。Vue 3 项目骨架、强类型 Job Query API Client、职位列表、职位详情和历史快照查看已经完成。
 
 ## Phase 2 目标
 

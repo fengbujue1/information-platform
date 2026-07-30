@@ -7,15 +7,19 @@ import { createAppRouter } from '@/router'
 
 const getJobsMock = vi.hoisted(() => vi.fn())
 const getJobByIdMock = vi.hoisted(() => vi.fn())
+const getJobSnapshotsMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@/api/jobApi', () => ({
   getJobs: getJobsMock,
   getJobById: getJobByIdMock,
+  getJobSnapshots: getJobSnapshotsMock,
 }))
 
 beforeEach(() => {
   getJobsMock.mockReset()
   getJobByIdMock.mockReset()
+  getJobSnapshotsMock.mockReset()
+  getJobSnapshotsMock.mockResolvedValue([])
   getJobsMock.mockResolvedValue({
     page: 1,
     size: 20,
@@ -112,13 +116,17 @@ describe('application routing', () => {
     expect(getJobsMock).not.toHaveBeenCalled()
   })
 
-  it('renders the snapshot placeholder without requesting snapshots', async () => {
+  it('renders the real snapshots page and loads its route id', async () => {
     const { wrapper } = await mountAt(
       '/jobs/7/snapshots?from=%2Fjobs%3Fkeyword%3DJava',
     )
 
     expect(wrapper.text()).toContain('历史快照')
-    expect(wrapper.text()).toContain('TASK-016')
+    expect(wrapper.text()).toContain('当前职位暂无历史版本')
+    expect(getJobSnapshotsMock).toHaveBeenCalledWith(
+      7,
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    )
     expect(getJobsMock).not.toHaveBeenCalled()
     expect(getJobByIdMock).not.toHaveBeenCalled()
   })

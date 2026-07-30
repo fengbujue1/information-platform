@@ -1,6 +1,6 @@
 # Information Hub Web
 
-Information Platform 的标准化信息浏览前端。当前已实现 Vue 3 工程骨架、强类型 Job Query API Client、真实职位列表和职位详情；历史快照页面仍为 TASK-016 的最小占位页。
+Information Platform 的标准化信息浏览前端。当前已实现 Vue 3 工程骨架、强类型 Job Query API Client、真实职位列表、职位详情和历史快照查看。
 
 ## 环境要求
 
@@ -32,7 +32,7 @@ npm.cmd run dev
 
 - `http://localhost:5173/jobs`：职位列表
 - `http://localhost:5173/jobs/{id}`：职位详情
-- `http://localhost:5173/jobs/{id}/snapshots`：历史快照占位页
+- `http://localhost:5173/jobs/{id}/snapshots`：历史快照列表和版本内容
 - 任意不存在的前端路径将显示 404 页面
 
 ## API 开发配置
@@ -60,7 +60,7 @@ INFORMATION_HUB_PROXY_TARGET=http://127.0.0.1:8080
 
 后续页面必须通过这些函数读取数据，不直接创建 Axios 实例。API错误统一转换为 `ApiClientError`，不会向页面暴露 Axios内部 request、response 或 config。
 
-`/jobs` 通过 `getJobs` 加载真实职位列表，`/jobs/:id` 通过 `getJobById` 加载当前详情。历史快照占位页暂不调用 `getJobSnapshots`，由 TASK-016 实现。
+`/jobs` 通过 `getJobs` 加载真实职位列表，`/jobs/:id` 通过 `getJobById` 加载当前详情，`/jobs/:id/snapshots` 通过 `getJobSnapshots` 加载按后端顺序排列的历史版本。
 
 ## 验证命令
 
