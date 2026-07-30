@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest'
 import {
   EMPTY_VALUE_PLACEHOLDER,
   formatDateTime,
+  formatDateTimeOrText,
+  formatJsonValueList,
   formatNullableValue,
   formatSalary,
 } from './formatters'
@@ -64,5 +66,31 @@ describe('formatSalary', () => {
       }),
     ).toContain('最高')
     expect(formatSalary({})).toBe(EMPTY_VALUE_PLACEHOLDER)
+  })
+})
+
+describe('formatDateTimeOrText', () => {
+  it('formats timestamps and preserves non-date source text', () => {
+    expect(
+      formatDateTimeOrText('2026-07-28T08:00:00Z'),
+    ).not.toBe('2026-07-28T08:00:00Z')
+    expect(formatDateTimeOrText('刚刚活跃')).toBe('刚刚活跃')
+    expect(formatDateTimeOrText(' ')).toBe(EMPTY_VALUE_PLACEHOLDER)
+  })
+})
+
+describe('formatJsonValueList', () => {
+  it('formats heterogeneous JSON values without assuming string tags', () => {
+    expect(
+      formatJsonValueList([
+        ' Java ',
+        '',
+        3,
+        true,
+        null,
+        { label: '本科' },
+      ]),
+    ).toEqual(['Java', '3', 'true', '{"label":"本科"}'])
+    expect(formatJsonValueList(null)).toEqual([])
   })
 })

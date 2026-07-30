@@ -5,7 +5,8 @@ import {
   type RouterHistory,
 } from 'vue-router'
 
-import JobDetailPlaceholderView from '@/views/JobDetailPlaceholderView.vue'
+import JobDetailView from '@/views/JobDetailView.vue'
+import JobSnapshotsPlaceholderView from '@/views/JobSnapshotsPlaceholderView.vue'
 import JobsView from '@/views/JobsView.vue'
 import NotFoundView from '@/views/NotFoundView.vue'
 
@@ -27,7 +28,12 @@ export function createAppRouter(
       {
         path: '/jobs/:id',
         name: 'job-detail',
-        component: JobDetailPlaceholderView,
+        component: JobDetailView,
+      },
+      {
+        path: '/jobs/:id/snapshots',
+        name: 'job-snapshots',
+        component: JobSnapshotsPlaceholderView,
       },
       {
         path: '/:pathMatch(.*)*',

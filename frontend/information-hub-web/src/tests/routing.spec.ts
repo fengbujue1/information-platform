@@ -1,4 +1,4 @@
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createMemoryHistory } from 'vue-router'
 
@@ -6,19 +6,65 @@ import App from '@/App.vue'
 import { createAppRouter } from '@/router'
 
 const getJobsMock = vi.hoisted(() => vi.fn())
+const getJobByIdMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@/api/jobApi', () => ({
   getJobs: getJobsMock,
+  getJobById: getJobByIdMock,
 }))
 
 beforeEach(() => {
   getJobsMock.mockReset()
+  getJobByIdMock.mockReset()
   getJobsMock.mockResolvedValue({
     page: 1,
     size: 20,
     total: 0,
     totalPages: 0,
     items: [],
+  })
+  getJobByIdMock.mockResolvedValue({
+    id: 7,
+    source: 'BOSS',
+    sourceItemId: 'source-7',
+    sourceUrl: null,
+    title: 'Java developer',
+    content: 'Job description',
+    publishTime: null,
+    collectedAt: '2026-07-28T01:00:00Z',
+    firstSeenTime: '2026-07-28T01:00:00Z',
+    lastSeenTime: '2026-07-28T02:00:00Z',
+    currentVersionNo: 1,
+    collectorId: 'collector',
+    collectorVersion: '1.0',
+    sourceCompanyId: null,
+    sourceRecruiterId: null,
+    companyName: 'Example company',
+    companyUrl: null,
+    companyScaleText: null,
+    companyStageText: null,
+    companyIndustryText: null,
+    salaryText: null,
+    salarySource: null,
+    salaryMinMonthlyYuan: null,
+    salaryMaxMonthlyYuan: null,
+    salaryMonths: null,
+    locationName: null,
+    cityName: null,
+    areaName: null,
+    businessDistrictName: null,
+    experienceText: null,
+    educationText: null,
+    recruiterName: null,
+    recruiterTitle: null,
+    recruiterActiveText: null,
+    remoteType: 'UNKNOWN',
+    jobStatus: 'ACTIVE',
+    detailStatus: 'FETCHED',
+    detailCollectedAt: null,
+    sourceTags: null,
+    sourceSkillTags: null,
+    welfare: null,
   })
 })
 
@@ -32,6 +78,7 @@ async function mountAt(path: string) {
       plugins: [router],
     },
   })
+  await flushPromises()
 
   return { router, wrapper }
 }
@@ -51,14 +98,29 @@ describe('application routing', () => {
     expect(wrapper.text()).toContain('职位浏览')
   })
 
-  it('renders the detail placeholder without loading detail data', async () => {
+  it('renders the real detail page and loads its route id', async () => {
     const { wrapper } = await mountAt(
       '/jobs/7?from=%2Fjobs%3Fkeyword%3DJava',
     )
 
-    expect(wrapper.text()).toContain('职位详情')
-    expect(wrapper.text()).toContain('TASK-015')
+    expect(wrapper.text()).toContain('Java developer')
+    expect(wrapper.text()).toContain('Job description')
+    expect(getJobByIdMock).toHaveBeenCalledWith(
+      7,
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    )
     expect(getJobsMock).not.toHaveBeenCalled()
+  })
+
+  it('renders the snapshot placeholder without requesting snapshots', async () => {
+    const { wrapper } = await mountAt(
+      '/jobs/7/snapshots?from=%2Fjobs%3Fkeyword%3DJava',
+    )
+
+    expect(wrapper.text()).toContain('历史快照')
+    expect(wrapper.text()).toContain('TASK-016')
+    expect(getJobsMock).not.toHaveBeenCalled()
+    expect(getJobByIdMock).not.toHaveBeenCalled()
   })
 
   it('renders the 404 placeholder for an unknown path', async () => {

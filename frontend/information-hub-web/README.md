@@ -1,6 +1,6 @@
 # Information Hub Web
 
-Information Platform 的标准化信息浏览前端。当前包含 Vue 3 工程骨架和强类型 Job Query API Client；`/jobs` 与 404 仍为占位页，页面尚未调用真实 API。
+Information Platform 的标准化信息浏览前端。当前已实现 Vue 3 工程骨架、强类型 Job Query API Client、真实职位列表和职位详情；历史快照页面仍为 TASK-016 的最小占位页。
 
 ## 环境要求
 
@@ -30,8 +30,10 @@ npm.cmd run dev
 
 开发服务器启动后访问：
 
-- `http://localhost:5173/jobs`
-- 任意不存在的前端路径将显示 404 占位页
+- `http://localhost:5173/jobs`：职位列表
+- `http://localhost:5173/jobs/{id}`：职位详情
+- `http://localhost:5173/jobs/{id}/snapshots`：历史快照占位页
+- 任意不存在的前端路径将显示 404 页面
 
 ## API 开发配置
 
@@ -58,7 +60,7 @@ INFORMATION_HUB_PROXY_TARGET=http://127.0.0.1:8080
 
 后续页面必须通过这些函数读取数据，不直接创建 Axios 实例。API错误统一转换为 `ApiClientError`，不会向页面暴露 Axios内部 request、response 或 config。
 
-当前页面仍为占位页，因此启动前端不会自动访问 Information Hub。TASK-014 再接入真实职位列表。
+`/jobs` 通过 `getJobs` 加载真实职位列表，`/jobs/:id` 通过 `getJobById` 加载当前详情。历史快照占位页暂不调用 `getJobSnapshots`，由 TASK-016 实现。
 
 ## 验证命令
 
@@ -70,4 +72,4 @@ npm run build
 
 PowerShell 存在上述执行策略限制时，将命令中的 `npm` 替换为 `npm.cmd`。
 
-`.env.example` 只用于说明可公开到浏览器的非敏感环境变量。不要在前端环境变量中保存密码、Token 或 Cookie。
+`.env.example` 只包含非敏感的本地开发示例。只有 `VITE_` 前缀变量会进入浏览器；任何前端或 Vite 环境变量都不得保存密码、Token 或 Cookie。

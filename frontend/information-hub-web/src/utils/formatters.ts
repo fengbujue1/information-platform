@@ -1,3 +1,5 @@
+import type { JsonValue } from '@/types/json'
+
 export const EMPTY_VALUE_PLACEHOLDER = '—'
 
 export interface DateTimeFormatOptions {
@@ -48,6 +50,39 @@ export function formatDateTime(
   }).format(date)
 }
 
+export function formatDateTimeOrText(
+  value: string | null | undefined,
+): string {
+  const candidate = value?.trim()
+  if (!candidate) {
+    return EMPTY_VALUE_PLACEHOLDER
+  }
+
+  const formatted = formatDateTime(candidate)
+  return formatted === EMPTY_VALUE_PLACEHOLDER ? candidate : formatted
+}
+
+export function formatJsonValueList(
+  values: JsonValue[] | null | undefined,
+): string[] {
+  if (!values) {
+    return []
+  }
+
+  return values.flatMap((value) => {
+    if (value === null) {
+      return []
+    }
+    if (typeof value === 'string') {
+      const normalized = value.trim()
+      return normalized ? [normalized] : []
+    }
+    if (typeof value === 'number' || typeof value === 'boolean') {
+      return [String(value)]
+    }
+    return [JSON.stringify(value)]
+  })
+}
 function isValidSalaryValue(value: number | null | undefined): value is number {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0
 }

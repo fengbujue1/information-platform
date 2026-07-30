@@ -1,0 +1,119 @@
+.job-detail {
+  display: grid;
+  gap: 20px;
+}
+
+.job-detail-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.job-detail-heading h1 {
+  margin: 12px 0;
+  overflow-wrap: anywhere;
+}
+
+.job-detail-actions,
+.job-detail-statuses,
+.detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.job-detail-actions {
+  justify-content: flex-end;
+}
+
+.internal-link,
+.external-link {
+  color: #409eff;
+  text-decoration: none;
+}
+
+.internal-link:hover,
+.external-link:hover {
+  text-decoration: underline;
+}
+
+.job-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.job-detail-card-wide {
+  grid-column: 1 / -1;
+}
+
+.job-detail-card h2,
+.detail-tag-group h3 {
+  margin: 0;
+}
+
+.detail-list {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+}
+
+.detail-list > div {
+  display: grid;
+  grid-template-columns: minmax(100px, 130px) 1fr;
+  gap: 12px;
+}
+
+.detail-list dt {
+  color: #606266;
+}
+
+.detail-list dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.detail-tag-group {
+  display: grid;
+  gap: 10px;
+}
+
+.detail-tag-group + .detail-tag-group {
+  margin-top: 20px;
+}
+
+.job-description {
+  min-height: 120px;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.result-back-link {
+  margin-left: 16px;
+}
+
+@media (max-width: 720px) {
+  .job-detail-heading {
+    display: grid;
+  }
+
+  .job-detail-actions {
+    justify-content: flex-start;
+  }
+
+  .job-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .job-detail-card-wide {
+    grid-column: auto;
+  }
+
+  .detail-list > div {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
