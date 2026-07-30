@@ -1,6 +1,6 @@
 # Phase 2 Codex 协作流程
 
-## 1. 第一次启动 Phase 2
+## 1. 恢复 Phase 2 最新上下文
 
 发送给 Codex：
 
@@ -12,8 +12,6 @@
 - Phase 1 已完成。
 - Collector → Information Hub → MySQL → Job Query API 已打通。
 - Phase 2 将建设标准化职位 Web 浏览 MVP。
-- 当前 TASK 是 docs/tasks/TASK-011.md。
-- TASK-011 只冻结范围和文档，不创建 Vue 代码。
 
 请按顺序阅读：
 
@@ -23,11 +21,11 @@
 4. docs/ARCHITECTURE.md
 5. docs/ROADMAP.md
 6. docs/CURRENT_STATUS.md
-7. docs/PHASE2_SCOPE.md
-8. docs/contracts/job-query-api-v1.md
-9. docs/contracts/web-ui-behavior-v1.md
-10. docs/decisions/ADR-010-phase2-web-mvp-boundary.md
-11. docs/tasks/TASK-011.md
+7. CURRENT_STATUS 中指定的当前 TASK
+8. docs/PHASE2_SCOPE.md
+9. docs/contracts/job-query-api-v1.md
+10. docs/contracts/web-ui-behavior-v1.md
+11. docs/decisions/ADR-010-phase2-web-mvp-boundary.md
 12. frontend/information-hub-web/AGENTS.md
 13. 最近 8 条 Git 提交
 
@@ -41,17 +39,17 @@ git diff --check
 
 1. 当前项目目标。
 2. Phase 1 已完成的真实能力。
-3. Phase 2 推荐范围。
-4. Phase 2 明确不做什么。
+3. Phase 2 已完成内容。
+4. 当前 TASK 和前置依赖。
 5. 当前文档是否有冲突。
-6. TASK-011 准备修改哪些文件。
+6. 当前 TASK 准备修改哪些文件。
 7. 需要我确认的决定。
-8. 文档验证方法。
+8. 验证方法。
 
 不要修改代码和文件，等待我确认。
 ```
 
-## 2. 确认 TASK-011 的回复样例
+## 2. 确认 TASK-011 的回复样例（已完成，历史参考）
 
 ```text
 确认采用以下 Phase 2 决策：
@@ -80,7 +78,7 @@ git diff --check
 - 不提交 Git。
 ```
 
-## 3. 开始 TASK-012
+## 3. 开始 TASK-012（已完成，历史参考）
 
 ```text
 请实施 docs/tasks/TASK-012.md。
@@ -345,4 +343,4 @@ git pull --rebase
 git status
 ```
 
-然后使用本文件第 1 节的恢复指令，并把当前 TASK 编号替换为实际任务。
+然后使用本文件第 1 节的恢复指令。该指令会根据 `CURRENT_STATUS` 动态读取当前 TASK，无需手动替换任务编号。

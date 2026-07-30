@@ -17,9 +17,9 @@ BOSS Collector
 → Job Query API
 ```
 
-Phase 2 范围已经冻结，当前任务为 TASK-012：创建 Vue 3 项目骨架。
+Phase 2 范围已经冻结，TASK-011 至 TASK-014 已完成。
 
-当前尚未创建 Vue 业务代码。
+当前任务为 TASK-015：实现职位详情。Vue 3 项目骨架、强类型 Job Query API Client，以及支持筛选、排序、分页和 URL 状态恢复的职位列表页已经完成。
 
 ## Phase 2 目标
 

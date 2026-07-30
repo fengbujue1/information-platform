@@ -25,7 +25,7 @@ GET /api/v1/jobs/{id}
 GET /api/v1/jobs/{id}/snapshots
 ```
 
-前端目录目前只有开发规则，尚未创建实际 Vue 项目。
+前端项目已按本范围进入实施，具体完成情况和当前任务以 [CURRENT_STATUS](CURRENT_STATUS.md) 为准。
 
 现有 Job Query API 只返回标准化字段，不返回 `rawPayload`，也没有增加读取端用户认证。
 
