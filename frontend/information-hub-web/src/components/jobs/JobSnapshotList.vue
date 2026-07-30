@@ -22,28 +22,31 @@ const emit = defineEmits<{
       <span>{{ snapshots.length }} 个版本</span>
     </div>
 
-    <div class="snapshot-list" role="list">
-      <button
-        v-for="snapshot in snapshots"
-        :key="snapshot.id"
-        type="button"
-        class="snapshot-option"
-        :class="{ 'is-selected': snapshot.id === selectedSnapshotId }"
-        :aria-pressed="snapshot.id === selectedSnapshotId"
-        :data-test="`snapshot-option-${snapshot.versionNo}`"
-        @click="emit('select', snapshot.id)"
-      >
-        <span class="snapshot-option-heading">
-          <strong>版本 {{ snapshot.versionNo }}</strong>
-          <span>{{ formatDateTime(snapshot.createdAt) }}</span>
-        </span>
-        <span class="snapshot-option-title">
-          {{ formatNullableValue(snapshot.title) }}
-        </span>
-        <span class="snapshot-option-meta">
-          采集于 {{ formatDateTime(snapshot.collectedAt) }}
-        </span>
-      </button>
-    </div>
+    <ul class="snapshot-list">
+      <li v-for="snapshot in snapshots" :key="snapshot.id">
+        <button
+          type="button"
+          class="snapshot-option"
+          :class="{ 'is-selected': snapshot.id === selectedSnapshotId }"
+          :aria-pressed="snapshot.id === selectedSnapshotId"
+          :aria-current="
+            snapshot.id === selectedSnapshotId ? 'true' : undefined
+          "
+          :data-test="`snapshot-option-${snapshot.versionNo}`"
+          @click="emit('select', snapshot.id)"
+        >
+          <span class="snapshot-option-heading">
+            <strong>版本 {{ snapshot.versionNo }}</strong>
+            <span>{{ formatDateTime(snapshot.createdAt) }}</span>
+          </span>
+          <span class="snapshot-option-title">
+            {{ formatNullableValue(snapshot.title) }}
+          </span>
+          <span class="snapshot-option-meta">
+            采集于 {{ formatDateTime(snapshot.collectedAt) }}
+          </span>
+        </button>
+      </li>
+    </ul>
   </section>
 </template>

@@ -1,0 +1,19 @@
+.jobs-view > *,
+.job-filter-form > *,
+.job-detail > *,
+.job-detail-grid > *,
+.snapshots-view > *,
+.snapshots-layout > * {
+  min-width: 0;
+}
+
+.job-filter-form {
+  min-width: 0;
+}
+
+.page-heading,
+.section-heading,
+.job-filter-panel,
+.job-results {
+  max-width: 100%;
+}

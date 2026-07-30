@@ -1,17 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import {
-  ElButton,
-  ElEmpty,
-  ElResult,
-  ElSkeleton,
-} from 'element-plus'
+import { ElButton } from 'element-plus'
 import 'element-plus/es/components/button/style/css'
-import 'element-plus/es/components/empty/style/css'
-import 'element-plus/es/components/result/style/css'
-import 'element-plus/es/components/skeleton/style/css'
 import { RouterLink } from 'vue-router'
 
+import PageState from '@/components/common/PageState.vue'
 import JobSnapshotContent from '@/components/jobs/JobSnapshotContent.vue'
 import JobSnapshotList from '@/components/jobs/JobSnapshotList.vue'
 import { useJobSnapshots } from '@/composables/useJobSnapshots'
@@ -40,55 +33,53 @@ const detailTarget = computed(() =>
 </script>
 
 <template>
-  <section class="snapshots-view" aria-labelledby="snapshots-page-title">
-    <ElSkeleton
+  <section class="snapshots-view" aria-label="职位历史快照">
+    <PageState
       v-if="loading"
+      kind="loading"
+      title="正在加载历史快照"
       :rows="12"
-      animated
-      aria-label="正在加载历史快照"
     />
 
-    <ElResult
+    <PageState
       v-else-if="invalidId"
-      icon="warning"
+      kind="invalid"
       title="职位地址无效"
-      sub-title="职位 ID 必须为正整数"
+      description="职位 ID 必须为正整数"
     >
-      <template #extra>
-        <RouterLink :to="returnTarget">返回职位列表</RouterLink>
-      </template>
-    </ElResult>
+      <RouterLink :to="returnTarget" class="internal-link">
+        返回职位列表
+      </RouterLink>
+    </PageState>
 
-    <ElResult
+    <PageState
       v-else-if="notFound"
-      icon="info"
+      kind="not-found"
       title="职位不存在"
-      sub-title="无法查看该职位的历史快照"
+      description="无法查看该职位的历史快照"
     >
-      <template #extra>
-        <RouterLink :to="returnTarget">返回职位列表</RouterLink>
-      </template>
-    </ElResult>
+      <RouterLink :to="returnTarget" class="internal-link">
+        返回职位列表
+      </RouterLink>
+    </PageState>
 
-    <ElResult
+    <PageState
       v-else-if="error"
-      icon="error"
+      kind="error"
       title="历史快照加载失败"
-      :sub-title="error.message"
+      :description="error.message"
     >
-      <template #extra>
-        <ElButton
-          type="primary"
-          data-test="retry-snapshots"
-          @click="retry"
-        >
-          重试
-        </ElButton>
-        <RouterLink :to="detailTarget" class="result-back-link">
-          返回职位详情
-        </RouterLink>
-      </template>
-    </ElResult>
+      <ElButton
+        type="primary"
+        data-test="retry-snapshots"
+        @click="retry"
+      >
+        重试
+      </ElButton>
+      <RouterLink :to="detailTarget" class="internal-link">
+        返回职位详情
+      </RouterLink>
+    </PageState>
 
     <template v-else>
       <header class="snapshots-page-heading">
@@ -104,12 +95,16 @@ const detailTarget = computed(() =>
         </RouterLink>
       </header>
 
-      <ElEmpty
+      <PageState
         v-if="snapshots.length === 0"
-        description="当前职位暂无历史版本"
+        kind="empty"
+        title="当前职位暂无历史版本"
+        description="职位存在，但尚未形成可查看的历史快照"
       >
-        <RouterLink :to="detailTarget">返回当前职位详情</RouterLink>
-      </ElEmpty>
+        <RouterLink :to="detailTarget" class="internal-link">
+          返回当前职位详情
+        </RouterLink>
+      </PageState>
 
       <div v-else class="snapshots-layout">
         <JobSnapshotList

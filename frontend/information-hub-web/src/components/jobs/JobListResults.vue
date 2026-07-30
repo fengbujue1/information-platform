@@ -2,24 +2,19 @@
 import { computed } from 'vue'
 import {
   ElButton,
-  ElEmpty,
   ElPagination,
-  ElResult,
-  ElSkeleton,
   ElTable,
   ElTableColumn,
   ElTag,
   ElTooltip,
 } from 'element-plus'
 import 'element-plus/es/components/button/style/css'
-import 'element-plus/es/components/empty/style/css'
 import 'element-plus/es/components/pagination/style/css'
-import 'element-plus/es/components/result/style/css'
-import 'element-plus/es/components/skeleton/style/css'
 import 'element-plus/es/components/table/style/css'
 import 'element-plus/es/components/tag/style/css'
 import 'element-plus/es/components/tooltip/style/css'
 
+import PageState from '@/components/common/PageState.vue'
 import type { JobListItem } from '@/types/job'
 import {
   formatDateTime,
@@ -95,32 +90,34 @@ function statusTagType(
       </div>
     </div>
 
-    <ElSkeleton
+    <PageState
       v-if="loading"
+      kind="loading"
+      title="正在加载职位列表"
       :rows="8"
-      animated
-      aria-label="正在加载职位列表"
     />
 
-    <ElResult
+    <PageState
       v-else-if="errorMessage"
-      icon="error"
+      kind="error"
       title="职位列表加载失败"
-      :sub-title="errorMessage"
+      :description="errorMessage"
     >
-      <template #extra>
-        <ElButton type="primary" @click="emit('retry')">重试</ElButton>
-      </template>
-    </ElResult>
+      <ElButton type="primary" data-test="retry-jobs" @click="emit('retry')">
+        重试
+      </ElButton>
+    </PageState>
 
-    <ElEmpty
+    <PageState
       v-else-if="items.length === 0"
-      description="没有符合条件的职位"
+      kind="empty"
+      title="没有符合条件的职位"
+      description="可以调整筛选条件后重新查询"
     >
       <ElButton type="primary" plain @click="emit('reset')">
         重置筛选
       </ElButton>
-    </ElEmpty>
+    </PageState>
 
     <template v-else>
       <div class="job-table">
@@ -213,7 +210,10 @@ function statusTagType(
         </button>
       </div>
 
-      <div class="jobs-pagination">
+      <nav
+        class="jobs-pagination jobs-pagination-desktop"
+        aria-label="职位结果分页"
+      >
         <ElPagination
           background
           :current-page="page"
@@ -224,7 +224,23 @@ function statusTagType(
           @current-change="emit('pageChange', $event)"
           @size-change="emit('sizeChange', $event)"
         />
-      </div>
+      </nav>
+
+      <nav
+        class="jobs-pagination jobs-pagination-mobile"
+        aria-label="职位结果紧凑分页"
+      >
+        <ElPagination
+          size="small"
+          background
+          :current-page="page"
+          :page-size="size"
+          :total="total"
+          :pager-count="5"
+          layout="prev, pager, next"
+          @current-change="emit('pageChange', $event)"
+        />
+      </nav>
     </template>
   </section>
 </template>

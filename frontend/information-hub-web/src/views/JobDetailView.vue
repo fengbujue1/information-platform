@@ -1,15 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import {
-  ElButton,
-  ElResult,
-  ElSkeleton,
-} from 'element-plus'
+import { ElButton } from 'element-plus'
 import 'element-plus/es/components/button/style/css'
-import 'element-plus/es/components/result/style/css'
-import 'element-plus/es/components/skeleton/style/css'
 import { RouterLink } from 'vue-router'
 
+import PageState from '@/components/common/PageState.vue'
 import JobDetailContent from '@/components/jobs/JobDetailContent.vue'
 import { useJobDetail } from '@/composables/useJobDetail'
 import { createJobSnapshotsTarget } from '@/utils/jobDetailRoute'
@@ -31,55 +26,53 @@ const snapshotsTarget = computed(() =>
 </script>
 
 <template>
-  <section aria-label="职位详情页面">
-    <ElSkeleton
+  <section class="job-detail-page" aria-label="职位详情">
+    <PageState
       v-if="loading"
+      kind="loading"
+      title="正在加载职位详情"
       :rows="12"
-      animated
-      aria-label="正在加载职位详情"
     />
 
-    <ElResult
+    <PageState
       v-else-if="invalidId"
-      icon="warning"
+      kind="invalid"
       title="职位地址无效"
-      sub-title="职位 ID 必须为正整数"
+      description="职位 ID 必须为正整数"
     >
-      <template #extra>
-        <RouterLink :to="returnTarget">返回职位列表</RouterLink>
-      </template>
-    </ElResult>
+      <RouterLink :to="returnTarget" class="internal-link">
+        返回职位列表
+      </RouterLink>
+    </PageState>
 
-    <ElResult
+    <PageState
       v-else-if="notFound"
-      icon="info"
+      kind="not-found"
       title="职位不存在"
-      sub-title="该职位可能尚未归档或已经不可用"
+      description="该职位可能尚未归档或已经不可用"
     >
-      <template #extra>
-        <RouterLink :to="returnTarget">返回职位列表</RouterLink>
-      </template>
-    </ElResult>
+      <RouterLink :to="returnTarget" class="internal-link">
+        返回职位列表
+      </RouterLink>
+    </PageState>
 
-    <ElResult
+    <PageState
       v-else-if="error"
-      icon="error"
+      kind="error"
       title="职位详情加载失败"
-      :sub-title="error.message"
+      :description="error.message"
     >
-      <template #extra>
-        <ElButton
-          type="primary"
-          data-test="retry-detail"
-          @click="retry"
-        >
-          重试
-        </ElButton>
-        <RouterLink :to="returnTarget" class="result-back-link">
-          返回职位列表
-        </RouterLink>
-      </template>
-    </ElResult>
+      <ElButton
+        type="primary"
+        data-test="retry-detail"
+        @click="retry"
+      >
+        重试
+      </ElButton>
+      <RouterLink :to="returnTarget" class="internal-link">
+        返回职位列表
+      </RouterLink>
+    </PageState>
 
     <JobDetailContent
       v-else-if="job"
