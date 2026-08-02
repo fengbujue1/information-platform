@@ -8,107 +8,124 @@
 
 状态：已完成。
 
-完成链路：
-
-```text
-实际输出结构审计
-→ 冻结 InformationEnvelope V1
-→ 创建 Spring Boot
-→ 建立远程 MySQL 开发与测试环境
-→ 创建 Flyway 数据库结构
-→ 实现信息接入 API
-→ 完成 BOSS Mapper
-→ 完成 Information Hub Client
-→ 完成本地 Outbox
-→ 实现职位查询 API
-→ 完成真实端到端验收
-```
-
-Phase 1 任务：
-
-1. [TASK-001：分析 BOSS 输出结构](tasks/TASK-001.md)
-2. [TASK-002：确认 InformationEnvelope V1](tasks/TASK-002.md)
-3. [TASK-003：创建 Spring Boot 后端](tasks/TASK-003.md)
-4. [TASK-004A：建立远程 MySQL 开发与测试环境](tasks/TASK-004A.md)
-5. [TASK-004：创建数据库结构](tasks/TASK-004.md)
-6. [TASK-005：实现接入 API](tasks/TASK-005.md)
-7. [TASK-006A：增加原始响应诊断输出](tasks/TASK-006A.md)
-8. [TASK-006B：接入招聘者在线观测时间](tasks/TASK-006B.md)
-9. [TASK-006：实现 BOSS 字段映射器](tasks/TASK-006.md)
-10. [TASK-007：实现 Information Hub Client](tasks/TASK-007.md)
-11. [TASK-007A：增加外部配置文件](tasks/TASK-007A.md)
-12. [TASK-007B：修复任意工作目录启动](tasks/TASK-007B.md)
-13. [TASK-008：实现本地 Outbox](tasks/TASK-008.md)
-14. [TASK-009：实现职位查询 API](tasks/TASK-009.md)
-15. [TASK-010：完成端到端验收](tasks/TASK-010.md)
+完成：
+- BOSS 列表与详情采集；
+- InformationEnvelope V1；
+- Information Hub；
+- MySQL/Flyway；
+- 幂等接入；
+- 历史快照；
+- Outbox；
+- Job Query API；
+- 真实端到端验收。
 
 ## Phase 2：标准化职位 Web 浏览 MVP
 
 状态：已完成。
 
-范围文档：
+完成：
+- Vue 3；
+- Job API Client；
+- 职位列表；
+- 筛选/排序/分页；
+- 职位详情；
+- 历史快照；
+- URL 状态；
+- Loading/Empty/Error/404；
+- CI；
+- Nginx 同源部署模板；
+- Browser E2E；
+- 真实环境验收。
 
-- [Phase 2 范围](PHASE2_SCOPE.md)
-- [Web UI Behavior V1](contracts/web-ui-behavior-v1.md)
-- [ADR-010：Phase 2 Web MVP 边界](decisions/ADR-010-phase2-web-mvp-boundary.md)
+TASK-011 ～ TASK-019 已完成。
 
-完成链路：
+## Phase 3：AI Processing Foundation & User Relevance MVP
+
+状态：规划中。当前 Draft 等待 TASK-020 仓库审查和设计冻结。
+
+### 目标
+
+Phase 3 建立面向通用 Information 的 AI 基础设施，但只以 JOB 作为第一个真实实现。
+
+首个 MVP：
 
 ```text
-浏览器
-→ Information Hub Web
-→ Job Query API V1
-→ Information Hub
-→ MySQL
+User
+→ Prompt Profile / Version
+→ JOB_USER_RELEVANCE_V1
+→ 最近 N 天 Preview
+→ Manual / Scheduled Batch
+→ AI Provider
+→ Information Analysis
+→ Token Usage
+→ Web
 ```
 
-Phase 2 已完成标准化职位列表、筛选、排序、分页、详情、历史快照、页面状态、URL 恢复、基础 CI、受控部署和自动化及人工端到端验收。
+### Phase 3 TASK
 
-Phase 2 任务：
+1. [TASK-020：Phase 3 仓库审查与设计冻结](tasks/TASK-020.md)
+2. [TASK-021：Identity MVP](tasks/TASK-021.md)
+3. [TASK-022：Prompt Profile 与 Prompt Version](tasks/TASK-022.md)
+4. [TASK-023：Analysis Definition 与 Contracts](tasks/TASK-023.md)
+5. [TASK-024：Phase 3 数据模型与 Flyway](tasks/TASK-024.md)
+6. [TASK-025：AI Provider、Usage Adapter 与 Fake Provider](tasks/TASK-025.md)
+7. [TASK-026：Prompt Assembly 与结构化输出](tasks/TASK-026.md)
+8. [TASK-027：单条 Information Analysis](tasks/TASK-027.md)
+9. [TASK-028：Candidate Resolver、Preview 与 Token Estimate](tasks/TASK-028.md)
+10. [TASK-029：异步 Analysis Batch 与 Budget Guard](tasks/TASK-029.md)
+11. [TASK-030：每日 Analysis Schedule](tasks/TASK-030.md)
+12. [TASK-031：Phase 3 Web](tasks/TASK-031.md)
+13. [TASK-032：真实模型与 Phase 3 E2E 验收](tasks/TASK-032.md)
 
-1. [TASK-011：冻结 Phase 2 Web MVP 范围](tasks/TASK-011.md)
-2. [TASK-012：创建 Vue 3 项目骨架](tasks/TASK-012.md)
-3. [TASK-013：实现 API Client、类型与环境配置](tasks/TASK-013.md)
-4. [TASK-014：实现职位列表、筛选和分页](tasks/TASK-014.md)
-5. [TASK-015：实现职位详情](tasks/TASK-015.md)
-6. [TASK-016：实现历史快照查看](tasks/TASK-016.md)
-7. [TASK-017：完善交互、响应式和健壮性](tasks/TASK-017.md)
-8. [TASK-018：建立 CI 与受控构建部署配置](tasks/TASK-018.md)
-9. [TASK-019：完成 Phase 2 端到端验收](tasks/TASK-019.md)
+### Phase 3 核心边界
 
-Phase 2 不包含：
+- JOB 只是首个 Information Type。
+- 首个 Analysis Purpose = USER_RELEVANCE。
+- Prompt 跟账号走并版本化。
+- System Prompt / Schema 由平台控制。
+- Analysis 绑定 Snapshot。
+- Actual Token 以 Provider Invocation 为事实来源。
+- Manual 与 Schedule 共用 Batch Engine。
+- Schedule 默认关闭，默认用户本地 02:00。
+- 不实现向量检索、推荐和通知。
 
-- rawPayload 管理；
-- 用户系统；
-- 写操作；
-- AI；
-- 推荐；
-- 通知；
-- 公网无认证部署。
-
-## Phase 3：AI 分析
-
-状态：未开始，等待范围规划。
-
-开始实施前必须先冻结目标、输入输出协议、数据模型、安全边界、模型接入方式、成本限制和验收标准。
-
-原则：
-
-- 来源标签与 AI 标准技能分开保存。
-- AI 分析结果不覆盖原始信息。
-- 内容质量分与用户匹配分分离。
-- 模型、Prompt、Token 和分析版本可追溯。
-
-## Phase 4：个性化推荐与通知
+## Phase 4：个性化推荐
 
 状态：未开始。
 
 可能包含：
 
 - 用户画像；
-- 职位匹配评分；
-- 相似职位去重；
-- 公司多样性；
-- 每日 Top N；
-- Web 通知；
-- 其他受控通知渠道。
+- 主动匹配；
+- 排序；
+- 相似信息去重；
+- 多样性；
+- Top N；
+- 推荐反馈。
+
+Phase 4 不应与 Phase 3 的 USER_RELEVANCE 混淆：Phase 3 是用户明确配置 Prompt 后主动或定时运行；Phase 4 是系统基于长期画像主动产生推荐。
+
+## Future：Prompt-driven Retrieval / Semantic Search
+
+当真实信息类型和数据量需要时，再单独规划：
+
+- 自然语言临时查询；
+- Candidate Retrieval；
+- Fulltext；
+- Elasticsearch；
+- Embedding；
+- Vector Search；
+- Hybrid Search；
+- Rerank。
+
+当前不提前选择检索基础设施。
+
+## Future：Notification / Automation
+
+在推荐和事件模型稳定后再规划：
+
+- Web Notification；
+- 邮件；
+- 短信；
+- 微信；
+- 其他推送。
