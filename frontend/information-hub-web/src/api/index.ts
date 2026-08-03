@@ -17,6 +17,15 @@ export {
   logout,
 } from './authApi'
 export {
+  activatePromptVersion,
+  createPromptProfile,
+  createPromptVersion,
+  getPromptProfile,
+  listPromptProfiles,
+  listPromptVersions,
+  updatePromptProfileStatus,
+} from './promptApi'
+export {
   buildJobQueryParameters,
   getJobById,
   getJobs,

@@ -17,7 +17,7 @@ BOSS Collector
 → Information Hub Web
 ```
 
-Phase 3 设计已冻结。TASK-024 已完成 V2 Migration、8 张核心表及对应 PO/Mapper 持久化基础，TASK-021 已完成 Identity MVP；当前下一实施任务是 TASK-022 Prompt Profile 与 Prompt Version。Prompt、Provider、Analysis、Batch 和 Schedule 等 Phase 3 业务能力尚未实现。
+Phase 3 设计已冻结。TASK-024 已完成 V2 Migration、8 张核心表及对应 PO/Mapper 持久化基础，TASK-021 已完成 Identity MVP，TASK-022 已完成账号级 Prompt Profile 与不可变 Prompt Version；当前下一实施任务是 TASK-023 Analysis Definition 与 Contracts 代码落地。Provider、Analysis、Batch、Schedule 和 Phase 3 Web 等业务能力尚未实现。
 
 ## Phase 3 Accepted Design
 
@@ -54,6 +54,7 @@ User Relevance MVP
 - 受控账号 Bootstrap、安全密码摘要、同源 Session、CSRF、登录/登出和当前用户接口；
 - 需要 Session 的 Job Query API，以及 Vue 3 登录、职位搜索、筛选、排序、分页和历史查看；
 - 保持独立 Bearer Token 认证的 Collector 接口；
+- 需要 Session + CSRF 的账号级 Prompt Profile / Version API；
 - Java、Python、Vue 和浏览器 E2E CI；
 - Nginx SPA 回退和 `/api` 同源代理受控部署模板。
 

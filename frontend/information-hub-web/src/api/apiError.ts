@@ -27,6 +27,16 @@ const ERROR_MESSAGES: Readonly<Record<string, string>> = {
   AUTHENTICATION_FAILED: '用户名或密码错误',
   AUTHENTICATION_REQUIRED: '登录状态已失效，请重新登录',
   ACCESS_DENIED: '请求被拒绝，请刷新页面后重试',
+  PROMPT_PROFILE_NAME_REQUIRED: '请输入 Prompt Profile 名称',
+  PROMPT_PROFILE_NAME_TOO_LONG: 'Prompt Profile 名称不能超过 255 个字符',
+  PROMPT_PROFILE_NAME_CONFLICT: '当前账号已存在同名 Prompt Profile',
+  PROMPT_PROFILE_NOT_FOUND: 'Prompt Profile 不存在或无权访问',
+  PROMPT_VERSION_NOT_FOUND: 'Prompt Version 不存在或不属于该 Profile',
+  PROMPT_CONTENT_REQUIRED: '请输入 User Prompt',
+  PROMPT_CONTENT_TOO_LONG: 'User Prompt 不能超过 8,000 个字符',
+  INVALID_PROMPT_PROFILE_STATUS: 'Prompt Profile 状态不受支持',
+  UNSUPPORTED_ANALYSIS_DEFINITION: '当前 Analysis Definition 不受支持',
+  PROMPT_PERSISTENCE_FAILED: 'Prompt 数据暂时无法保存，请稍后重试',
   INTERNAL_ERROR: '服务暂时不可用，请稍后重试',
 }
 

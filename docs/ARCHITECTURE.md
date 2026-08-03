@@ -12,8 +12,8 @@ Information Hub
     ├── ingestion
     ├── information
     ├── job
-    ├── identity（Phase 3 持久化基础已实施）
-    ├── analysis（Phase 3 持久化基础已实施）
+    ├── identity（Identity MVP 已实施）
+    ├── analysis（Prompt 已实施，其余按 Phase 3 TASK 推进）
     ├── recommendation（后续）
     └── notification（后续）
     │
@@ -184,12 +184,12 @@ Information Hub Web
 - Identity 登录、Bootstrap、Session、CSRF 与 Owner 上下文；
 - Job Query API 与 Information Hub Web 的 Session 认证适配；
 - 保持独立 Bearer Token 认证的 Collector 安全边界。
+- 账号级 Prompt Profile、不可变 Prompt Version、稳定 contentHash、事务内 Active Version 切换与 Owner 隔离 API。
 
 当前尚未实施：
 
-- Prompt Profile / Version 业务 Service 和 API；
 - Analysis Definition、Provider、Prompt Assembly 与单条 Analysis；
 - Candidate Preview、Batch Worker、Schedule Dispatcher；
 - Prompt、Analysis、Batch、Schedule 等 Phase 3 Web 页面与真实模型 E2E。
 
-详细设计以 Accepted `PHASE3_ARCHITECTURE_DRAFT.md` 和 `DATABASE_DESIGN_PHASE3_DRAFT.md` 为准。文件名中的 `_DRAFT` 为保持既有链接而保留，不表示设计仍待讨论。当前下一实施任务是 TODO 状态的 TASK-022。
+详细设计以 Accepted `PHASE3_ARCHITECTURE_DRAFT.md` 和 `DATABASE_DESIGN_PHASE3_DRAFT.md` 为准。文件名中的 `_DRAFT` 为保持既有链接而保留，不表示设计仍待讨论。当前下一实施任务是 TODO 状态的 TASK-023。

@@ -10,7 +10,8 @@
 - Phase 3 的 Scope、Architecture、Data Model、Database Design、ADR 和 Contracts 已通过 TASK-020 审查并 Accepted。
 - TASK-024 已完成 Phase 3 V2 migration、8 张表、PO/Mapper 和真实 MySQL 验证。
 - TASK-021 已完成 Identity MVP：受控账号 Bootstrap、密码摘要、同源 Session、CSRF、Login / Logout / Me、Owner 上下文，以及 Job Query/Web/E2E 的认证适配。
-- Phase 3 Prompt、Provider、Analysis Engine、Batch Worker、Schedule 和对应 Web 业务实现尚未开始。
+- TASK-022 已完成账号级 Prompt Profile、不可变 Prompt Version、Active Version 切换、Owner 隔离及对应 API。
+- Phase 3 Analysis Definition、Provider、Analysis Engine、Batch Worker、Schedule 和对应 Web 业务实现尚未开始。
 
 ## 当前真实可用链路
 
@@ -31,14 +32,15 @@ BOSS Collector
 - 同源 Session、CSRF 和 Owner 上下文；
 - 需要 Session 的 Job Query API 与 Web 登录入口；
 - 保持独立 Bearer Token 语义的 Collector 接口。
+- 需要 Session + CSRF 的 Prompt Profile / Version API。
 
 当前没有：
 
 - AI Provider；
-- Prompt、Analysis、Batch、Schedule 的业务 Service/API；
+- Analysis Definition、Analysis、Batch、Schedule 的业务 Service/API；
 - Prompt、Analysis、Batch、Schedule 的 Phase 3 Web 页面。
 
-当前已经具备但尚未暴露业务 API 的 Phase 3 持久化基础：
+当前已经具备的 Phase 3 持久化基础：
 
 ```text
 user_account
@@ -50,6 +52,9 @@ ai_analysis_batch
 ai_analysis_batch_item
 ai_model_invocation
 ```
+
+其中 `user_account` 已由 Identity MVP 使用，`ai_prompt_profile` / `ai_prompt_version`
+已由 TASK-022 业务 API 使用；其余 Analysis、Schedule、Batch、Invocation 表尚待后续 TASK 暴露业务能力。
 
 ## 已冻结的 Phase 3 目标
 
@@ -77,16 +82,15 @@ JOB_USER_RELEVANCE_V1
 
 ## 当前任务
 
-TASK-022：Prompt Profile 与 Prompt Version。
+TASK-023：Analysis Definition 与 Contracts 代码落地。
 
-TASK-021 已完成最小账号登录、Bootstrap、同源 Session、CSRF、Owner 上下文和现有 Job Query/Web/E2E 认证适配。下一任务只应按 Accepted Contract 实施账号级 Prompt Profile 与不可变 Prompt Version，不得提前实现 Provider、Analysis Engine、推荐或通知。
+TASK-022 已完成账号级 Prompt Profile、不可变 Prompt Version、稳定 contentHash、事务内 Active Version 切换和 Owner 隔离。下一任务只应落地 Accepted Analysis Definition 与 Contracts，不得提前实现 Provider、Analysis Engine、推荐或通知。
 
 ## 下一步执行顺序
 
-1. TASK-022：Prompt Profile 与 Prompt Version；
-2. TASK-023：Analysis Definition 与 Contracts 代码落地；
-3. TASK-025：AI Provider 与 Fake Provider；
-4. TASK-026～TASK-032：按 Roadmap 继续。
+1. TASK-023：Analysis Definition 与 Contracts 代码落地；
+2. TASK-025：AI Provider 与 Fake Provider；
+3. TASK-026～TASK-032：按 Roadmap 继续。
 
 任务编号不变；顺序调整是因为 Identity、Prompt 和 Analysis 的持久化依赖 TASK-024 的 Accepted 表结构。
 
