@@ -1,6 +1,6 @@
 # TASK-025：实现 AI Provider、Usage Adapter 与 Fake Provider
 
-状态：TODO  
+状态：DONE
 所属阶段：Phase 3  
 优先级：P0  
 负责人：User + Codex
@@ -54,16 +54,16 @@
 
 ## 6. 验收标准
 
-- [ ] Fake Provider 可稳定返回结构化响应和 Usage
-- [ ] OpenAI-compatible Adapter 可解析 Usage
-- [ ] Provider 无 Usage 时字段 NULL/UNAVAILABLE
-- [ ] API Key 不进入日志
-- [ ] AI disabled 时不会发网络请求
-- [ ] timeout/429/5xx 有明确分类
-- [ ] ambiguous timeout 不无脑重试
-- [ ] CI 不需要真实 Key
-- [ ] 测试通过
-- [ ] CURRENT_STATUS 指向 TASK-026
+- [x] Fake Provider 可稳定返回结构化响应和 Usage
+- [x] OpenAI-compatible Adapter 可解析 Usage
+- [x] Provider 无 Usage 时字段 NULL/UNAVAILABLE
+- [x] API Key 不进入日志
+- [x] AI disabled 时不会发网络请求
+- [x] timeout/429/5xx 有明确分类
+- [x] ambiguous timeout 不无脑重试
+- [x] CI 不需要真实 Key
+- [x] 测试通过
+- [x] CURRENT_STATUS 指向 TASK-026
 
 ## 7. 实施前必须汇报
 
@@ -78,21 +78,39 @@
 
 ## 8. 实施记录
 
-待填写。
+- 新增通用 `AiProviderClient`，请求只接收上层已组装的 Chat 消息与单次最大输出 Token，并在真实调用前提供 Provider/Model Invocation 元数据，不绑定 JOB、Prompt Profile 或 Analysis 持久化。
+- 新增统一 `AiProviderResult`、`AiProviderUsage`、Usage Status、稳定错误分类和安全重试处置。
+- Actual Usage 仅接受 Provider 报告值，不补算 input/output/total/cached/reasoning Token；Usage 缺失时状态为 `UNAVAILABLE` 且所有 Token 为 NULL。
+- 新增确定性、无网络、可注入预设结构化文本和 Usage 的 `FakeAiProviderClient`。
+- 新增基于 Spring `RestClient` 与现有 Jackson 的 `OpenAiCompatibleChatClient`，使用 Chat Completions `/chat/completions`。
+- Adapter 解析 Provider/model/request id/finish reason/latency 和 OpenAI-compatible Usage，包括 cached/reasoning 可选明细。
+- Provider 默认 disabled；真实配置只从服务端环境变量读取，启用前校验 baseUrl/apiKey/model/maxOutputTokens。
+- API Key 只进入 Authorization Header；配置诊断不输出 API Key 或未经校验的 Base URL 原文，稳定异常和测试输出均脱敏，无效响应异常不保留可能回显原始响应的 Jackson cause。
+- timeout 与已执行但响应无效的场景标记 `AMBIGUOUS_DO_NOT_AUTO_RETRY`；429 标记可退避重试；5xx 保守视为结果不确定。Client 内部不实现自动重试。
+- 本任务没有数据库访问、事务、Invocation 持久化、Prompt Assembly、Analysis、Batch、Schedule、API 或前端变更。
 
 ## 9. 测试结果
 
-必须填写实际执行命令和结果，禁止编造。
+- `.\mvnw.cmd "-Dtest=AiProviderDomainTest,AiProviderPropertiesTest,FakeAiProviderClientTest,OpenAiCompatibleUsageAdapterTest,OpenAiCompatibleChatClientTest" test`
+  - 结果：通过；16 tests，0 failures，0 errors，0 skipped。
+- 清除当前 Maven 进程的 `INFORMATION_HUB_TEST_DB_*` 与 `INFORMATION_HUB_TEST_EMPTY_DB_*` 后执行 `.\mvnw.cmd test`
+  - 结果：通过；110 tests，0 failures，0 errors，19 skipped，即 91 tests 通过。
+  - 19 个跳过项均为需要真实 MySQL 的既有数据库集成测试；Spring Application Context 与其余后端回归通过。
+- `.\mvnw.cmd -DskipTests package`
+  - 结果：通过；编译、资源复制、JAR 与 Spring Boot 重打包成功。
+- Provider 单元测试全部使用 `MockRestServiceServer` 或 Fake，不访问公网，不需要真实 API Key。
 
 ## 10. 遗留问题
 
-待填写。
+- 完整数据库集成测试需在 SSH 通道恢复并监听 `127.0.0.1:13306` 后重跑；本任务不修改数据库。
+- TASK-026 负责业务 Prompt Assembly、最大响应大小、结构化 JSON 解析和 Definition Schema Validation；TASK-025 只返回 Assistant 原始文本与 Provider 元数据。
+- TASK-027 及后续任务负责 Invocation 状态和 Usage 持久化、显式重试、Batch/Worker 与事务边界；本任务只提供错误和重试处置语义，不执行自动重试。
 
 ## 11. 完成确认
 
-- [ ] 当前 TASK 文档已更新
-- [ ] `docs/CURRENT_STATUS.md` 已更新
-- [ ] `git diff --check` 通过
+- [x] 当前 TASK 文档已更新
+- [x] `docs/CURRENT_STATUS.md` 已更新
+- [x] `git diff --check` 通过
 - [ ] 用户已检查 `git diff`
 - [ ] 用户确认测试结果
 - [ ] 用户完成 commit / push

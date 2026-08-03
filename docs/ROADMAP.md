@@ -41,7 +41,7 @@ TASK-011 ～ TASK-019 已完成。
 
 ## Phase 3：AI Processing Foundation & User Relevance MVP
 
-状态：进行中。TASK-020 已完成设计冻结，TASK-024 已完成数据库与持久化基础，TASK-021 已完成 Identity MVP，TASK-022 已完成 Prompt Profile 与不可变 Prompt Version，TASK-023 已完成 Analysis Definition 与 Contracts 代码落地；当前下一实施任务为 TASK-025，状态 TODO。
+状态：进行中。TASK-020、TASK-024、TASK-021、TASK-022、TASK-023 和 TASK-025 已完成；当前下一实施任务为 TASK-026，状态 TODO。
 
 ### 目标
 
@@ -68,8 +68,8 @@ User
 3. [TASK-021：Identity MVP（已完成）](tasks/TASK-021.md)
 4. [TASK-022：Prompt Profile 与 Prompt Version（已完成）](tasks/TASK-022.md)
 5. [TASK-023：Analysis Definition 与 Contracts（已完成）](tasks/TASK-023.md)
-6. [TASK-025：AI Provider、Usage Adapter 与 Fake Provider（当前下一任务，TODO）](tasks/TASK-025.md)
-7. [TASK-026：Prompt Assembly 与结构化输出](tasks/TASK-026.md)
+6. [TASK-025：AI Provider、Usage Adapter 与 Fake Provider（已完成）](tasks/TASK-025.md)
+7. [TASK-026：Prompt Assembly 与结构化输出（当前下一任务，TODO）](tasks/TASK-026.md)
 8. [TASK-027：单条 Information Analysis](tasks/TASK-027.md)
 9. [TASK-028：Candidate Resolver、Preview 与 Token Estimate](tasks/TASK-028.md)
 10. [TASK-029：异步 Analysis Batch 与 Budget Guard](tasks/TASK-029.md)

@@ -17,7 +17,7 @@ BOSS Collector
 → Information Hub Web
 ```
 
-Phase 3 设计已冻结。TASK-024 已完成 V2 Migration、8 张核心表及对应 PO/Mapper 持久化基础，TASK-021 已完成 Identity MVP，TASK-022 已完成账号级 Prompt Profile 与不可变 Prompt Version，TASK-023 已完成 Analysis Definition 与 `JOB_USER_RELEVANCE_V1` 代码落地；当前下一实施任务是 TASK-025 AI Provider、Usage Adapter 与 Fake Provider。Analysis、Batch、Schedule 和 Phase 3 Web 等业务能力尚未实现。
+Phase 3 设计已冻结。数据库基础、Identity、Prompt Version、Analysis Definition 和 TASK-025 Provider 基础已完成；当前下一实施任务是 TASK-026 Prompt Assembly 与结构化输出校验。Analysis 持久化、Batch、Schedule 和 Phase 3 Web 等业务能力尚未实现。
 
 ## Phase 3 Accepted Design
 
@@ -62,6 +62,12 @@ User Relevance MVP
 `INFORMATION_HUB_BOOTSTRAP_USERNAME`、`INFORMATION_HUB_BOOTSTRAP_PASSWORD`、
 `INFORMATION_HUB_BOOTSTRAP_DISPLAY_NAME` 和 `INFORMATION_HUB_BOOTSTRAP_TIMEZONE`。
 生产 HTTPS 环境应设置 `INFORMATION_HUB_SESSION_COOKIE_SECURE=true`。仓库不提供默认密码，也不保存真实凭据。
+
+真实 AI 默认关闭。仅在服务端显式提供 `INFORMATION_HUB_AI_ENABLED=true`、
+`INFORMATION_HUB_AI_BASE_URL`、`INFORMATION_HUB_AI_API_KEY` 和
+`INFORMATION_HUB_AI_MODEL` 后才允许调用 OpenAI-compatible Provider；可选配置
+`INFORMATION_HUB_AI_TIMEOUT` 和 `INFORMATION_HUB_AI_MAX_OUTPUT_TOKENS`。API Key
+不得进入前端、数据库业务表、Git 或日志。
 
 ## Phase 3 明确不做
 

@@ -30,6 +30,14 @@ information-hub:
       password: ${INFORMATION_HUB_BOOTSTRAP_PASSWORD:}
       display-name: ${INFORMATION_HUB_BOOTSTRAP_DISPLAY_NAME:}
       timezone: ${INFORMATION_HUB_BOOTSTRAP_TIMEZONE:Asia/Shanghai}
+  ai:
+    provider:
+      enabled: ${INFORMATION_HUB_AI_ENABLED:false}
+      base-url: ${INFORMATION_HUB_AI_BASE_URL:}
+      api-key: ${INFORMATION_HUB_AI_API_KEY:}
+      model: ${INFORMATION_HUB_AI_MODEL:}
+      timeout: ${INFORMATION_HUB_AI_TIMEOUT:30s}
+      max-output-tokens: ${INFORMATION_HUB_AI_MAX_OUTPUT_TOKENS:1000}
 
 mybatis-plus:
   configuration:

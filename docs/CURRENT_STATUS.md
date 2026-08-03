@@ -12,7 +12,8 @@
 - TASK-021 已完成 Identity MVP：受控账号 Bootstrap、密码摘要、同源 Session、CSRF、Login / Logout / Me、Owner 上下文，以及 Job Query/Web/E2E 的认证适配。
 - TASK-022 已完成账号级 Prompt Profile、不可变 Prompt Version、Active Version 切换、Owner 隔离及对应 API。
 - TASK-023 已完成通用 Analysis Definition Registry、唯一的 `JOB_USER_RELEVANCE_V1`、Snapshot 输入投影、版本化平台 System Prompt / Output Schema 与严格输出校验。
-- Phase 3 Provider、Analysis Engine、Batch Worker、Schedule 和对应 Web 业务实现尚未开始。
+- TASK-025 已完成通用 AiProviderClient、OpenAI-compatible Adapter、统一 Usage/错误语义及 CI Fake Provider，真实 AI 默认 disabled。
+- Phase 3 Prompt Assembly、Analysis Engine、Batch Worker、Schedule 和对应 Web 业务实现尚未开始。
 
 ## 当前真实可用链路
 
@@ -34,10 +35,10 @@ BOSS Collector
 - 需要 Session 的 Job Query API 与 Web 登录入口；
 - 保持独立 Bearer Token 语义的 Collector 接口。
 - 需要 Session + CSRF 的 Prompt Profile / Version API。
+- 默认禁用的 OpenAI-compatible Provider 基础、统一 Usage Adapter 和无网络 Fake Provider。
 
 当前没有：
 
-- AI Provider；
 - Analysis、Batch、Schedule 的业务 Service/API；
 - Prompt、Analysis、Batch、Schedule 的 Phase 3 Web 页面。
 
@@ -83,14 +84,14 @@ JOB_USER_RELEVANCE_V1
 
 ## 当前任务
 
-TASK-025：AI Provider、Usage Adapter 与 Fake Provider。
+TASK-026：Prompt Assembly 与结构化输出校验。
 
-TASK-023 已完成代码级 Definition Registry、`JOB_USER_RELEVANCE_V1` 输入/输出边界及平台控制资源。下一任务只应实现 Accepted Provider 边界、Usage Adapter 与 Fake/OpenAI-compatible Provider，不得提前实现业务 Prompt Assembly、Analysis Engine、推荐或通知。
+TASK-025 已完成 Provider 抽象、OpenAI-compatible HTTP Adapter、Actual Usage 映射、默认禁用和安全错误分类。下一任务只应组装平台 System Prompt、用户 Prompt 与 Snapshot Input，并执行 JSON/Schema 后处理，不得提前实现 Analysis 持久化、Batch、Schedule、推荐或通知。
 
 ## 下一步执行顺序
 
-1. TASK-025：AI Provider 与 Fake Provider；
-2. TASK-026～TASK-032：按 Roadmap 继续。
+1. TASK-026：Prompt Assembly 与结构化输出校验；
+2. TASK-027～TASK-032：按 Roadmap 继续。
 
 任务编号不变；顺序调整是因为 Identity、Prompt 和 Analysis 的持久化依赖 TASK-024 的 Accepted 表结构。
 
