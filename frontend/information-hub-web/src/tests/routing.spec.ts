@@ -4,6 +4,14 @@ import { createMemoryHistory } from 'vue-router'
 
 import App from '@/App.vue'
 import { createAppRouter } from '@/router'
+import { setAuthenticatedUserForTest } from '@/stores/authSession'
+
+const testUser = {
+  id: 1,
+  username: 'admin',
+  displayName: 'Admin',
+  timezone: 'Asia/Shanghai',
+}
 
 const getJobsMock = vi.hoisted(() => vi.fn())
 const getJobByIdMock = vi.hoisted(() => vi.fn())
@@ -73,7 +81,11 @@ beforeEach(() => {
 })
 
 async function mountAt(path: string) {
-  const router = createAppRouter(createMemoryHistory())
+  setAuthenticatedUserForTest(testUser)
+  const router = createAppRouter(
+    createMemoryHistory(),
+    async () => testUser,
+  )
   await router.push(path)
   await router.isReady()
 

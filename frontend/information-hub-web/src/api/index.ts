@@ -4,7 +4,18 @@ export {
   toApiClientError,
   type ApiErrorKind,
 } from './apiError'
-export { httpClient, resolveApiBaseUrl } from './httpClient'
+export {
+  httpClient,
+  resolveApiBaseUrl,
+  setUnauthorizedHandler,
+} from './httpClient'
+export {
+  clearCsrfToken,
+  getCsrfToken,
+  getCurrentUser,
+  login,
+  logout,
+} from './authApi'
 export {
   buildJobQueryParameters,
   getJobById,

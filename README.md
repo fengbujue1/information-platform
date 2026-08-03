@@ -17,7 +17,7 @@ BOSS Collector
 → Information Hub Web
 ```
 
-Phase 3 设计已冻结。TASK-024 已完成 V2 Migration、8 张核心表及对应 PO/Mapper 持久化基础；当前准备进入 TASK-021 Identity MVP，Phase 3 业务能力尚未实现。
+Phase 3 设计已冻结。TASK-024 已完成 V2 Migration、8 张核心表及对应 PO/Mapper 持久化基础，TASK-021 已完成 Identity MVP；当前下一实施任务是 TASK-022 Prompt Profile 与 Prompt Version。Prompt、Provider、Analysis、Batch 和 Schedule 等 Phase 3 业务能力尚未实现。
 
 ## Phase 3 Accepted Design
 
@@ -51,9 +51,16 @@ User Relevance MVP
 - 统一协议接入 Information Hub；
 - MySQL 幂等归档、非破坏性合并和历史快照；
 - 职位列表、详情和快照只读 API；
-- Vue 3 职位搜索、筛选、排序、分页和历史查看；
+- 受控账号 Bootstrap、安全密码摘要、同源 Session、CSRF、登录/登出和当前用户接口；
+- 需要 Session 的 Job Query API，以及 Vue 3 登录、职位搜索、筛选、排序、分页和历史查看；
+- 保持独立 Bearer Token 认证的 Collector 接口；
 - Java、Python、Vue 和浏览器 E2E CI；
 - Nginx SPA 回退和 `/api` 同源代理受控部署模板。
+
+启动 Identity Bootstrap 时，通过部署环境显式提供
+`INFORMATION_HUB_BOOTSTRAP_USERNAME`、`INFORMATION_HUB_BOOTSTRAP_PASSWORD`、
+`INFORMATION_HUB_BOOTSTRAP_DISPLAY_NAME` 和 `INFORMATION_HUB_BOOTSTRAP_TIMEZONE`。
+生产 HTTPS 环境应设置 `INFORMATION_HUB_SESSION_COOKIE_SECURE=true`。仓库不提供默认密码，也不保存真实凭据。
 
 ## Phase 3 明确不做
 

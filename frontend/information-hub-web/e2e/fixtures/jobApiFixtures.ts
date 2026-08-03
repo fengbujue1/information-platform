@@ -197,6 +197,40 @@ export async function installJobApiMock(
     snapshotRequests: [],
   }
 
+  await page.route('**/api/v1/auth/**', async (route) => {
+    const url = new URL(route.request().url())
+    if (url.pathname === '/api/v1/auth/me') {
+      await fulfillJson(
+        route,
+        200,
+        success('CURRENT_USER_FOUND', {
+          id: 1,
+          username: 'admin',
+          displayName: 'Admin',
+          timezone: 'Asia/Shanghai',
+        }),
+      )
+      return
+    }
+    if (url.pathname === '/api/v1/auth/csrf') {
+      await fulfillJson(
+        route,
+        200,
+        success('CSRF_TOKEN_CREATED', {
+          headerName: 'X-CSRF-TOKEN',
+          parameterName: '_csrf',
+          token: 'e2e-csrf-token',
+        }),
+      )
+      return
+    }
+    await fulfillJson(route, 404, {
+      success: false,
+      code: 'AUTH_ROUTE_NOT_MOCKED',
+      message: 'auth route not mocked',
+    })
+  })
+
   await page.route('**/api/v1/jobs**', async (route) => {
     const url = new URL(route.request().url())
 

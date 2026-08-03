@@ -12,6 +12,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -99,6 +100,15 @@ public class GlobalApiExceptionHandler {
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "INGESTION_PERSISTENCE_FAILED",
                 "Information could not be persisted");
+    }
+
+    /** 登录失败统一返回相同信息，避免泄露账号是否存在或是否停用。 */
+    @ExceptionHandler(AuthenticationException.class)
+    ResponseEntity<ApiResponse<Void>> handleAuthentication(AuthenticationException exception) {
+        return error(
+                HttpStatus.UNAUTHORIZED,
+                "AUTHENTICATION_FAILED",
+                "Invalid username or password");
     }
 
     /** 兜底处理未预期异常，避免向客户端暴露内部实现。 */

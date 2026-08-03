@@ -50,6 +50,55 @@ input {
   border-radius: 8px;
 }
 
+.app-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.app-navigation {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.app-title,
+.app-navigation-link,
+.app-logout {
+  color: #ffffff;
+}
+
+.app-user {
+  color: #dcdfe6;
+  font-size: 14px;
+}
+
+.login-view {
+  display: grid;
+  min-height: calc(100vh - 136px);
+  place-items: center;
+}
+
+.login-card {
+  width: min(420px, 100%);
+  padding: 28px;
+  border: 1px solid #e4e7ed;
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgb(31 45 61 / 8%);
+}
+
+.login-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.login-form .el-button {
+  width: 100%;
+  margin-top: 8px;
+}
+
 .jobs-view {
   display: grid;
   gap: 20px;

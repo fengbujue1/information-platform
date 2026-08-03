@@ -116,7 +116,12 @@ const ResultsStub = defineComponent({
 })
 
 async function mountAt(path: string) {
-  const router = createAppRouter(createMemoryHistory())
+  const router = createAppRouter(createMemoryHistory(), async () => ({
+    id: 1,
+    username: 'admin',
+    displayName: 'Admin',
+    timezone: 'Asia/Shanghai',
+  }))
   await router.push(path)
   await router.isReady()
 

@@ -11,6 +11,8 @@ import com.informationplatform.hub.common.api.GlobalApiExceptionHandler;
 import com.informationplatform.hub.ingestion.api.CollectorApiProperties;
 import com.informationplatform.hub.ingestion.api.CollectorRequestSizeFilter;
 import com.informationplatform.hub.ingestion.api.CollectorTokenAuthenticationFilter;
+import com.informationplatform.hub.identity.infrastructure.security.IdentitySecurityConfiguration;
+import com.informationplatform.hub.identity.infrastructure.security.IdentityUserDetailsService;
 import com.informationplatform.hub.job.api.dto.JobDetailResponse;
 import com.informationplatform.hub.job.api.dto.JobListItemResponse;
 import com.informationplatform.hub.job.api.dto.JobSnapshotResponse;
@@ -27,6 +29,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.security.test.context.support.WithMockUser;
 
 @WebMvcTest(JobQueryController.class)
 @Import({
@@ -34,7 +37,8 @@ import org.springframework.test.web.servlet.MockMvc;
     CollectorTokenAuthenticationFilter.class,
     CollectorRequestSizeFilter.class,
     ApiErrorWriter.class,
-    GlobalApiExceptionHandler.class
+    GlobalApiExceptionHandler.class,
+    IdentitySecurityConfiguration.class
 })
 @TestPropertySource(properties = {
     "information-hub.collector-api.token=test-collector-token",
@@ -48,7 +52,11 @@ class JobQueryControllerTest {
     @MockitoBean
     private JobQueryService queryService;
 
+    @MockitoBean
+    private IdentityUserDetailsService identityUserDetailsService;
+
     @Test
+    @WithMockUser
     void returnsPagedJobsWithoutContentOrRawPayload() throws Exception {
         when(queryService.listJobs(any())).thenReturn(new PageResponse<>(
                 2,
@@ -71,6 +79,7 @@ class JobQueryControllerTest {
     }
 
     @Test
+    @WithMockUser
     void returnsDetailWithoutRawPayload() throws Exception {
         when(queryService.getJob(7L)).thenReturn(detail());
 
@@ -83,6 +92,7 @@ class JobQueryControllerTest {
     }
 
     @Test
+    @WithMockUser
     void returnsSnapshotsWithoutRawPayload() throws Exception {
         when(queryService.getSnapshots(7L)).thenReturn(List.of(snapshot()));
 
@@ -94,6 +104,7 @@ class JobQueryControllerTest {
     }
 
     @Test
+    @WithMockUser
     void returnsStableErrorsForInvalidQueryAndMissingJob() throws Exception {
         when(queryService.listJobs(any())).thenThrow(new JobQueryRequestException(
                 "INVALID_JOB_PAGE_SIZE", "size must be between 1 and 100"));
@@ -108,6 +119,7 @@ class JobQueryControllerTest {
     }
 
     @Test
+    @WithMockUser
     void rejectsNonNumericJobIdAsBadRequest() throws Exception {
         mockMvc.perform(get("/api/v1/jobs/not-a-number"))
                 .andExpect(status().isBadRequest())

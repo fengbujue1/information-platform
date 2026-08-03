@@ -24,6 +24,9 @@ const ERROR_MESSAGES: Readonly<Record<string, string>> = {
   VALIDATION_FAILED: '请求参数校验失败',
   JOB_NOT_FOUND: '职位不存在或已不可用',
   JOB_QUERY_FAILED: '职位信息暂时无法查询',
+  AUTHENTICATION_FAILED: '用户名或密码错误',
+  AUTHENTICATION_REQUIRED: '登录状态已失效，请重新登录',
+  ACCESS_DENIED: '请求被拒绝，请刷新页面后重试',
   INTERNAL_ERROR: '服务暂时不可用，请稍后重试',
 }
 

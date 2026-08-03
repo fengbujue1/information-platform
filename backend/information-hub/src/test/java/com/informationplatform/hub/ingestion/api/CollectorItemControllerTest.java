@@ -10,6 +10,8 @@ import com.informationplatform.hub.common.api.ApiErrorWriter;
 import com.informationplatform.hub.common.api.GlobalApiExceptionHandler;
 import com.informationplatform.hub.ingestion.api.dto.IngestionResult;
 import com.informationplatform.hub.ingestion.application.InformationIngestionService;
+import com.informationplatform.hub.identity.infrastructure.security.IdentitySecurityConfiguration;
+import com.informationplatform.hub.identity.infrastructure.security.IdentityUserDetailsService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -26,7 +28,8 @@ import org.springframework.test.web.servlet.MockMvc;
     CollectorTokenAuthenticationFilter.class,
     CollectorRequestSizeFilter.class,
     ApiErrorWriter.class,
-    GlobalApiExceptionHandler.class
+    GlobalApiExceptionHandler.class,
+    IdentitySecurityConfiguration.class
 })
 @TestPropertySource(properties = {
     "information-hub.collector-api.token=test-collector-token",
@@ -41,6 +44,9 @@ class CollectorItemControllerTest {
 
     @MockitoBean
     private InformationIngestionService ingestionService;
+
+    @MockitoBean
+    private IdentityUserDetailsService identityUserDetailsService;
 
     @Test
     void createsItemWithStableResponse() throws Exception {

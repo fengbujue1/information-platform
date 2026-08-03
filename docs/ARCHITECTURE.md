@@ -165,7 +165,7 @@ Information Hub Web
 边界：
 
 - 后端模块名使用 `identity`，不是泛化的 `user` 大模块。
-- `/api/v1/jobs/**` 在 Identity MVP 后纳入 Session Auth。
+- `/api/v1/jobs/**` 已纳入 Session Auth。
 - `/api/v1/collector/**` 继续使用独立 Bearer Token。
 - Analysis 绑定 `information_snapshot.id`；当前 Snapshot 仍通过 `(information_id, current_version_no)` 读取。
 - FIRST_INGESTED 使用 `information_item.first_seen_time`。
@@ -181,13 +181,15 @@ Information Hub Web
 - `identity` 的 `UserAccountPo` / Mapper；
 - `analysis` 的 7 组 PO/Mapper；
 - 数据库结构、升级、空库 Migration 和 Mapper 集成测试。
+- Identity 登录、Bootstrap、Session、CSRF 与 Owner 上下文；
+- Job Query API 与 Information Hub Web 的 Session 认证适配；
+- 保持独立 Bearer Token 认证的 Collector 安全边界。
 
 当前尚未实施：
 
-- Identity 登录、Bootstrap、Session、CSRF 与 Owner 上下文；
 - Prompt Profile / Version 业务 Service 和 API；
 - Analysis Definition、Provider、Prompt Assembly 与单条 Analysis；
 - Candidate Preview、Batch Worker、Schedule Dispatcher；
-- Phase 3 Web 页面与真实模型 E2E。
+- Prompt、Analysis、Batch、Schedule 等 Phase 3 Web 页面与真实模型 E2E。
 
-详细设计以 Accepted `PHASE3_ARCHITECTURE_DRAFT.md` 和 `DATABASE_DESIGN_PHASE3_DRAFT.md` 为准。文件名中的 `_DRAFT` 为保持既有链接而保留，不表示设计仍待讨论。当前下一实施任务是 TODO 状态的 TASK-021。
+详细设计以 Accepted `PHASE3_ARCHITECTURE_DRAFT.md` 和 `DATABASE_DESIGN_PHASE3_DRAFT.md` 为准。文件名中的 `_DRAFT` 为保持既有链接而保留，不表示设计仍待讨论。当前下一实施任务是 TODO 状态的 TASK-022。

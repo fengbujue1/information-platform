@@ -11,10 +11,25 @@ spring:
     validate-on-migrate: true
     clean-disabled: true
 
+server:
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        same-site: lax
+        secure: ${INFORMATION_HUB_SESSION_COOKIE_SECURE:false}
+        path: /
+
 information-hub:
   collector-api:
     token: ${INFORMATION_HUB_COLLECTOR_TOKEN:}
     max-request-bytes: ${INFORMATION_HUB_COLLECTOR_MAX_REQUEST_BYTES:2097152}
+  identity:
+    bootstrap:
+      username: ${INFORMATION_HUB_BOOTSTRAP_USERNAME:}
+      password: ${INFORMATION_HUB_BOOTSTRAP_PASSWORD:}
+      display-name: ${INFORMATION_HUB_BOOTSTRAP_DISPLAY_NAME:}
+      timezone: ${INFORMATION_HUB_BOOTSTRAP_TIMEZONE:Asia/Shanghai}
 
 mybatis-plus:
   configuration:

@@ -41,7 +41,7 @@ TASK-011 ～ TASK-019 已完成。
 
 ## Phase 3：AI Processing Foundation & User Relevance MVP
 
-状态：进行中。TASK-020 已完成设计冻结，TASK-024 已完成数据库与持久化基础；当前下一实施任务为 TASK-021，状态 TODO。
+状态：进行中。TASK-020 已完成设计冻结，TASK-024 已完成数据库与持久化基础，TASK-021 已完成 Identity MVP；当前下一实施任务为 TASK-022，状态 TODO。
 
 ### 目标
 
@@ -65,8 +65,8 @@ User
 
 1. [TASK-020：Phase 3 仓库审查与设计冻结（已完成）](tasks/TASK-020.md)
 2. [TASK-024：Phase 3 数据模型与 Flyway（已完成）](tasks/TASK-024.md)
-3. [TASK-021：Identity MVP（当前下一任务，TODO）](tasks/TASK-021.md)
-4. [TASK-022：Prompt Profile 与 Prompt Version](tasks/TASK-022.md)
+3. [TASK-021：Identity MVP（已完成）](tasks/TASK-021.md)
+4. [TASK-022：Prompt Profile 与 Prompt Version（当前下一任务，TODO）](tasks/TASK-022.md)
 5. [TASK-023：Analysis Definition 与 Contracts](tasks/TASK-023.md)
 6. [TASK-025：AI Provider、Usage Adapter 与 Fake Provider](tasks/TASK-025.md)
 7. [TASK-026：Prompt Assembly 与结构化输出](tasks/TASK-026.md)
