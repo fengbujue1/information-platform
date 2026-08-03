@@ -12,7 +12,8 @@ Information Hub
     ├── ingestion
     ├── information
     ├── job
-    ├── analysis（后续）
+    ├── identity（Phase 3 计划）
+    ├── analysis（Phase 3 计划）
     ├── recommendation（后续）
     └── notification（后续）
     │
@@ -144,3 +145,29 @@ A → B → A
 - 幂等更新前的当前记录查询使用固定 `FOR UPDATE` 锁查询，锁定后再读取 Job 扩展。
 - 主表、Job 扩展和快照继续使用同一个 Spring 事务。
 - Flyway SQL 仍是数据库结构的最终事实来源，MyBatis-Plus 不负责自动建表。
+
+## 11. Phase 3 Accepted 目标架构（尚未实施）
+
+TASK-020 已冻结、TASK-024 起逐步实施：
+
+```text
+Information Hub Web
+→ Same-origin Session + CSRF
+→ identity / information / job / analysis
+→ MySQL
+→ OpenAI-compatible Provider（默认关闭）
+```
+
+边界：
+
+- 后端模块名使用 `identity`，不是泛化的 `user` 大模块。
+- `/api/v1/jobs/**` 在 Identity MVP 后纳入 Session Auth。
+- `/api/v1/collector/**` 继续使用独立 Bearer Token。
+- Analysis 绑定 `information_snapshot.id`；当前 Snapshot 仍通过 `(information_id, current_version_no)` 读取。
+- FIRST_INGESTED 使用 `information_item.first_seen_time`。
+- Provider Client 使用 Spring `RestClient` 与 Jackson；CI 使用 Fake Provider。
+- Preview 使用短期 HMAC token，不建表、不调用 AI。
+- Worker/Scheduler 使用 Spring + MySQL 短事务；外部 HTTP 调用不持有数据库事务。
+- Actual Token 的唯一事实来源是 `ai_model_invocation`。
+
+详细设计以 Accepted `PHASE3_ARCHITECTURE_DRAFT.md` 和 `DATABASE_DESIGN_PHASE3_DRAFT.md` 为准。在 TASK-024 migration 完成前，本节不得解释为已落地能力。

@@ -1,404 +1,275 @@
-# Phase 3 Data Model Draft
+# Phase 3 Data Model
 
-状态：Proposed
+状态：Accepted
+接受日期：2026-08-03
+说明：文件名保留 `_DRAFT` 以维持既有链接；物理字段以 `DATABASE_DESIGN_PHASE3_DRAFT.md` 为准。
 
-> 本文件负责 Phase 3 的领域模型、实体职责和关系设计，不是最终 Flyway SQL。
->
-> 具体 MySQL 字段类型、主键、唯一键、索引、外键、删除规则、状态和物理表结构参见：
->
-> `docs/DATABASE_DESIGN_PHASE3_DRAFT.md`
->
-> `PHASE3_DATA_MODEL_DRAFT.md` 与 `DATABASE_DESIGN_PHASE3_DRAFT.md` 必须在 TASK-020 中一起接受真实仓库审查；用户确认后才能进入 Accepted。TASK-024 只能实现已经 Accepted 的数据库设计。
+## 1. 新增模型
 
-## 1. 建议新增表
+Phase 3 需要 8 个持久化模型：
 
 ```text
-user_account
-ai_prompt_profile
-ai_prompt_version
-information_analysis
-ai_model_invocation
-ai_analysis_batch
-ai_analysis_batch_item
-ai_analysis_schedule
+UserAccount
+PromptProfile
+PromptVersion
+InformationAnalysis
+AnalysisSchedule
+AnalysisBatch
+AnalysisBatchItem
+ModelInvocation
 ```
 
-## 2. user_account
+不新增 Preview、Session、Definition、System Prompt、Schedule Run、Usage Summary 或 Cost 表。
+
+## 2. UserAccount
 
 职责：
 
 - 登录身份；
-- AI 数据 Owner；
-- 用户时区。
+- Prompt/Analysis/Batch/Schedule Owner；
+- 用户时区；
+- User Usage 聚合键。
 
-建议字段：
+规则：
 
-```text
-id
-username
-password_hash
-display_name
-timezone
-status
-created_at
-updated_at
-```
+- 用户名 `trim + lower-case`，大小写不敏感唯一；
+- 密码只保存安全摘要；
+- 默认时区 `Asia/Shanghai`；
+- 账号以 `ACTIVE/DISABLED` 管理，不硬删除；
+- 初始账号只允许一次性受控 Bootstrap。
 
-不保存明文密码。
+## 3. PromptProfile
 
-## 3. ai_prompt_profile
+职责：表示用户的一组长期关注点并选择一个 Analysis Definition。
 
-职责：
+规则：
 
-- 用户长期关注点；
-- 绑定 Analysis Definition；
-- 指向 Active Version。
+- 一个用户多个 Profile；
+- 同一用户内名称唯一；
+- 保存 `analysisDefinitionKey`；
+- `activeVersionId` 可空，指向所属 Profile 的当前 Version；
+- Profile 停用而非硬删除；
+- Active Version 归属关系由 Service 在事务内校验。
 
-建议字段：
+## 4. PromptVersion
 
-```text
-id
-user_id
-name
-analysis_definition_key
-active_version_id
-status
-created_at
-updated_at
-```
+职责：保存不可变 User Prompt 历史。
 
-## 4. ai_prompt_version
+规则：
 
-职责：
+- `(promptProfileId, versionNo)` 唯一；
+- `(promptProfileId, contentHash)` 唯一；
+- 相同内容复用已有 Version；
+- 版本一经创建不更新正文；
+- 最大 8,000 字符由 API/Application Service 校验；
+- 被 Profile、Analysis 或 Batch 引用时禁止物理删除。
 
-- 不可变 Prompt 历史。
+## 5. InformationAnalysis
 
-建议字段：
-
-```text
-id
-prompt_profile_id
-version_no
-content
-content_hash
-created_at
-```
-
-旧 Version 内容不可修改。
-
-## 5. information_analysis
-
-职责：
-
-- 一次逻辑 Information Analysis；
-- 绑定 User、Snapshot、Prompt Version、Definition；
-- 保存业务结果。
-
-建议字段：
-
-```text
-id
-user_id
-information_id
-snapshot_id
-information_type
-
-analysis_definition_key
-analysis_definition_version
-analysis_purpose
-
-prompt_profile_id
-prompt_version_id
-
-status
-
-result_json
-relevance_score
-summary
-
-estimated_input_tokens
-estimated_output_tokens
-estimated_total_tokens
-estimate_method
-
-started_at
-completed_at
-created_at
-updated_at
-```
+职责：保存对确定 Snapshot 的逻辑业务分析结果。
 
 逻辑身份：
 
 ```text
-user_id
-+ snapshot_id
-+ prompt_version_id
-+ analysis_definition_key
-+ analysis_definition_version
+userId
++ snapshotId
++ promptVersionId
++ analysisDefinitionKey
++ analysisDefinitionVersion
 ```
 
-是否做数据库 UNIQUE 必须在 TASK-020 结合失败重试历史冻结；TASK-024 不得临场自行决定。
+绑定：
 
-## 6. ai_model_invocation
+- `informationId`：父 Information；
+- `snapshotId`：不可变事实版本；
+- `promptProfileId/promptVersionId`：用户输入版本；
+- Definition key/version：平台规则版本。
 
-职责：
-
-- 每一次真实 Provider 请求；
-- Actual Token 事实来源。
-
-建议字段：
+状态：
 
 ```text
-id
-analysis_id
-user_id
-
-provider
-model_name
-provider_request_id
-
-attempt_no
-status
-
-input_tokens
-output_tokens
-total_tokens
-cached_input_tokens
-reasoning_tokens
-usage_status
-
-latency_ms
-
-error_code
-error_message
-
-started_at
-completed_at
-created_at
-```
-
-规则：
-
-- Provider 有 Usage 就存；
-- Analysis FAILED 不影响 Usage；
-- Provider 无 Usage 时 actual 字段 NULL；
-- Estimate 不得写入 actual 字段。
-
-## 7. ai_analysis_batch
-
-职责：
-
-- 一次手动确认或 Schedule 触发的批任务；
-- 冻结时间窗口、Prompt Version、限制和统计。
-
-建议字段：
-
-```text
-id
-user_id
-
-trigger_type
-schedule_id
-
-information_type
-analysis_definition_key
-analysis_definition_version
-
-prompt_profile_id
-prompt_version_id
-
-window_basis
-requested_window_days
-window_start
-window_end
-
-requested_max_candidates
-requested_token_budget
-
-total_in_window
-eligible_count
-already_analyzed_count
-selected_count
-deferred_count
-
-estimated_input_tokens
-estimated_output_tokens
-estimated_total_tokens
-estimate_method
-
-status
-skip_reason
-
-scheduled_for
-started_at
-completed_at
-created_at
-updated_at
-```
-
-Actual Token 通过 Invocation 聚合。若 Batch 保存汇总列，只能是派生缓存，不是事实源。
-
-## 8. ai_analysis_batch_item
-
-职责：
-
-- 冻结 Batch 候选；
-- 记录选择、跳过、延期和执行结果。
-
-建议字段：
-
-```text
-id
-batch_id
-information_id
-snapshot_id
-analysis_id
-
-selection_order
-status
-decision_reason
-
-estimated_input_tokens
-estimated_output_tokens
-estimated_total_tokens
-
-created_at
-updated_at
-```
-
-可能原因：
-
-```text
-SELECTED
-SKIPPED_ALREADY_ANALYZED
-DEFERRED_ITEM_LIMIT
-DEFERRED_TOKEN_BUDGET
+PENDING
+RUNNING
 SUCCEEDED
 FAILED
 ```
 
-最终枚举由 Contract 冻结。
+失败信息以脱敏 `failureCode/failureMessage` 保存。结构化结果和 Estimate 在执行前允许为空。
 
-## 9. ai_analysis_schedule
+重试语义：
 
-职责：
+- `SUCCEEDED` 复用；
+- `FAILED` 显式重试同一 Analysis；
+- 每次实际外部请求创建新 Invocation；
+- Provider/Model 变化不创建新的逻辑 Analysis 身份。
 
-- 每日自动分析配置；
-- 只创建 Batch，不直接调用 Provider。
+## 6. ModelInvocation
 
-建议字段：
+职责：记录每一次真实 Provider 调用，是 Actual Token 的唯一事实源。
+
+关系：
 
 ```text
-id
-user_id
-name
+ModelInvocation
+→ InformationAnalysis
+→ UserAccount
+→ optional AnalysisBatchItem
+```
 
-information_type
-analysis_definition_key
-prompt_profile_id
+状态：
 
-enabled
-
-local_time
-timezone
-
-window_days
-max_candidates
-max_estimated_tokens
-
-last_triggered_at
-next_run_at
-
-created_at
-updated_at
+```text
+RUNNING
+SUCCEEDED
+FAILED
+TIMEOUT
+UNKNOWN
 ```
 
 规则：
 
-```text
-enabled default false
-local_time default 02:00
-timezone 使用 IANA 名称
-```
+- `(analysisId, attemptNo)` 唯一；
+- Actual token 仅来自 Provider Usage；
+- Usage 缺失时 token 为 `NULL`、`usageStatus=UNAVAILABLE`；
+- JSON/Schema 后处理失败时仍保留已报告 Usage；
+- 保存 provider request id、finish reason、latency 和脱敏错误；
+- 不保存完整 Provider 原始响应、Authorization 或 API Key；
+- 不确定的 `TIMEOUT/UNKNOWN` 不自动盲重试。
 
-## 10. Schedule 幂等
+`batchItemId` 冻结调用的批次归属，防止后来对同一 Analysis 的重试改变历史 Batch Usage。
 
-同一 Schedule 的同一计划时刻只能产生一次运行。
+## 7. AnalysisBatch
 
-候选唯一身份：
+职责：冻结一次 Manual Confirm 或 Scheduled Trigger 的执行上下文和聚合统计。
 
-```text
-(schedule_id, scheduled_for)
-```
+冻结内容：
 
-可以落在 Batch UNIQUE，也可以引入独立 Run 表。TASK-030 最终决定。
+- owner/trigger；
+- schedule 或 manual request id；
+- information type；
+- definition key/version；
+- prompt profile/version；
+- absolute window；
+- requested limits；
+-候选统计；
+- Estimate；
+-执行状态。
 
-## 11. 用户 Token 聚合
-
-不以 `token_statistics` 作为事实表。
-
-事实：
-
-```text
-ai_model_invocation
-```
-
-聚合维度：
-
-- 今日；
-- 本月；
-- 累计；
-- Batch；
-- Analysis；
-- Provider；
-- Model。
-
-性能不足以后再考虑汇总表。
-
-## 12. 成本
-
-可选保存：
+幂等：
 
 ```text
-pricing_version
-currency
-derived_cost
+Manual:    UNIQUE(userId, manualRequestId)
+Scheduled: UNIQUE(scheduleId, scheduledFor)
 ```
 
-不做支付/余额/套餐/结算。
+MySQL 允许 UNIQUE 中多个 `NULL`，因此 Manual 的 schedule 字段可为 `NULL`；Application Service/数据库 CHECK 仍需约束 trigger type 对应字段组合。
 
-没有可靠价格快照时 Cost 为 NULL。
-
-## 13. FK 与删除
-
-建议：
-
-- Analysis → Snapshot 使用保护性 FK；
-- Prompt Version 被引用后不可物理删除；
-- User AI 历史默认不级联硬删；
-- Schedule 以禁用为主；
-- Batch / Analysis / Invocation 保留审计历史。
-
-最终 ON DELETE 与既有数据库规则在 TASK-024 统一。
-
-## 14. 时间
-
-沿用现有平台：
-
-- DB UTC；
-- API 带偏移；
-- Schedule 保存 IANA timezone；
-- local_time 表达墙上时间；
-- next_run_at 使用 UTC。
-
-## 15. 不新增
+Batch 状态：
 
 ```text
-embedding
-vector
-recommendation
-notification
-billing
-organization
-tenant
+PENDING
+RUNNING
+COMPLETED
+PARTIAL_FAILED
+FAILED
+NOOP
 ```
+
+分别保存 `deferredByItemLimitCount` 与 `deferredByTokenBudgetCount`，避免丢失延期原因。
+
+## 8. AnalysisBatchItem
+
+职责：冻结进入 Candidate Limit 后的有序候选和执行决策，支持审计与 Worker 恢复。
+
+规则：
+
+- `(batchId, snapshotId)` 唯一；
+- `(batchId, selectionOrder)` 唯一；
+- Snapshot 创建 Batch 后不漂移；
+- `analysisId` 可空，执行或复用后关联；
+- 保存 Item Estimate、decision reason、started/completed 时间；
+- Item-limit 之外不逐项保存，只记 Batch 聚合数量；
+- Token-budget 延后项需要保存，`decisionReason=TOKEN_BUDGET`。
+
+状态：
+
+```text
+SELECTED
+RUNNING
+SUCCEEDED
+FAILED
+SKIPPED
+DEFERRED
+```
+
+## 9. AnalysisSchedule
+
+职责：保存每日规则并在到点时创建 Scheduled Batch。
+
+规则：
+
+- 只保存 `promptProfileId`，不冗余 information type/definition key；
+- 触发时由 Profile/Definition Registry 解析并冻结到 Batch；
+- 默认 disabled；
+- 默认用户本地 02:00；
+- timezone 为 IANA 名称；
+- disabled 时 `nextRunAt=NULL`；
+- 不保存 `lastTriggeredAt`，最近运行从 Batch 派生；
+- Schedule 停用而非硬删除。
+
+同一 Schedule 同时最多一个 `PENDING/RUNNING` Batch。重叠触发仍创建幂等 NOOP Batch，以保留计划点审计。
+
+## 10. 既有 Information 关系
+
+真实主键兼容：
+
+```text
+information_item.id       BIGINT UNSIGNED
+information_snapshot.id   BIGINT UNSIGNED
+```
+
+Phase 3 FK 使用同类型并全部 `ON DELETE RESTRICT`。
+
+当前 Snapshot 通过：
+
+```text
+information_item.current_version_no
+→ information_snapshot(information_id, version_no)
+```
+
+Analysis 通过 `snapshotId` 绑定准确历史版本；不新增 `currentSnapshotId`。
+
+## 11. 时间与窗口
+
+- 所有时间点使用 UTC `DATETIME(3)`；
+- 用户日程保存 IANA timezone 和本地 `TIME`；
+- `FIRST_INGESTED` 映射 `information_item.first_seen_time`；
+- 窗口采用 `[windowStart, windowEnd)`；
+- 候选排序 `firstSeenTime DESC, informationId DESC`；
+- Batch 必须保存绝对窗口，不能只保存相对天数。
+
+## 12. FK 与删除
+
+所有 Phase 3 历史链 FK 使用 `ON DELETE RESTRICT`。
+
+账号、Profile、Schedule 使用状态停用；Prompt Version、Analysis、Invocation、Batch、Batch Item 作为审计事实保留。Phase 3 不实现用户历史硬删除。
+
+## 13. Usage 与 Cost
+
+User/Analysis/Batch Actual Usage 都从 `ModelInvocation` 聚合：
+
+```text
+User:       invocation.userId
+Analysis:   invocation.analysisId
+Batch:      invocation.batchItemId → item.batchId
+```
+
+不创建 Usage 汇总表。Phase 3 不保存金额或价格快照，不把 Token 推导值称为真实账单。
+
+## 14. Definition 与 Preview
+
+- Analysis Definition 是代码注册表；
+- System Prompt 是代码/资源版本；
+- Preview 是无副作用读与估算；
+- Manual Preview 使用 10 分钟 HMAC token；
+- 第一版不为以上概念建表。

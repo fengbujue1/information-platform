@@ -58,7 +58,7 @@
 - [ ] 来源文本不能覆盖平台规则
 - [ ] Score/Confidence 范围规则已测试
 - [ ] Contract 与实现一致
-- [ ] CURRENT_STATUS 指向 TASK-024
+- [ ] CURRENT_STATUS 指向 TASK-025
 
 ## 7. 实施前必须汇报
 

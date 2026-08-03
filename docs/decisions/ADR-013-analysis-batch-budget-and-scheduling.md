@@ -1,6 +1,7 @@
 # ADR-013：统一 Batch Engine、Token Budget 与每日 Schedule
 
-状态：Proposed  
+状态：Accepted
+接受日期：2026-08-03
 日期：2026-08-02
 
 ## 背景
@@ -34,6 +35,8 @@ Preview
 
 Preview 不调用 AI。
 
+Preview 不持久化，返回 10 分钟有效的 HMAC 签名 token；Confirm 重算相同绝对窗口与候选/Estimate 指纹。Manual Batch 以 `(userId, manualRequestId)` 幂等。
+
 ## Schedule
 
 默认：
@@ -49,6 +52,8 @@ Phase 3 不开放 Cron 表达式。
 
 Schedule 不直接调用 Provider，只创建 Batch。
 
+Dispatcher 每 30～60 秒扫描，允许 5 分钟 misfire grace；超过后跳过历史计划。重叠触发创建 NOOP Batch 并推进下次计划。
+
 ## 限制
 
 必须同时支持：
@@ -60,6 +65,21 @@ Schedule 不直接调用 Provider，只创建 Batch。
 
 超出候选数或 Token Budget 的项目延期，并记录原因。
 
+冻结值：
+
+```text
+defaults: windowDays=3, maxCandidates=20, maxEstimatedTokens=75000
+hard caps: windowDays=14, maxCandidates=50, maxEstimatedTokens=200000
+maxOutputTokens per call=1000
+```
+
+Estimate V1：
+
+```text
+ceil((ceil(UTF-8 bytes / 3) + 64) × 1.20) + maxOutputTokens
+method = UTF8_BYTES_DIV3_MARGIN20_V1
+```
+
 ## Token
 
 - Estimated Token：Preview/Guard 使用；
@@ -67,6 +87,8 @@ Schedule 不直接调用 Provider，只创建 Batch。
 - Estimated 绝不冒充 Actual；
 - 失败 Analysis 也可能产生 Actual Token；
 - 每个 Provider Request 单独保存 Invocation。
+
+Invocation 绑定 Batch Item，保证历史 Batch Usage 不受 Analysis 后续重试影响。
 
 ## Schedule Prompt
 
@@ -114,6 +136,8 @@ Spring + MySQL
 ```
 
 不引入 Quartz、XXL-JOB、Kafka、RabbitMQ 或 Redis Queue。
+
+Worker 单并发，使用短事务和 `FOR UPDATE SKIP LOCKED` 领取；Provider HTTP 调用不持有数据库事务。结果不确定的调用不自动盲重试。
 
 ## 重新评估
 

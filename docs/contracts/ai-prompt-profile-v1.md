@@ -1,95 +1,89 @@
 # AI Prompt Profile V1
 
-状态：Draft  
+状态：Accepted
+接受日期：2026-08-03
 适用阶段：Phase 3
 
 ## 1. Profile
 
-Prompt Profile 属于当前登录用户。
-
-字段语义：
+Profile 表示当前用户的一组长期关注点：
 
 ```text
 id
 name
 analysisDefinitionKey
-activeVersion
+activeVersionId
 status
 createdAt
 updatedAt
 ```
 
-## 2. 多 Profile
+- 一个用户可以有多个 Profile；
+- `(userId, name)` 唯一；
+- 第一版仅允许 `analysisDefinitionKey=JOB_USER_RELEVANCE`；
+- Profile 只保存 User Prompt 的版本引用，不保存 System Prompt；
+- 停用使用 `DISABLED`，不硬删除历史。
 
-一个用户可创建多个 Profile。
-
-名称只需在当前用户范围内可识别；是否唯一由 TASK-022 决定。
-
-## 3. Version
-
-每次保存 Prompt 内容修改：
-
-```text
-create new immutable version
-→ set activeVersion
-```
-
-禁止修改已经存在的历史 Version 内容。
-
-## 4. Prompt Version 字段
+## 2. Version
 
 ```text
 id
-profileId
+promptProfileId
 versionNo
 content
 contentHash
 createdAt
 ```
 
-## 5. User Prompt 边界
+- Version 不可变；
+- 同一 Profile 的 `versionNo` 从 1 递增且唯一；
+- 同一 Profile 的 `contentHash` 唯一；
+- 内容未变化时复用已有 Version；
+- 切换 Active Version 必须验证 Version 属于当前用户和该 Profile；
+- 创建 Version 与切换 Active Version使用同一明确事务。
 
-User Prompt 用于描述用户关注点。
+## 3. User Prompt 边界
 
-它不能：
+User Prompt：
 
-- 替换 System Prompt；
-- 修改 Output Schema；
-- 关闭安全规则；
-- 请求读取 rawPayload；
-- 请求暴露 API Key；
-- 改变 Definition 的 Information Type。
+- 最大 8,000 字符；
+- 作为用户偏好输入；
+- 不能覆盖 System Prompt；
+- 不能修改 Output Schema；
+- 不得包含服务器秘密；
+- 页面需要提示来源内容和模型输出可能不准确。
 
-## 6. 长度
+平台控制：
 
-必须设置最大 Prompt 长度。
+- System Prompt；
+- Definition key/version；
+- Input Projection；
+- Output Schema；
+- `maxOutputTokens`。
 
-具体数值由 TASK-022 根据 Token Budget 冻结。
+## 4. API
 
-## 7. Schedule
+TASK-022 实现以下同源 Session API，具体响应包络沿用项目统一格式：
 
-Schedule 保存 Profile ID。
+```http
+GET  /api/v1/ai/prompt-profiles
+POST /api/v1/ai/prompt-profiles
+GET  /api/v1/ai/prompt-profiles/{profileId}
+POST /api/v1/ai/prompt-profiles/{profileId}/versions
+GET  /api/v1/ai/prompt-profiles/{profileId}/versions
+PUT  /api/v1/ai/prompt-profiles/{profileId}/active-version
+PUT  /api/v1/ai/prompt-profiles/{profileId}/status
+```
 
-运行时解析 Active Version。
+所有写请求要求 CSRF。客户端不得提交 `userId` 来决定 Owner。
 
-Batch 一旦创建，只保存并使用冻结的 Version ID。
+## 5. Schedule
 
-## 8. 删除
+Schedule 只保存 Profile ID。触发时解析当前 Active Version，并把 Version ID 冻结到 Batch。Profile 无 Active Version、已停用或 Definition 不可用时，触发创建 NOOP/失败结果，不调用 Provider。
 
-被历史 Analysis/Batch 使用的 Version 不物理删除。
+## 6. 删除
 
-Profile 优先使用停用状态。
-
-## 9. API
-
-需要支持：
-
-- Profile 列表；
-- 创建；
-- 查看；
-- 创建新 Version；
-- 查看 Version 历史；
-- 切换 Active Version；
-- 停用。
-
-最终 endpoint 在 TASK-022 冻结。
+- Version 不提供物理删除；
+- Profile 不提供物理删除；
+- 相同内容不创建无意义版本；
+- 历史 Analysis/Batch 引用的 Version 永久可追溯。

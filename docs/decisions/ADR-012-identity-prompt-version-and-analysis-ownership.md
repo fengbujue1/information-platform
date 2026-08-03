@@ -1,6 +1,7 @@
 # ADR-012：Identity MVP、账号级 Prompt Version 与 Snapshot 级 Analysis Ownership
 
-状态：Proposed  
+状态：Accepted
+接受日期：2026-08-03
 日期：2026-08-02
 
 ## 背景
@@ -28,9 +29,13 @@
 - timezone；
 - owner isolation。
 
-浏览器推荐同源 Session Cookie。
+浏览器使用同源 Session Cookie。第一版使用单实例内存 Session，不提前引入 Spring Session JDBC。
 
 Collector Bearer Token 不改变。
+
+现有 Job Query API 在 Phase 3 纳入 Session Auth；前端和 E2E 先登录后访问。Cookie 使用 HttpOnly、SameSite=Lax，生产 HTTPS 下 Secure；状态修改请求使用 CSRF。
+
+初始账号只允许从服务端环境变量进行一次性受控 Bootstrap：仅用户表为空时创建，无默认凭据，秘密不入 Git/日志，创建后移除密码变量。
 
 ### Prompt
 
@@ -45,6 +50,8 @@ User
 一个用户可有多个 Profile。
 
 修改 Prompt = 创建新 Version，不 UPDATE 历史内容。
+
+同一 Profile 的相同内容 hash 复用已有 Version。User Prompt 最大 8,000 字符。
 
 ### Analysis Ownership
 
@@ -113,7 +120,11 @@ System Prompt、Output Schema 和 Input Projection 由平台控制。
 - 推荐画像；
 - 账号计费。
 
-## 待 TASK-020 冻结
+## TASK-020 冻结结果
 
-- 是否把现有 Job Query API 也统一要求 Session。
-- 初始账号的安全 Bootstrap 方式。
+- Job Query API 统一要求 Session；
+- Collector Bearer Token 过滤链保持独立；
+- 使用一次性环境变量 Bootstrap；
+- 用户名应用层 trim/lower，数据库大小写不敏感唯一；
+- 默认 timezone 为 Asia/Shanghai；
+- 不增加 Spring Session JDBC 表。

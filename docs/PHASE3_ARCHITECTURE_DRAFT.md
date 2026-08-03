@@ -1,309 +1,262 @@
-# Phase 3 Architecture Draft
+# Phase 3 Architecture
 
-状态：Proposed
+状态：Accepted
+接受日期：2026-08-03
+说明：文件名保留 `_DRAFT` 以维持既有链接；本文内容已经 TASK-020 审查并冻结。
 
 ## 1. 总体结构
 
 ```text
-Browser
-   │
-   ├── Login
-   ├── Prompt
-   ├── Preview
-   ├── Batch
-   ├── Schedule
-   └── Usage
-   │
-   ▼
-Information Hub
-   ├── identity
-   ├── prompt
-   ├── analysis
-   │   ├── definition
-   │   │   └── job
-   │   ├── candidate
-   │   │   └── job
-   │   ├── batch
-   │   ├── schedule
-   │   └── provider
-   ├── information
-   └── job
-        │
-        ▼
-      MySQL
-        │
-        ├── existing information tables
-        └── Phase 3 AI tables
-                │
-                ▼
-          AiProviderClient
-                │
-                ▼
-       OpenAI-compatible Provider
+Information Hub Web
+    │ Same-origin Session + CSRF
+    ▼
+Information Hub modular monolith
+    ├── identity
+    ├── information
+    ├── job
+    └── analysis
+        ├── definition
+        ├── prompt
+        ├── provider
+        ├── candidate
+        ├── batch
+        ├── worker
+        └── schedule
+    │
+    ├── MySQL
+    └── OpenAI-compatible Provider（默认关闭）
+
+BOSS Collector
+    └── 独立 Bearer Token → ingestion
 ```
 
-## 2. 通用核心与领域实现
+Phase 3 继续使用单个 Spring Boot 模块化单体和当前 MySQL，不引入消息队列、缓存、搜索引擎或独立 Worker 服务。
 
-通用核心：
+## 2. 通用核心与首个领域实现
 
-- User
-- Prompt Profile
-- Prompt Version
-- Analysis Definition
-- Information Analysis
-- Model Invocation
-- Batch
-- Schedule
-- Token Usage
+通用核心使用 Information 语义：
 
-JOB 专属：
+- `AnalysisDefinition`；
+- `InformationAnalysis`；
+- `AiModelInvocation`；
+- `AnalysisBatch`；
+- `AnalysisSchedule`；
+- `CandidateResolver`；
+- `AiProviderClient`。
 
-- Job Input Projection
-- Job Candidate Resolver
-- Job User Relevance Output
+JOB 只提供：
 
-不要为了未来信息类型创建巨大泛型框架。只抽取稳定边界。
+- `JOB_USER_RELEVANCE_V1`；
+- Snapshot Input Projection；
+- JOB Candidate Resolver；
+- Output Schema Validator。
 
-## 3. Analysis Definition Registry
+未来新增信息类型时增加新的 Definition/Projection/Resolver，不改写通用 Batch、Provider 和 Usage 核心。
 
-建议代码层存在：
+## 3. 模块依赖
 
 ```text
-AnalysisDefinitionRegistry
-└── JOB_USER_RELEVANCE_V1
+identity
+   ↑ owner
+prompt ─────────────┐
+                    ▼
+information ← analysis definition ← job implementation
+                    │
+                    ├── provider
+                    ├── batch/worker
+                    └── schedule
 ```
 
-Definition 提供：
+- `identity` 不依赖 analysis；
+- `information` 不依赖具体 AI Provider；
+- `job` 可以读取 information 标准化投影；
+- `analysis` 不修改 information/job/snapshot 来源事实；
+- Controller 只做协议适配，业务规则与事务在 Application Service；
+- 特殊行锁查询放 Mapper 固定 SQL，不把 SQL 或 Mapper 调用放进 Controller。
 
-- key/version；
-- informationType；
-- purpose；
-- input projector；
-- system prompt template；
-- output schema；
-- max output tokens；
-- candidate resolver key。
+## 4. Snapshot 读取路径
 
-未来新类型通过增加 Definition + Resolver 扩展。
-
-## 4. Prompt Assembly
+现有当前快照关系：
 
 ```text
-Platform System Prompt
-      +
-Definition Rules
-      +
-User Prompt Version
-      +
-Structured Information Input
-      ↓
-Model
+information_item.current_version_no
+→ information_snapshot(information_id, version_no)
 ```
 
-职位正文、标签等来源内容属于数据，不是指令。
-
-平台必须通过清晰分隔和 System Instruction 防止来源文本覆盖分析规则。
-
-## 5. Analysis Identity
-
-默认逻辑幂等键：
+Phase 3 Analysis 的历史身份直接绑定：
 
 ```text
-userId
-+ snapshotId
-+ promptVersionId
-+ definitionKey
-+ definitionVersion
+information_analysis.snapshot_id
+→ information_snapshot.id
 ```
 
-已有 `SUCCEEDED`：
+Phase 3 增加内部 `snapshot_id` Reader/Mapper 查询即可，不增加 `current_snapshot_id`，不扩大公开 Job Query API，也不读取 `raw_payload`。
+
+`FIRST_INGESTED` 使用 `information_item.first_seen_time`，候选稳定排序为：
 
 ```text
-REUSE / SKIP
+first_seen_time DESC, information_item.id DESC
 ```
 
-Model / Provider 变化不自动触发重分析。
+## 5. Identity 与安全区域
 
-## 6. Provider
-
-```text
-Analysis Service
-      ↓
-AiProviderClient
-      ↓
-AiProviderResult<T>
-```
-
-统一结果至少包含：
-
-- provider；
-- model；
-- provider request id；
-- response；
-- usage；
-- latency；
-- finish metadata。
-
-每次真实请求形成一个 Model Invocation。
-
-## 7. Actual Token
-
-Actual Token 的事实来源：
-
-```text
-ai_model_invocation
-```
-
-不是 Preview，不是本地 Tokenizer。
-
-即使 Analysis 后续 Schema Validation FAILED，只要 Provider 返回 Usage，也要保存。
-
-## 8. Manual Batch
-
-```text
-Preview
-→ Confirm
-→ Create Batch
-→ Freeze Candidates
-→ Worker
-→ Analyses
-```
-
-## 9. Scheduled Batch
-
-```text
-Schedule Due
-→ Resolve Active Prompt Version
-→ Internal Candidate Resolution
-→ Apply Limits
-→ Create Batch
-→ Worker
-```
-
-之后与 Manual 完全共用。
-
-## 10. Candidate Pipeline
-
-第一版 JOB：
-
-```text
-FIRST_INGESTED window
-→ eligibility
-→ current snapshot
-→ already analyzed skip
-→ stable ordering
-→ item limit
-→ token budget
-```
-
-具体首次入库字段由 TASK-020 校正。
-
-## 11. Token Budget Guard
-
-至少检查：
-
-- platform maxWindowDays；
-- platform maxCandidates；
-- requested limits；
-- estimated token budget；
-- per-call max output tokens。
-
-执行中持续累计 Actual Usage。
-
-Estimate 和 Actual 永远分开。
-
-## 12. Scheduler
-
-Phase 3 不引入 Quartz / XXL-JOB。
-
-优先最小方案：
-
-```text
-Spring periodic dispatcher
-→ query due schedules
-→ DB lock / idempotency
-→ create batch
-```
-
-最终实现由 TASK-030 结合项目现状确定。
-
-## 13. Security Zones
-
-建议：
+Spring Security 过滤链区分两个认证区域：
 
 ```text
 /api/v1/collector/**
-→ existing Collector Bearer Token
+    → 现有 Collector Bearer Token
+    → 不使用用户 Session / CSRF
 
 /api/v1/auth/**
-→ browser login / session
-
-/api/v1/ai/**
-→ authenticated user
-
 /api/v1/jobs/**
-→ TASK-020 决定是否纳入 session auth
+/api/v1/ai/**
+    → 浏览器 Session
+    → 状态修改请求要求 CSRF
 ```
 
-Collector Token 和用户 Session 不混用。
+认证端点固定为：
 
-## 14. Worker
+```http
+POST /api/v1/auth/login
+POST /api/v1/auth/logout
+GET  /api/v1/auth/me
+GET  /api/v1/auth/csrf
+```
 
-第一版：
+第一版使用内存 Session，不创建 Spring Session JDBC 表。Web 与 Hub 保持同源，E2E 先登录后访问原有 Job 页面。
+
+## 6. Prompt 与 Definition
 
 ```text
-MySQL persistent state
-+ Spring background worker
+User
+→ Prompt Profile
+→ immutable Prompt Version
+→ Definition Registry
+   ├── Input Projection
+   ├── System Prompt resource
+   ├── Output Schema
+   └── maxOutputTokens
+→ Provider Request
 ```
 
-要求：
+用户只控制 User Prompt。平台控制 System Prompt、Definition Version、Projection 和 Schema。
 
-- 重启可恢复；
-- 不重复完成项；
-- 不依赖浏览器连接；
-- 低并发；
-- 明确事务和锁；
-- 不丢 Batch 状态。
+Schedule 保存 Profile，不保存 Prompt Version；触发时解析 Active Version，然后把 Prompt Version 与当前 Definition Version冻结到 Batch。
 
-## 15. Retry
+## 7. Analysis Identity
 
-不做所有错误的无脑自动重试。
-
-原则：
-
-- 明确未发送：可重试；
-- 429：按 Provider backoff；
-- 明确未执行：可重试；
-- 请求已发出但客户端超时：结果不确定，MVP 默认不自动重试；
-- Provider 已返回 Usage 但解析失败：记录 Usage，Analysis FAILED；
-- Schema 无效：不得当成功保存。
-
-## 16. 扩展方式
-
-未来：
+逻辑唯一键：
 
 ```text
-analysis/definition/job
-analysis/definition/news
-analysis/definition/policy
-
-analysis/candidate/job
-analysis/candidate/news
-analysis/candidate/policy
+user
++ snapshot
++ prompt version
++ definition key/version
 ```
 
-无需推翻 Prompt、Batch、Usage、Schedule 和 Provider。
+Provider/Model 是执行元数据，不属于业务身份。成功结果复用；失败显式重试复用同一 Analysis，并追加 Invocation。
 
-## 17. 本阶段禁止
+## 8. Provider
 
-- Kafka
-- RabbitMQ
-- Redis Queue
-- Elasticsearch
-- Vector DB
-- RAG
-- Agent Framework
-- 微服务
-- Kubernetes
+Provider 抽象：
 
-出现真实瓶颈后单独 ADR。
+```text
+AiProviderClient
+├── FakeAiProviderClient
+└── OpenAiCompatibleChatClient
+```
+
+OpenAI-compatible 实现复用 Spring Web 自带 `RestClient` 和现有 Jackson `ObjectMapper`，不引入 AI SDK。配置只在服务端，默认 disabled，CI 只使用 Fake。
+
+真实网络调用必须在数据库事务之外。请求前先持久化 `RUNNING` Invocation，请求完成后在短事务内保存脱敏元数据、状态、结构化结果和 Provider Usage。
+
+## 9. Actual Token
+
+```text
+Provider response usage
+→ ai_model_invocation
+→ Analysis / Batch / User 聚合
+```
+
+`ai_model_invocation` 是唯一 Actual Token 事实源。Estimate 仅用于 Preview 与 Budget。Invocation 绑定 `batch_item_id`，从而按 Batch 聚合时只统计该批真正产生的调用。
+
+## 10. Manual Preview 与 Confirm
+
+```text
+Preview request
+→ resolve absolute window
+→ load ordered candidates
+→ resolve current Snapshot
+→ remove already-succeeded identity
+→ estimate each candidate
+→ apply candidate/token limits
+→ return counts + HMAC preview token
+
+Confirm
+→ verify signature/expiry/owner/manualRequestId
+→ recompute same absolute window and fingerprint
+→ reject drift or create idempotent Batch + Items
+```
+
+Preview token 有效期 10 分钟，不建 Preview 表，不调用 Provider。Manual Batch 以 `(user_id, manual_request_id)` 防重复。
+
+## 11. Batch 与 Worker
+
+```text
+Batch Creator
+→ freeze Batch and ordered Items in one transaction
+→ Worker polls
+→ SELECT ... FOR UPDATE SKIP LOCKED
+→ short claim transaction
+→ provider call outside transaction
+→ short completion transaction
+```
+
+第一版 Worker 单并发。任何 `RUNNING` 调用在崩溃后如果无法确认 Provider 是否执行，必须转为 `UNKNOWN`/失败，不自动重复收费。
+
+Item-limit 之外只保留 Batch 聚合计数；Token-budget 延后项保存 Item 和明确原因，以支持审计和恢复。
+
+## 12. Scheduler
+
+```text
+periodic dispatcher (30–60s)
+→ lock due schedule
+→ scheduledFor = nextRunAt
+→ check overlap
+→ create Scheduled or NOOP Batch idempotently
+→ advance nextRunAt atomically
+```
+
+- due index：`(enabled, next_run_at, id)`；
+- trigger unique：`(schedule_id, scheduled_for)`；
+- 默认关闭、用户本地 02:00、IANA timezone；
+- 5 分钟 misfire grace；
+- 超过 grace 不补跑历史；
+- Schedule 不直接调用 Provider。
+
+## 13. 事务边界
+
+必须使用明确事务：
+
+- Profile 创建 Version 并切换 Active Version；
+- 创建 Analysis 逻辑身份；
+- Preview Confirm 创建 Batch/Items；
+- Worker 领取；
+- Worker 完成；
+- Scheduler 触发并推进 `next_run_at`。
+
+外部 HTTP 调用不得包含在数据库事务中。
+
+## 14. 禁止的架构扩张
+
+Phase 3 不增加：
+
+- Kafka / RabbitMQ；
+- Redis；
+- Elasticsearch；
+- Vector DB / Embedding / RAG / Agent；
+- 微服务；
+- Recommendation / Notification；
+- Preview 持久化；
+- Spring Session JDBC；
+- 动态 Definition 或 System Prompt 数据库表。

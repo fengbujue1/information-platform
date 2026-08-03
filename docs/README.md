@@ -18,12 +18,12 @@
 - [Web UI Behavior V1](contracts/web-ui-behavior-v1.md)
 - [ADR-010：Phase 2 Web MVP 边界](decisions/ADR-010-phase2-web-mvp-boundary.md)
 
-## Phase 3（Draft，等待 TASK-020 冻结）
+## Phase 3（Accepted Design，实施中）
 
 - [Phase 3 范围](PHASE3_SCOPE.md)
-- [Phase 3 Architecture Draft](PHASE3_ARCHITECTURE_DRAFT.md)
-- [Phase 3 Data Model Draft](PHASE3_DATA_MODEL_DRAFT.md)
-- [Phase 3 Database Design Draft](DATABASE_DESIGN_PHASE3_DRAFT.md)
+- [Phase 3 Architecture（Accepted）](PHASE3_ARCHITECTURE_DRAFT.md)
+- [Phase 3 Data Model（Accepted）](PHASE3_DATA_MODEL_DRAFT.md)
+- [Phase 3 Database Design（Accepted，待实施）](DATABASE_DESIGN_PHASE3_DRAFT.md)
 
 ### Phase 3 ADR
 
@@ -42,11 +42,11 @@
 
 ### Phase 3 TASK
 
-1. [TASK-020：Phase 3 仓库审查与设计冻结](tasks/TASK-020.md)
-2. [TASK-021：Identity MVP](tasks/TASK-021.md)
-3. [TASK-022：Prompt Profile 与 Prompt Version](tasks/TASK-022.md)
-4. [TASK-023：Analysis Definition 与 Phase 3 Contracts](tasks/TASK-023.md)
-5. [TASK-024：Phase 3 数据模型与 Flyway](tasks/TASK-024.md)
+1. [TASK-020：Phase 3 仓库审查与设计冻结（已完成）](tasks/TASK-020.md)
+2. [TASK-024：Phase 3 数据模型与 Flyway（当前）](tasks/TASK-024.md)
+3. [TASK-021：Identity MVP](tasks/TASK-021.md)
+4. [TASK-022：Prompt Profile 与 Prompt Version](tasks/TASK-022.md)
+5. [TASK-023：Analysis Definition 与 Phase 3 Contracts](tasks/TASK-023.md)
 6. [TASK-025：AI Provider、Usage Adapter 与 Fake Provider](tasks/TASK-025.md)
 7. [TASK-026：Prompt Assembly 与结构化输出](tasks/TASK-026.md)
 8. [TASK-027：单条 Information Analysis](tasks/TASK-027.md)
@@ -65,4 +65,4 @@
 
 ## 当前任务
 
-[TASK-020：Phase 3 仓库审查与设计冻结](tasks/TASK-020.md)
+[TASK-024：Phase 3 数据模型与 Flyway](tasks/TASK-024.md)

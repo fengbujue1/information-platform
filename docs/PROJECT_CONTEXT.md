@@ -43,7 +43,7 @@ Collector
 - Persistence：MySQL 8、Flyway、MyBatis-Plus 3.5.17（Spring Boot 3 Starter）
 - Frontend：Vue 3、TypeScript、Vite、Element Plus
 - Deployment：Docker Compose
-- AI：后续使用 OpenAI 兼容接口，框架在 AI Phase 再决定
+- AI：Phase 3 使用通用 OpenAI-compatible Client，优先复用 Spring `RestClient` 与 Jackson，不引入 AI SDK
 
 ## Java 代码可读性约定
 
@@ -70,3 +70,14 @@ Collector
 - Kubernetes
 - 短信和微信推送
 - 复杂用户权限系统
+
+## Phase 3 Accepted 边界
+
+- 第一版只实现 `JOB_USER_RELEVANCE_V1`，通用核心保持 Information 语义。
+- 使用最小账号、同源 Session、CSRF 和 Owner 隔离；不实现公共注册、RBAC 或多租户。
+- Prompt 跟账号走并以不可变 Version 保存；System Prompt 和 Schema 由平台控制。
+- Analysis 绑定不可变 Snapshot，不覆盖来源事实，不默认读取 rawPayload。
+- Actual Token 只能来自每次 Provider Invocation 的 Usage。
+- Manual 与 Schedule 共用 Batch Engine；Schedule 默认关闭、用户本地 02:00。
+- 第一版 Worker/Scheduler 复用 Spring + MySQL，不引入新基础设施。
+- Accepted 物理设计在 TASK-024 实施前仍不是当前数据库事实。

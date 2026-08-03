@@ -1,5 +1,7 @@
 # Phase 3 Codex 协作流程
 
+当前状态：TASK-020 已于 2026-08-03 完成设计冻结。第一、二节保留为审查历史模板；后续从 TASK-024 开始。
+
 ## 1. 第一次：只做 TASK-020 仓库审查
 
 把下面内容发送给 Codex：
@@ -136,8 +138,8 @@ docs/DATABASE_DESIGN_PHASE3_DRAFT.md
 2. 修正 `docs/DATABASE_DESIGN_PHASE3_DRAFT.md` 中的字段、类型、PK、UK、Index、FK、ON DELETE 和时间规则。
 3. 把我已经确认的 Scope / ADR / Contracts / Phase 3 Data Model / Phase 3 Database Design 改为 Accepted。
 4. 更新 PROJECT_CONTEXT / ARCHITECTURE / DATABASE_DESIGN / AGENTS 中确实需要长期同步的原则；注意 Phase 3 表尚未实施时，不要把 Draft 表伪装成已落地数据库事实。
-5. ROADMAP 保持 TASK-020 → TASK-032 顺序，除非你已说明必须调整。
-6. CURRENT_STATUS 当前任务改为 TASK-021。
+5. 按已确认依赖调整为 TASK-020 → TASK-024 → TASK-021 → TASK-022 → TASK-023 → TASK-025～TASK-032。
+6. CURRENT_STATUS 当前任务改为 TASK-024。
 7. 更新 TASK-020 实施记录和实际文档校验结果。
 8. 运行 git diff --check。
 9. 不创建 Java、SQL、Vue 业务代码。

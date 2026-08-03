@@ -1,6 +1,7 @@
 # Analysis Batch V1
 
-状态：Draft  
+状态：Accepted
+接受日期：2026-08-03
 适用阶段：Phase 3
 
 ## 1. Trigger
@@ -10,27 +11,34 @@ MANUAL
 SCHEDULED
 ```
 
+两种 Trigger 共用 Candidate Resolver、Batch Creator、Budget Guard、Worker 和 Usage 聚合。
+
 ## 2. Preview
 
-Manual 创建 Batch 前必须 Preview。
-
-Preview 输入至少：
+Manual 创建 Batch 前必须 Preview。输入：
 
 ```text
 promptProfileId
-analysisDefinitionKey
-windowDays
-maxCandidates
-maxEstimatedTokens
+windowDays            default 3, hard max 14
+maxCandidates         default 20, hard max 50
+maxEstimatedTokens    default 75000, hard max 200000
 ```
 
-服务端解析当前用户、Profile Active Version 和平台硬限制。
+Preview：
 
-Preview 不调用 AI Provider。
+- 不调用 Provider；
+- 不创建 Analysis/Invocation/Batch；
+- 解析当前 Active Prompt Version；
+- 使用当前 Definition Version；
+- 以 `information_item.first_seen_time` 解析 `[windowStart, windowEnd)`；
+- 按 `firstSeenTime DESC, id DESC` 稳定排序；
+- 解析候选对应当前 Snapshot；
+- 排除相同逻辑身份已成功项；
+- 计算每项 Estimate 并应用限制。
 
-## 3. Preview 输出
+## 3. Preview 输出与确认
 
-至少：
+至少返回：
 
 ```text
 windowStart
@@ -38,51 +46,56 @@ windowEnd
 totalInWindow
 eligibleCount
 alreadyAnalyzedCount
-pendingCount
 selectedCount
-deferredByItemLimit
-deferredByTokenBudget
-
+deferredByItemLimitCount
+deferredByTokenBudgetCount
 estimatedInputTokens
 estimatedOutputTokens
 estimatedTotalTokens
 estimateMethod
+expiresAt
+previewToken
 ```
 
-## 4. 时间窗口
+`previewToken` 是 10 分钟有效的 HMAC 签名载荷，包含 Owner、Profile/Version、Definition、绝对窗口、limits、有序候选/Estimate 指纹和随机 `manualRequestId`。
 
-Preview 返回绝对 windowStart/windowEnd。
+Confirm 必须重新计算相同窗口和指纹。过期、篡改或候选漂移返回稳定冲突错误，不创建 Batch。`(userId, manualRequestId)` 保证重复 Confirm 返回同一 Batch。
 
-Manual Confirm 必须基于同一个冻结窗口创建 Batch，不能重新计算“现在 - N 天”导致候选漂移。
-
-具体 Preview Token / requestId 机制由 TASK-028 冻结。
-
-## 5. Stable Ordering
-
-候选必须稳定排序。
-
-第一版具体字段由 Job Candidate Resolver 合同决定。
-
-不能依赖无 ORDER BY 的数据库自然顺序。
-
-## 6. Candidate Limits
-
-处理顺序：
+## 4. Estimate
 
 ```text
-window
-→ eligibility
-→ already analyzed skip
-→ stable order
-→ maxCandidates
-→ tokenBudget
+baseTokens = ceil(UTF-8 bytes / 3)
+estimatedInputTokens = ceil((baseTokens + 64) × 1.20)
+estimatedOutputTokens = definition.maxOutputTokens
+estimatedTotalTokens = input + output
+estimateMethod = UTF8_BYTES_DIV3_MARGIN20_V1
 ```
 
-超限项记录 deferred 原因。
+第一版 Definition `maxOutputTokens=1000`。
 
-## 7. Batch 状态
+## 5. Batch 与 Items
 
-至少需要表达：
+Batch 冻结：
+
+- trigger、owner、schedule/manual request；
+- Profile/Prompt Version；
+- Definition key/version；
+- absolute window；
+- limits/counts/Estimate；
+-执行状态。
+
+进入 Candidate Limit 的候选按顺序冻结为 Item。Token Budget 延后的候选也保存 Item 和 `TOKEN_BUDGET` 原因；Item Limit 之外只保存 Batch 聚合计数。
+
+Batch Item 唯一：
+
+```text
+(batchId, snapshotId)
+(batchId, selectionOrder)
+```
+
+## 6. 状态
+
+Batch：
 
 ```text
 PENDING
@@ -93,47 +106,34 @@ FAILED
 NOOP
 ```
 
-是否增加 COMPLETED_WITH_LIMIT 由 TASK-029 冻结。
-
-## 8. Batch Items
-
-Batch 创建时冻结需要执行和延期的候选信息，防止运行中数据变化造成候选集合漂移。
-
-## 9. Async
-
-Create Batch 立即返回 batchId。
-
-浏览器通过查询获取进度，不保持长连接等待全部分析完成。
-
-## 10. Usage
-
-Batch Actual Token 由其 Model Invocations 聚合。
-
-必须能展示：
+Item：
 
 ```text
-estimatedTotalTokens
-actualTotalTokens
+SELECTED
+RUNNING
+SUCCEEDED
+FAILED
+SKIPPED
+DEFERRED
 ```
 
-Actual 不可用时标明部分/不可用，不用 Estimate 替代。
+## 7. Async 与恢复
 
-## 11. Idempotency
+- 创建 Batch/Items 后立即返回，不在 HTTP 请求中跑完整批次；
+- 单并发 Worker 周期轮询；
+- `FOR UPDATE SKIP LOCKED` 领取；
+- 领取和完成分别短事务；
+- Provider 调用不持有事务；
+- 进程中断留下的 Invocation 结果不确定时标记 UNKNOWN，不自动重复收费。
 
-一个 Item 对应的 Analysis 已成功时，不重复收费调用。
+## 8. Usage
 
-Batch 重启后不得重新执行已经 SUCCEEDED 的 Item。
+Batch Actual Usage 只统计绑定其 Item 的 Invocation。Analysis 后续独立重试不得改变历史 Batch Usage。Provider 无 Usage 时保持 `UNAVAILABLE/NULL`。
 
-## 12. Failure
+## 9. Failure
 
-单 Item 失败默认不要求整个 Batch 回滚。
+单项失败不回滚其他已完成项。Batch 根据 Item 结果进入 `COMPLETED/PARTIAL_FAILED/FAILED`。错误信息脱敏，用户可显式重试失败 Analysis，但系统不自动重试不确定请求。
 
-Batch 结束时根据成功/失败情况得到最终状态。
+## 10. Access
 
-## 13. Retry
-
-Phase 3 不允许对 ambiguous timeout 无脑自动重试。
-
-## 14. Access
-
-用户只能操作自己的 Batch。
+Preview、Confirm、Batch、Item 和 Usage 都要求 Session Owner 隔离；所有写请求要求 CSRF。

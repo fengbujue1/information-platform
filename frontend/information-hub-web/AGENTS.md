@@ -4,7 +4,7 @@
 
 本模块负责标准化信息的浏览前端。
 
-Phase 2 当前只实现职位浏览 MVP。
+Phase 2 职位浏览 MVP 已完成。Phase 3 按当前 TASK 增加 Identity、Prompt、Analysis、Batch 和 Schedule 页面。
 
 前端不得直接访问：
 
@@ -32,7 +32,7 @@ Phase 2 默认使用 npm，并提交 `package-lock.json`。未经确认不得在
 
 Node 版本必须使用受维护的 LTS，并通过仓库版本文件固定。实际版本由 TASK-012 在检查开发环境后确定。
 
-## 三、Phase 2 范围
+## 三、阶段范围
 
 允许：
 
@@ -45,15 +45,14 @@ Node 版本必须使用受维护的 LTS，并通过仓库版本文件固定。�
 - 前端测试；
 - 受控构建部署。
 
-禁止提前实现：
+Phase 3 仍禁止：
 
 - rawPayload；
-- 用户系统；
 - 复杂权限；
 - 收藏和备注；
 - 职位写操作；
 - Collector 管理；
-- AI、推荐和通知；
+- 推荐和通知；
 - 公网无认证部署。
 
 ## 四、目录边界
@@ -94,6 +93,9 @@ src/
 7. 错误码统一转换为用户可理解的信息。
 8. 请求取消、重复请求和竞态必须得到处理。
 9. 不在浏览器中保存 Collector Token。
+10. 不在浏览器中保存 Provider API Key、Bootstrap 密码或其他服务器秘密。
+11. Identity MVP 后 Axios 使用同源 Session；状态修改请求携带 CSRF token。
+12. 401 进入登录流程，403 显示权限/CSRF 错误，不把两者当普通网络失败。
 
 ## 六、路由和状态
 
@@ -111,6 +113,8 @@ src/
 - `.env` 真实文件不得提交 Git。
 - 不把服务器秘密写入 `VITE_` 环境变量。
 - 未增加读取认证前，不配置公网无认证访问。
+- Identity MVP 后 `/jobs` 和 AI 页面使用认证路由守卫，并安全恢复原站内路径。
+- Session 使用 HttpOnly Cookie，前端不得尝试读取 Session ID。
 - 不增加宽泛的后端 CORS；优先使用 Vite Proxy 和 Nginx 同源代理。
 
 ## 八、用户体验
@@ -142,7 +146,7 @@ npm run build
 
 组件和工具函数应有稳定测试。
 
-TASK-019 负责端到端验收，不能用单元测试替代真实前后端联调。
+Phase 3 E2E 必须先登录并携带 Session/CSRF；不能用单元测试替代真实前后端联调。
 
 ## 十、任务纪律
 

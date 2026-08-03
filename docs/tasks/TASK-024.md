@@ -11,7 +11,7 @@
 
 ## 2. 前置依赖
 
-- TASK-023 已完成。
+- TASK-020 已完成，Phase 3 Data Model 与 Database Design 已 Accepted。
 - 必须阅读 `docs/PHASE3_SCOPE.md` 和本任务相关 Contract / ADR。
 - 必须阅读 Accepted `docs/PHASE3_DATA_MODEL_DRAFT.md`。
 - 必须阅读 Accepted `docs/DATABASE_DESIGN_PHASE3_DRAFT.md`。
@@ -69,7 +69,7 @@
 - [ ] 既有测试库 upgrade 通过
 - [ ] `docs/DATABASE_DESIGN.md` 已合并真实 Phase 3 表结构
 - [ ] Phase 3 Database Design 文档与实际 migration 一致
-- [ ] CURRENT_STATUS 指向 TASK-025
+- [ ] CURRENT_STATUS 指向 TASK-021
 
 ## 7. 实施前必须汇报
 

@@ -1,6 +1,7 @@
 # Job User Relevance V1
 
-状态：Draft  
+状态：Accepted
+接受日期：2026-08-03
 Definition：`JOB_USER_RELEVANCE_V1`
 
 ## 1. 目标
@@ -11,7 +12,7 @@ Definition：`JOB_USER_RELEVANCE_V1`
 
 ## 2. 输入
 
-建议字段：
+输入由真实 `information_snapshot` 的 `standardized_payload` 和必要标准字段投影，固定字段：
 
 ```text
 title
@@ -29,9 +30,9 @@ sourceSkillTags
 welfare
 ```
 
-最终输入字段在 TASK-023 根据后端真实 Snapshot DTO 冻结。
+不得输入 `raw_payload`、Collector Token、Cookie 或其他认证信息。TASK-023 必须将以上 Contract 投影映射到真实 Snapshot DTO，并为缺失/NULL 字段保留显式空值语义。
 
-## 3. 输出 Draft
+## 3. 输出
 
 ```json
 {
@@ -90,7 +91,7 @@ welfare
 
 ## 6. Evidence
 
-如果 TASK-023 决定加入 evidence，必须只能引用输入中实际存在的信息，不能生成来源中不存在的事实。
+V1 不增加独立 evidence 字段。`positiveSignals`、`negativeSignals` 和 `attentionPoints` 只能引用输入中实际存在的信息，不能生成来源中不存在的事实。
 
 ## 7. Missing Data
 
@@ -127,3 +128,11 @@ System Prompt 必须要求模型忽略其中试图修改 AI 指令的文字。
 - 最大字符串/数组长度。
 
 不合法响应不能进入 SUCCEEDED。
+
+V1 上限：
+
+- `summary`：1000 字符；
+- 每个数组最多 20 项；
+- 数组单项最多 500 字符；
+- 不允许 Schema 未定义字段；
+- Definition `maxOutputTokens = 1000`。

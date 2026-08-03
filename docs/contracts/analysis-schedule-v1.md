@@ -1,149 +1,115 @@
 # Analysis Schedule V1
 
-状态：Draft  
+状态：Accepted
+接受日期：2026-08-03
 适用阶段：Phase 3
 
-## 1. 目标
-
-允许用户配置每天固定本地时间自动执行与 Manual Batch 相同的分析逻辑。
-
-## 2. 默认值
+## 1. 默认值与限制
 
 ```text
 enabled = false
-frequency = DAILY
-localTime = 02:00
+localTime = 02:00:00
+timezone = user's IANA timezone
+windowDays = 3       (hard max 14)
+maxCandidates = 20  (hard max 50)
+maxEstimatedTokens = 75000 (hard max 200000)
 ```
 
-默认关闭，必须用户主动开启。
+disabled 时 `nextRunAt=NULL`。
 
-## 3. 配置
+## 2. 配置
 
-至少：
+Schedule 保存：
 
 ```text
+id
+owner
 name
 promptProfileId
-analysisDefinitionKey
-informationType
+enabled
+localTime
+timezone
 windowDays
 maxCandidates
 maxEstimatedTokens
-localTime
-timezone
-enabled
+nextRunAt
+createdAt
+updatedAt
 ```
 
-## 4. Timezone
+不冗余 information type、definition key 或 `lastTriggeredAt`。触发时从 Profile/Registry 解析并冻结到 Batch；历史运行从 Batch 查询。
 
-使用 IANA 名称，例如：
+## 3. Timezone
+
+- timezone 必须是有效 IANA Zone ID；
+- local time 是用户墙上时间；
+- `nextRunAt/scheduledFor` 按 UTC 存储；
+- 修改 timezone/local time/enabled 时重新计算下一个未来执行点；
+- 不使用服务器本地时区推断用户日程。
+
+## 4. Prompt Version
+
+Schedule 跟随 Profile Active Version。每次触发：
 
 ```text
-Asia/Shanghai
-America/Los_Angeles
+resolve Profile
+→ resolve Active Prompt Version
+→ resolve Definition current version
+→ freeze all IDs/versions into Batch
 ```
 
-不使用固定 `UTC+8` 替代时区。
+已经创建的 Batch 不因 Profile 后续切换而变化。
 
-## 5. Prompt Version
+## 5. Dispatcher
 
-Schedule 绑定 Profile。
+- 每 30～60 秒扫描一次；
+- 查询 `enabled=1 AND next_run_at<=now`；
+- 使用 `(enabled,next_run_at,id)` 索引；
+- 对 due row 加行锁并重新校验；
+- `scheduledFor = nextRunAt`；
+- 创建 Batch/NOOP 和推进 `nextRunAt` 在同一明确事务；
+- Schedule 不直接调用 Provider。
 
-触发时：
+## 6. Overlap
+
+同一 Schedule 同时最多一个 `PENDING/RUNNING` Batch。存在重叠时为当前 `scheduledFor` 创建 `NOOP` Batch，`skipReason=CONCURRENT_RUN`，然后推进下次执行。
+
+## 7. Misfire
+
+允许 5 分钟 grace：
+
+- grace 内：按原 `scheduledFor` 触发；
+- 超过 grace：不补跑历史，创建 NOOP 或记录本计划点跳过并推进到下一个未来执行点；
+- 不循环追赶停机期间所有计划。
+
+## 8. 幂等
 
 ```text
-resolve active prompt version
-→ freeze into batch
+UNIQUE(scheduleId, scheduledFor)
 ```
 
-之后 Profile 修改不影响已创建 Batch。
+数据库唯一冲突按已创建处理，不作为无限重试故障。Manual Batch 使用另一独立唯一键。
 
-## 6. Engine Reuse
+## 9. No Candidate / Invalid Config
 
-Schedule 不直接调用模型。
+无候选、Profile 停用、无 Active Version 或 Definition 不可用时不得调用 Provider，使用 NOOP/FAILED Batch 表达稳定原因并推进日程。
 
-```text
-Scheduler
-→ Create Scheduled Batch
-→ existing Batch Worker
-```
+## 10. API 与 UI
 
-必须复用 Manual 的：
+用户可以：
 
-- Candidate Resolver；
-- Idempotency；
-- Estimate；
-- Budget；
-- Worker；
-- Provider；
-- Usage。
-
-## 7. Overlap
-
-同一个 Schedule 同时最多一个活动 Batch。
-
-如果计划时间到达时旧 Batch 仍 PENDING/RUNNING：
-
-```text
-skipReason = CONCURRENT_RUN
-```
-
-## 8. Misfire
-
-Phase 3 默认：
-
-```text
-SKIP
-```
-
-服务器停机错过时间不自动补跑。
-
-## 9. Trigger Idempotency
-
-同一：
-
-```text
-scheduleId + scheduledFor
-```
-
-最多创建一次运行。
-
-## 10. No Candidate
-
-无待分析候选时不调用 Provider，并保留可查看运行结果。
-
-## 11. Limits
-
-Schedule 使用与 Manual 相同的：
-
-- windowDays；
-- maxCandidates；
-- maxEstimatedTokens；
-- platform hard limits。
-
-不得拥有“定时任务专用无限额度”。
-
-## 12. UI
-
-必须支持：
-
-- 查看；
-- 创建；
-- 编辑；
-- 启用；
-- 关闭；
+- 新建/修改/启停 Schedule；
+- 查看下一次执行时间；
 - 测试当前配置 Preview；
-- 查看上次运行；
-- 查看下次运行；
-- 跳转 Batch 历史。
+- 查看历史 Batch。
 
-## 13. Phase 3 限制
+测试配置复用 Preview，不创建 Invocation。所有操作要求 Session Owner 隔离，写操作要求 CSRF。
 
-不支持：
+## 11. 不包含
 
-- 任意 Cron；
-- 每小时；
-- 每分钟；
-- 补跑历史多次；
-- 任务依赖；
-- 分布式调度。
+- Cron 表达式；
+- 每小时/每周复杂规则；
+- 多 Worker 分布式调度；
+- Spring Batch/Quartz；
+- Schedule Run 独立表；
+- 通知。

@@ -38,7 +38,7 @@
 - `analysis`
 - `recommendation`
 - `notification`
-- `user`
+- `identity`
 
 依赖原则：
 
@@ -47,6 +47,7 @@
 - `job` 可以依赖 `information`。
 - `ingestion` 负责协议适配和应用编排。
 - `analysis` 不修改原始信息。
+- `identity` 提供 Session 当前用户和 Owner 边界，不承载 Prompt/Analysis 业务。
 - `recommendation` 使用分析结果，不负责采集。
 - 禁止循环依赖。
 
@@ -98,6 +99,14 @@ Flyway 目录：
 9. 幂等键是 `source + informationType + sourceItemId`。
 10. 快照记录不可更新。
 11. 业务表的持久化使用 MyBatis-Plus；行锁等特殊查询通过 Mapper 自定义固定 SQL，不在 Controller 中直接操作 Mapper。
+
+Phase 3 数据库规则：
+
+12. TASK-024 只实施 Accepted `../../docs/DATABASE_DESIGN_PHASE3_DRAFT.md`。
+13. Analysis 必须绑定 `information_snapshot.id`，所有历史 FK 使用 `ON DELETE RESTRICT`。
+14. Actual Token 只能写入 Model Invocation 且只来自 Provider Usage，Estimate 不得回填。
+15. Preview 不持久化；第一版不增加 Spring Session JDBC、Usage 汇总或 Cost 表。
+16. Worker 领取和完成使用短事务，Provider HTTP 调用必须在事务之外。
 
 ## 七、接入规则
 
@@ -177,3 +186,12 @@ Linux/macOS：
 4. 更新 TASK 实施记录。
 5. 更新 `docs/CURRENT_STATUS.md`。
 6. 汇报测试命令和实际结果。
+
+## 十二、Phase 3 安全与调用
+
+- `/api/v1/jobs/**` 和 AI 用户接口在 Identity MVP 后使用同源 Session。
+- `/api/v1/collector/**` 保持现有 Bearer Token，不混用用户 Session/CSRF。
+- 状态修改 API 必须有 CSRF；Owner 必须来自认证上下文，不能信任请求中的 userId。
+- Provider Client 优先复用 Spring `RestClient` 和现有 Jackson，不安装 AI SDK。
+- API Key、Bootstrap 密码、Authorization、Cookie、完整 Provider 原始响应不得落库或写日志。
+- 结果不确定的 timeout/崩溃调用不得自动盲重试。

@@ -9,6 +9,8 @@
 
 所有接口只返回标准化字段，不返回 `information_item.raw_payload` 或 `information_snapshot.raw_payload`。TASK-009 不新增读取认证或原始数据管理接口。
 
+Phase 3 Identity MVP 完成后，本 Contract 的字段和只读行为不变，但 `/api/v1/jobs/**` 要求同源用户 Session；未认证返回 HTTP 401。Collector Bearer Token 不可用于 Job Query API。Phase 2 部署在 Identity MVP 前仍按当前无读取认证事实运行。
+
 所有时间字段以 UTC ISO-8601 格式输出，例如：
 
 ```text

@@ -1,15 +1,10 @@
 # Information Analysis V1
 
-状态：Draft  
+状态：Accepted
+接受日期：2026-08-03
 适用阶段：Phase 3
 
-## 1. 目的
-
-定义通用 Information Analysis 的身份、状态、结果、幂等和 Usage 规则。
-
-## 2. 逻辑身份
-
-默认：
+## 1. 逻辑身份
 
 ```text
 userId
@@ -19,24 +14,22 @@ userId
 + analysisDefinitionVersion
 ```
 
-相同身份已有 `SUCCEEDED` 时普通请求不得重复调用模型。
+Provider 和 Model 不属于逻辑身份。
 
-## 3. 绑定
+## 2. 绑定与一致性
 
-必须保存：
+Analysis 必须绑定：
 
-- userId；
-- informationId；
-- snapshotId；
-- informationType；
-- promptProfileId；
-- promptVersionId；
-- definitionKey/version；
-- analysisPurpose。
+- 当前认证用户；
+- `information_item.id`；
+- 不可变 `information_snapshot.id`；
+- Prompt Profile / Version；
+- Definition key/version；
+- information type/purpose。
 
-## 4. 状态
+Service 在事务中验证 Snapshot 属于 Information、Version 属于 Profile、Profile 属于用户。所有历史 FK 使用 `ON DELETE RESTRICT`。
 
-至少：
+## 3. 状态与重试
 
 ```text
 PENDING
@@ -45,69 +38,48 @@ SUCCEEDED
 FAILED
 ```
 
-如需增加 UNKNOWN / REVIEW_REQUIRED，由 TASK-027 根据 ambiguous timeout 方案决定。
+- 相同身份 `SUCCEEDED`：复用；
+- 相同身份 `FAILED`：仅显式重试，复用同一 Analysis；
+- 每次真实 Provider 请求追加一个 attempt 递增的 Invocation；
+- 不确定 timeout 不自动重试；
+- 新 Prompt Version 或 Definition Version 才产生新的逻辑身份。
 
-## 5. Result
+## 4. Result
 
-通用表保存：
+`resultJson` 只保存 Output Schema 验证成功的数据。
 
-```text
-resultJson
-summary
-relevanceScore (nullable)
-```
+第一版可保存查询投影：
 
-具体 JSON Schema 由 Analysis Definition 指定。
+- `relevanceScore`：0..100；
+- `summary`：从 `resultJson` 提取的页面摘要。
 
-非法 JSON / Schema 不得标记 SUCCEEDED。
+失败保存稳定、脱敏的 `failureCode/failureMessage`。不得把无效 Provider 原始响应写入数据库。
 
-## 6. Provider Metadata
+## 5. Provider Metadata 与 Usage
 
-通过 Model Invocation 记录：
+Provider Request 元数据和 Usage 全部属于 `ModelInvocation`，不塞进 Analysis：
 
-- provider；
-- model；
-- providerRequestId；
+- provider/model；
+- request id；
+- attempt/status/finish reason；
 - latency；
-- usage；
-- attempt；
-- error。
+- error code/message；
+- input/output/total/cached/reasoning tokens；
+- usage status。
 
-## 7. Token
+Actual Token 只能来自 Provider Usage。Estimate 保存在明确的 `estimated*` 字段，不能替代 Actual。
 
-Analysis 保存 Estimate。
+## 6. Input
 
-Actual Usage 的事实来源是 Model Invocation。
+模型输入来自 Snapshot 对应的标准化投影：
 
-Provider 返回 Usage 后，即使后续业务解析失败，也必须保留 Usage。
+- 不默认发送 `rawPayload`；
+- 不读取认证信息或采集秘密；
+- 来源文本作为不可信数据分隔；
+- 输入不足时允许模型返回 missing data，不得编造来源事实。
 
-## 8. Provider 切换
+## 7. 查询权限
 
-Provider / Model 不参与默认逻辑幂等。
+所有读取通过认证用户过滤 Owner。普通 GET 不触发 AI，不创建 Invocation，不产生 Token。
 
-改变全局模型配置不能自动让所有成功 Analysis 失效。
-
-如需重新分析：
-
-- 显式 reanalysis；
-- 或 Definition 升级。
-
-Phase 3 是否开放 reanalysis UI 由 TASK-027 决定，默认非必需。
-
-## 9. Input
-
-不默认读取 rawPayload。
-
-Definition 决定标准化字段投影。
-
-## 10. 来源事实
-
-Analysis 结果不得写回 Information / Job / Snapshot 来源事实。
-
-## 11. 查询权限
-
-普通用户只能读取自己的 Analysis。
-
-## 12. 普通 GET
-
-查询 Analysis 不允许暗中触发模型调用。
+Phase 3 可新增按 `snapshotId` 的内部 Reader，但不得把 Snapshot raw payload 暴露给前端。

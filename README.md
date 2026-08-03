@@ -17,9 +17,9 @@ BOSS Collector
 → Information Hub Web
 ```
 
-Phase 3 正在进行设计冻结，尚未开始 AI 业务代码。
+Phase 3 设计已冻结，当前准备实施数据库结构，尚未开始 AI 业务代码。
 
-## Phase 3 Draft
+## Phase 3 Accepted Design
 
 Phase 3 计划建设：
 
@@ -72,8 +72,8 @@ User Relevance MVP
 
 - [文档索引](docs/README.md)
 - [Phase 3 Scope](docs/PHASE3_SCOPE.md)
-- [Phase 3 Architecture Draft](docs/PHASE3_ARCHITECTURE_DRAFT.md)
-- [Phase 3 Data Model Draft](docs/PHASE3_DATA_MODEL_DRAFT.md)
+- [Phase 3 Architecture（Accepted）](docs/PHASE3_ARCHITECTURE_DRAFT.md)
+- [Phase 3 Data Model（Accepted）](docs/PHASE3_DATA_MODEL_DRAFT.md)
 - [Phase 3 Codex Workflow](docs/CODEX_PHASE3_WORKFLOW.md)
 - [路线图](docs/ROADMAP.md)
 - [当前状态](docs/CURRENT_STATUS.md)

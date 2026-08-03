@@ -1,6 +1,6 @@
 # TASK-020：Phase 3 仓库审查与设计冻结
 
-状态：TODO  
+状态：DONE
 所属阶段：Phase 3  
 优先级：P0  
 负责人：User + Codex
@@ -43,7 +43,7 @@
 - 修正文档冲突。
 - 用户确认后将 Scope / ADR / Contracts / Phase 3 Data Model / Phase 3 Database Design 改为 Accepted。
 - 更新长期 ARCHITECTURE / PROJECT_CONTEXT / DATABASE_DESIGN / AGENTS 中确实需要同步的 Accepted 原则。
-- 将 CURRENT_STATUS 当前任务更新为 TASK-021。
+- 将 CURRENT_STATUS 当前任务更新为 TASK-024。
 
 ## 4. 不在本任务范围
 
@@ -68,24 +68,24 @@
 
 ## 6. 验收标准
 
-- [ ] Snapshot 绑定方案已用真实代码验证
-- [ ] FIRST_INGESTED 时间语义已映射真实字段
-- [ ] Identity 保护范围已确认
-- [ ] 初始账号 Bootstrap 方案已确认
-- [ ] Token Estimate 方案已确认
-- [ ] Batch/Worker/Scheduler 最小实现已确认
-- [ ] 平台默认 hard limits 已确认或明确留作后续任务
-- [ ] 第一家 Provider 方案已确认
-- [ ] Phase 3 候选表数量已确认
-- [ ] 8 张候选表的字段类型、NULL、PK、UK、Index、FK、ON DELETE 已逐项审查
-- [ ] Analysis 唯一键与重试策略已确认
-- [ ] Invocation Actual Token 事实源已确认
-- [ ] Batch/Schedule 幂等和索引已确认
-- [ ] 是否需要 Session/Preview 附加表已确认
-- [ ] 所有 Phase 3 Draft 无相互冲突
-- [ ] Scope / ADR / Contracts / Data Model / Database Design 经用户确认后 Accepted
-- [ ] 未产生 AI 业务代码
-- [ ] CURRENT_STATUS 指向 TASK-021
+- [x] Snapshot 绑定方案已用真实代码验证
+- [x] FIRST_INGESTED 时间语义已映射真实字段
+- [x] Identity 保护范围已确认
+- [x] 初始账号 Bootstrap 方案已确认
+- [x] Token Estimate 方案已确认
+- [x] Batch/Worker/Scheduler 最小实现已确认
+- [x] 平台默认 hard limits 已确认
+- [x] 第一家 Provider 方案已确认
+- [x] Phase 3 候选表数量已确认
+- [x] 8 张候选表的字段类型、NULL、PK、UK、Index、FK、ON DELETE 已逐项审查
+- [x] Analysis 唯一键与重试策略已确认
+- [x] Invocation Actual Token 事实源已确认
+- [x] Batch/Schedule 幂等和索引已确认
+- [x] 不增加 Session/Preview 附加表
+- [x] 所有 Phase 3 Accepted 文档无已知相互冲突
+- [x] Scope / ADR / Contracts / Data Model / Database Design 经用户确认后 Accepted
+- [x] 未产生 AI 业务代码
+- [x] CURRENT_STATUS 指向 TASK-024
 
 ## 7. 实施前必须汇报
 
@@ -100,21 +100,46 @@
 
 ## 8. 实施记录
 
-待填写。
+2026-08-03：
+
+- 对照 V1 Flyway、Information/Snapshot PO/Mapper/Service、Job Query、Web Router、依赖和 CI 完成真实仓库审查。
+- 确认 Snapshot 主键为 `BIGINT UNSIGNED`，当前 Snapshot 通过 `(information_id, current_version_no)` 查询。
+- 将 FIRST_INGESTED 固定为 `information_item.first_seen_time`。
+- 冻结 8 张表及全部字段、NULL/default、PK/UK/Index/FK/ON DELETE。
+- 冻结 Analysis 重试、Invocation Usage、Manual/Schedule 幂等、Worker 与 Scheduler 方案。
+- 冻结 Session Auth、CSRF、一次性账号 Bootstrap、Preview HMAC、Estimate 和平台硬上限。
+- 因 Identity/Prompt 依赖数据库表，将实际执行顺序调整为 TASK-024 → TASK-021 → TASK-022 → TASK-023 → TASK-025。
+- 只修改文档，未创建 Java、Vue、SQL、Flyway 或 AI 调用。
 
 ## 9. 测试结果
 
-必须填写实际执行命令和结果，禁止编造。
+实际执行：
+
+```text
+git -c safe.directory=E:/1.project/information-platform status --short --branch
+git -c safe.directory=E:/1.project/information-platform log --oneline -10
+git -c safe.directory=E:/1.project/information-platform diff --check
+```
+
+结果：
+
+- 开始实施前工作树干净，分支为 `dev`，最新提交为 `2a9255e`。
+- 实施前与完成后 `git diff --check` 均通过；仅输出 Windows Git 的 LF→CRLF 工作树提示，无 whitespace error。
+- 修改过的 Markdown 相对链接检查通过。
+- 一致性检索未发现 Phase 3 核心文档仍处于 Proposed/Draft，未发现待 TASK-020 决定的残留；`ADR_TEMPLATE.md` 的状态示例除外。
+- 新增内容秘密模式扫描无命中。
+- 本任务只有 Markdown 文档变更，未运行 Java/Vue 测试。
 
 ## 10. 遗留问题
 
-待填写。
+- TASK-024 尚未执行，因此 8 张 Phase 3 表仍不是当前数据库事实。
+- 第一家真实 Provider 的账号、模型名称与服务端秘密由 TASK-032 E2E 前由用户配置，不进入 Git。
 
 ## 11. 完成确认
 
-- [ ] 当前 TASK 文档已更新
-- [ ] `docs/CURRENT_STATUS.md` 已更新
-- [ ] `git diff --check` 通过
+- [x] 当前 TASK 文档已更新
+- [x] `docs/CURRENT_STATUS.md` 已更新
+- [x] `git diff --check` 通过
 - [ ] 用户已检查 `git diff`
 - [ ] 用户确认测试结果
 - [ ] 用户完成 commit / push

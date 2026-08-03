@@ -1,6 +1,7 @@
 # ADR-011：Phase 3 建设通用 AI Processing Foundation，JOB 作为首个实现
 
-状态：Proposed  
+状态：Accepted
+接受日期：2026-08-03
 日期：2026-08-02
 
 ## 背景
@@ -52,6 +53,8 @@ definition = JOB_USER_RELEVANCE_V1
 - `RECOMMENDATION`：未来主动推荐。
 
 Phase 3 只实现 USER_RELEVANCE。
+
+`analysis_definition` 第一版作为代码注册表，不建数据库表；System Prompt 和 Output Schema 由 Definition 版本控制。
 
 ## 正面影响
 

@@ -207,4 +207,8 @@ TypeScript 类型必须来自 Job Query API V1 和后端实际响应。
 - 当前 UI 不读取 rawPayload。
 - 当前 UI 不保存 Collector Token。
 - 当前 UI 不提供写操作。
-- 无读取认证时，不允许直接公开到公网。
+- Identity MVP 实施前无读取认证时，不允许直接公开到公网。
+- Identity MVP 实施后，访问 `/jobs`、详情和快照路由前必须确认 Session；未登录跳转 Login，并在登录后恢复原站内路径。
+- Axios 同源请求携带 Session Cookie；状态修改请求携带服务端 CSRF token。
+- 401 清理前端认证态并进入登录流程；403 不得误报为网络错误。
+- 现有 Job 页面仍不得读取 rawPayload 或保存任何服务器秘密。

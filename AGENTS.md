@@ -4,7 +4,7 @@
 
 本项目是一个通用的信息采集、分析、推荐和浏览平台。
 
-当前第一阶段只处理 BOSS 直聘职位，但架构不能绑定招聘业务。
+当前已落地 BOSS 直聘职位链路，但架构不能绑定招聘业务。
 未来可能接入：
 
 - 智联、猎聘等招聘来源
@@ -27,7 +27,8 @@
   - 负责接收、校验、去重、保存、查询和后续 AI 分析
 
 - `frontend/information-hub-web`
-  - 后续的 Vue 3 管理和浏览前端
+  - 已完成 Phase 2 职位浏览 MVP 的 Vue 3 前端
+  - Phase 3 按 TASK 增加 Identity 与 AI 处理页面
 
 ## 第一阶段数据链路
 
@@ -50,6 +51,10 @@ BOSS 采集器
 8. 当前不引入 Kafka、MongoDB、Elasticsearch、Kubernetes。
 9. 当前使用 MySQL，并使用 JSON 字段保存原始 payload。
 10. 不要修改已经验证可运行的 BOSS 采集核心，除非当前任务明确要求。
+11. Phase 3 的 Analysis 必须绑定不可变 Snapshot，不能覆盖 Information/Job/Snapshot 来源事实。
+12. Actual Token 只能来自 Provider Usage；Estimated Token 只能用于 Preview 和预算。
+13. Manual 与 Schedule 共用 Batch Engine；外部 AI HTTP 调用不得持有数据库事务。
+14. AI Provider、Bootstrap 密码、Session、Collector 等秘密不得进入前端、数据库业务表、Git 或日志。
 
 ## 技术栈
 
@@ -97,3 +102,13 @@ Java 代码注释要求：
 - 未经确认大规模重写现有采集器
 - 为未来需求提前引入复杂基础设施
 - 把密码、Cookie、Token 或数据库密码提交到 Git
+
+## Phase 3 实施约束
+
+- TASK-024 只能实施 Accepted `docs/DATABASE_DESIGN_PHASE3_DRAFT.md`，不得临场自由改表。
+- 后端账号模块命名为 `identity`；不要创建职责宽泛的 `user` 大模块。
+- 浏览器使用同源 Session + CSRF；Collector Bearer Token 保持独立。
+- Prompt 跟账号走并版本化；用户不能编辑 System Prompt 或 Output Schema。
+- Preview 不调用 AI，第一版不创建 Preview 或 Spring Session JDBC 表。
+- 第一版 AI Client 使用 Spring `RestClient` 与 Jackson，不引入 AI SDK。
+- 不提前引入 Kafka、Redis、Elasticsearch、Vector DB、RAG、Agent、微服务、推荐或通知。

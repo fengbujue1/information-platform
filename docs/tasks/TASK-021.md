@@ -11,7 +11,7 @@
 
 ## 2. 前置依赖
 
-- TASK-020 已完成。
+- TASK-024 已完成，`user_account` 及相关 Phase 3 表已迁移。
 - 必须阅读 `docs/PHASE3_SCOPE.md` 和本任务相关 Contract / ADR。
 - 开始前执行 `git status`、`git log --oneline -8`、`git diff --check`。
 

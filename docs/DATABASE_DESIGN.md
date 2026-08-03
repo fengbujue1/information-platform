@@ -584,13 +584,7 @@ V1__create_information_job_and_snapshot_tables.sql
 - `job_information`
 - `information_snapshot`
 
-后续示例：
-
-```text
-V2__create_analysis_tables.sql
-V3__create_user_and_recommendation_tables.sql
-V4__create_notification_tables.sql
-```
+后续 migration 必须读取真实最新版本后命名，不在长期文档中预占 V2/V3 文件名。
 
 ## 15. 已冻结设计决策
 
@@ -608,3 +602,38 @@ V4__create_notification_tables.sql
 12. 重复接入采用非破坏性更新，缺失、`NULL`、空字符串或空数组不覆盖已有有效值。
 13. BOSS `bossOnline=true` 记录带时区的 Collector 在线观测时间；false 或缺失时不清空已有观测时间。
 14. `recruiter_active_text` 不参与 contentHash，仅该字段变化时不创建职位快照。
+
+## 16. Phase 3 Accepted 设计（待 TASK-024 实施）
+
+TASK-020 已接受 Phase 3 物理设计，但以下内容尚未出现在当前 Flyway，因此不是当前数据库事实：
+
+```text
+user_account
+ai_prompt_profile
+ai_prompt_version
+information_analysis
+ai_analysis_schedule
+ai_analysis_batch
+ai_analysis_batch_item
+ai_model_invocation
+```
+
+同时计划在新 migration 为 `information_item` 增加：
+
+```text
+INDEX (information_type, first_seen_time, id)
+```
+
+冻结原则：
+
+- 现有 `information_item.id` 与 `information_snapshot.id` 均为 `BIGINT UNSIGNED`，Phase 3 FK 类型兼容；
+- Analysis 绑定 `information_snapshot.id`，不增加 `current_snapshot_id`；
+- FIRST_INGESTED 使用 `information_item.first_seen_time`；
+- 所有 AI 历史链 FK 使用 `ON DELETE RESTRICT`；
+- Analysis 逻辑唯一键覆盖 user/snapshot/prompt version/definition key+version；
+- 失败重试复用 Analysis 并追加 Invocation；
+- Invocation 是 Actual Token 唯一事实源；
+- Manual 和 Schedule 分别使用 `manual_request_id` 与 `(schedule_id, scheduled_for)` 幂等；
+- 第一版不增加 Spring Session JDBC、Preview、Definition、Usage Summary 或 Cost 表。
+
+TASK-024 必须严格按 `docs/DATABASE_DESIGN_PHASE3_DRAFT.md` 实现，完成 migration 和数据库测试后，再把真实字段、索引及 migration 文件名合并到本文的已实施事实章节。

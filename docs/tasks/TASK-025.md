@@ -11,6 +11,7 @@
 
 ## 2. 前置依赖
 
+- TASK-023 已完成。
 - TASK-024 已完成。
 - 必须阅读 `docs/PHASE3_SCOPE.md` 和本任务相关 Contract / ADR。
 - 开始前执行 `git status`、`git log --oneline -8`、`git diff --check`。
@@ -38,7 +39,7 @@
 - 不实现 Schedule。
 - 不把 API Key 放前端。
 - 不让 CI 依赖真实 Provider。
-- 不引入 LangChain4j/Spring AI，除非 TASK-020 已有明确 Accepted ADR。
+- 不引入 LangChain4j/Spring AI；使用 Spring `RestClient` 和现有 Jackson。
 
 ## 5. 实施原则
 

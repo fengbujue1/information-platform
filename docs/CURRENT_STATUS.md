@@ -1,17 +1,16 @@
 # 当前开发状态
 
-更新时间：2026-08-02  
+更新时间：2026-08-03
 当前分支：dev
 
 ## 当前阶段
 
-Phase 1 已完成。
+- Phase 1 已完成。
+- Phase 2 标准化职位 Web 浏览 MVP 已完成，并通过自动化浏览器测试和真实环境人工端到端验收。
+- Phase 3 的 Scope、Architecture、Data Model、Database Design、ADR 和 Contracts 已通过 TASK-020 审查并 Accepted。
+- Phase 3 业务代码和数据库 migration 尚未开始。
 
-Phase 2 标准化职位 Web 浏览 MVP 已完成，并通过自动化浏览器测试和真实环境人工端到端验收。
-
-Phase 3 已完成 Draft 规划包，尚未开始 AI 业务实现。
-
-## 当前可用链路
+## 当前真实可用链路
 
 ```text
 BOSS Collector
@@ -23,77 +22,68 @@ BOSS Collector
 → Information Hub Web
 ```
 
-## Phase 3 Draft 方向
+当前没有：
+
+- Spring Security 用户登录；
+- Phase 3 数据表；
+- AI Provider；
+- Analysis/Batch/Schedule；
+- Phase 3 Web 页面。
+
+## 已冻结的 Phase 3 目标
 
 ```text
 通用 Information AI Core
 +
-JOB USER_RELEVANCE MVP
+JOB_USER_RELEVANCE_V1
 ```
 
-包括：
+关键决策：
 
-- Identity MVP；
-- Prompt Profile；
-- Prompt Version；
-- Analysis Definition；
-- Snapshot 级 Analysis；
-- OpenAI-compatible Provider；
-- Model Invocation；
-- Actual Token Usage；
-- 最近 N 天 Preview；
-- Async Batch；
-- Token Budget；
-- 每日 Schedule；
-- Phase 3 Web。
+- JOB 只是 Information 的一种类型，Phase 3 只真实实现 JOB；
+- Prompt 跟账号走并版本化，System Prompt/Schema 由平台控制；
+- Analysis 绑定 `information_snapshot.id`；
+- FIRST_INGESTED 使用 `information_item.first_seen_time`；
+- Actual Token 只能来自 `ai_model_invocation` 的 Provider Usage；
+- Manual/Schedule 共用 Batch Engine；
+- Preview 使用 10 分钟 HMAC token，不建 Preview 表；
+- 第一版使用内存 Session，不建 Spring Session JDBC 表；
+- Job Query API 在 Identity MVP 后要求 Session，Collector Bearer Token 保持独立；
+- Worker/Scheduler 使用 Spring + MySQL 短事务方案；
+- Schedule 默认关闭、默认用户本地 02:00；
+- 不引入 Kafka、Redis、Elasticsearch、Vector DB、RAG、Agent、微服务；
+- 不实现推荐和通知。
 
 ## 当前任务
 
-TASK-020：Phase 3 仓库审查与设计冻结。
+TASK-024：实现 Phase 3 数据模型与 Flyway。
 
-TASK-020 只做：
+TASK-024 只允许按 Accepted `docs/DATABASE_DESIGN_PHASE3_DRAFT.md` 实施：
 
-- 真实仓库审查；
-- Draft 与真实代码/DB 校正；
-- Scope/ADR/Contracts 用户确认；
-- 长期文档同步；
-- 设计冻结。
+- 为现有 `information_item` 增加 FIRST_INGESTED 查询索引；
+- 新增 8 张 Phase 3 表；
+- 实现冻结的 PK/UK/Index/FK/ON DELETE/default；
+- 新增对应 PO/Mapper 和数据库测试；
+- 验证空库 migrate 与已有库 upgrade；
+- 将真正实施的数据库事实合并到 `docs/DATABASE_DESIGN.md`。
 
-TASK-020 不做：
+TASK-024 不允许临场重新设计表结构，也不实现登录、Prompt API、Provider、Batch Worker 或 Schedule。
 
-- AI Java 业务实现；
-- Flyway Phase 3 建表；
-- Provider 调用；
-- Login UI；
-- Prompt UI；
-- Batch；
-- Schedule。
+## 下一步执行顺序
 
-## 当前 Phase 3 关键原则
+1. TASK-024：Phase 3 数据模型与 Flyway；
+2. TASK-021：Identity MVP；
+3. TASK-022：Prompt Profile 与 Prompt Version；
+4. TASK-023：Analysis Definition 与 Contracts 代码落地；
+5. TASK-025：AI Provider 与 Fake Provider；
+6. TASK-026～TASK-032：按 Roadmap 继续。
 
-- JOB 只是 Information 的一种类型。
-- 通用 AI Core 不绑定招聘。
-- Phase 3 只真实实现 JOB。
-- Prompt 跟账号走并版本化。
-- 用户不能修改 System Prompt / Output Schema。
-- Analysis 绑定 Snapshot。
-- AI 不覆盖来源事实。
-- rawPayload 不默认发送给模型。
-- Actual Token 只能来自 Provider Usage。
-- Estimate 与 Actual 分开。
-- Manual 与 Schedule 共用 Batch Engine。
-- Schedule 默认关闭。
-- Schedule 默认用户本地 02:00。
-- Schedule 不并发重叠。
-- Misfire 默认不补跑。
-- 不提前引入 Kafka、Redis、Elasticsearch、Vector DB、RAG、Agent、微服务。
-- 不提前实现推荐和通知。
+任务编号不变；顺序调整是因为 Identity、Prompt 和 Analysis 的持久化依赖 TASK-024 的 Accepted 表结构。
 
-## 下一步
+## 当前风险
 
-1. 用户将 Phase 3 Draft 文档提交到 dev。
-2. 按 `docs/CODEX_PHASE3_WORKFLOW.md` 启动 TASK-020。
-3. Codex 只做仓库审查。
-4. 用户确认真实代码校正后的设计。
-5. 将 Scope / ADR / Contracts 改为 Accepted。
-6. TASK-020 完成后进入 TASK-021 Identity MVP。
+- 8 张 Phase 3 表尚未迁移，不能把 Accepted 设计误认为现有数据库事实。
+- Identity 会改变现有 Job Query/Web/E2E 的访问前置条件，TASK-021 必须同时更新测试登录夹具。
+- Provider timeout 可能已计费但结果未知，后续 Worker 不得自动盲重试。
+- Schedule 时区、DST、misfire 和 overlap 必须按 Accepted Contract 实现并测试。
+- Provider API Key、Bootstrap 密码、Session Cookie 和 Collector Token 均不得进入 Git、前端或日志。

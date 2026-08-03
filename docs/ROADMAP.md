@@ -41,7 +41,7 @@ TASK-011 ～ TASK-019 已完成。
 
 ## Phase 3：AI Processing Foundation & User Relevance MVP
 
-状态：规划中。当前 Draft 等待 TASK-020 仓库审查和设计冻结。
+状态：进行中。TASK-020 已完成设计冻结，当前进入 TASK-024 数据库实施。
 
 ### 目标
 
@@ -63,11 +63,11 @@ User
 
 ### Phase 3 TASK
 
-1. [TASK-020：Phase 3 仓库审查与设计冻结](tasks/TASK-020.md)
-2. [TASK-021：Identity MVP](tasks/TASK-021.md)
-3. [TASK-022：Prompt Profile 与 Prompt Version](tasks/TASK-022.md)
-4. [TASK-023：Analysis Definition 与 Contracts](tasks/TASK-023.md)
-5. [TASK-024：Phase 3 数据模型与 Flyway](tasks/TASK-024.md)
+1. [TASK-020：Phase 3 仓库审查与设计冻结（已完成）](tasks/TASK-020.md)
+2. [TASK-024：Phase 3 数据模型与 Flyway（当前）](tasks/TASK-024.md)
+3. [TASK-021：Identity MVP](tasks/TASK-021.md)
+4. [TASK-022：Prompt Profile 与 Prompt Version](tasks/TASK-022.md)
+5. [TASK-023：Analysis Definition 与 Contracts](tasks/TASK-023.md)
 6. [TASK-025：AI Provider、Usage Adapter 与 Fake Provider](tasks/TASK-025.md)
 7. [TASK-026：Prompt Assembly 与结构化输出](tasks/TASK-026.md)
 8. [TASK-027：单条 Information Analysis](tasks/TASK-027.md)
@@ -87,6 +87,9 @@ User
 - Actual Token 以 Provider Invocation 为事实来源。
 - Manual 与 Schedule 共用 Batch Engine。
 - Schedule 默认关闭，默认用户本地 02:00。
+- FIRST_INGESTED 使用 `information_item.first_seen_time`。
+- Job Query API 在 Identity MVP 后纳入 Session Auth，Collector Bearer Token 保持独立。
+- Preview 使用短期 HMAC token，不增加持久化表。
 - 不实现向量检索、推荐和通知。
 
 ## Phase 4：个性化推荐
