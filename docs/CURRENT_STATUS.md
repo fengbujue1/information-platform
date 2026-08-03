@@ -13,7 +13,8 @@
 - TASK-022 已完成账号级 Prompt Profile、不可变 Prompt Version、Active Version 切换、Owner 隔离及对应 API。
 - TASK-023 已完成通用 Analysis Definition Registry、唯一的 `JOB_USER_RELEVANCE_V1`、Snapshot 输入投影、版本化平台 System Prompt / Output Schema 与严格输出校验。
 - TASK-025 已完成通用 AiProviderClient、OpenAI-compatible Adapter、统一 Usage/错误语义及 CI Fake Provider，真实 AI 默认 disabled。
-- Phase 3 Prompt Assembly、Analysis Engine、Batch Worker、Schedule 和对应 Web 业务实现尚未开始。
+- TASK-026 已完成稳定 Prompt Assembly、版本化执行上下文、1 MiB 响应上限、单一 JSON 解析和 Definition Schema 后处理。
+- Phase 3 Analysis Engine、Batch Worker、Schedule 和对应 Web 业务实现尚未开始。
 
 ## 当前真实可用链路
 
@@ -36,6 +37,7 @@ BOSS Collector
 - 保持独立 Bearer Token 语义的 Collector 接口。
 - 需要 Session + CSRF 的 Prompt Profile / Version API。
 - 默认禁用的 OpenAI-compatible Provider 基础、统一 Usage Adapter 和无网络 Fake Provider。
+- 平台 System Prompt / Schema、User Prompt Version 与 Snapshot Input 的安全组装及严格结构化输出处理。
 
 当前没有：
 
@@ -84,14 +86,14 @@ JOB_USER_RELEVANCE_V1
 
 ## 当前任务
 
-TASK-026：Prompt Assembly 与结构化输出校验。
+TASK-027：单条 Information Analysis。
 
-TASK-025 已完成 Provider 抽象、OpenAI-compatible HTTP Adapter、Actual Usage 映射、默认禁用和安全错误分类。下一任务只应组装平台 System Prompt、用户 Prompt 与 Snapshot Input，并执行 JSON/Schema 后处理，不得提前实现 Analysis 持久化、Batch、Schedule、推荐或通知。
+TASK-026 已完成 Prompt Assembly 与结构化输出处理。下一任务只应实现一个认证用户针对确定 Snapshot 和 Prompt Version 的可追溯单条 Analysis、Invocation 与 Actual Usage 链路，不得提前实现 Batch、Schedule、推荐或通知。
 
 ## 下一步执行顺序
 
-1. TASK-026：Prompt Assembly 与结构化输出校验；
-2. TASK-027～TASK-032：按 Roadmap 继续。
+1. TASK-027：单条 Information Analysis；
+2. TASK-028～TASK-032：按 Roadmap 继续。
 
 任务编号不变；顺序调整是因为 Identity、Prompt 和 Analysis 的持久化依赖 TASK-024 的 Accepted 表结构。
 

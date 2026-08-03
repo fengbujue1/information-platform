@@ -20,8 +20,8 @@ public record SourceContentBoundary(
         if (serializedSource == null) {
             throw new IllegalArgumentException("Serialized source must not be null");
         }
-        return startMarker + System.lineSeparator()
-                + serializedSource + System.lineSeparator()
+        return startMarker + "\n"
+                + serializedSource + "\n"
                 + endMarker;
     }
 }

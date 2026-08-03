@@ -187,11 +187,12 @@ Information Hub Web
 - 账号级 Prompt Profile、不可变 Prompt Version、稳定 contentHash、事务内 Active Version 切换与 Owner 隔离 API。
 - 通用 Analysis Definition Registry、唯一的 `JOB_USER_RELEVANCE_V1`、Snapshot 输入投影、版本化平台 System Prompt / Output Schema 与严格输出校验。
 - 通用 AiProviderClient、OpenAI-compatible Adapter、Provider Usage/错误语义、默认禁用配置与 CI Fake Provider。
+- 稳定三消息 Prompt Assembly、版本化执行上下文、1 MiB 响应上限、单一 JSON 解析与 Definition Schema 后处理。
 
 当前尚未实施：
 
-- Prompt Assembly 与单条 Analysis；
+- 单条 Analysis；
 - Candidate Preview、Batch Worker、Schedule Dispatcher；
 - Prompt、Analysis、Batch、Schedule 等 Phase 3 Web 页面与真实模型 E2E。
 
-详细设计以 Accepted `PHASE3_ARCHITECTURE_DRAFT.md` 和 `DATABASE_DESIGN_PHASE3_DRAFT.md` 为准。文件名中的 `_DRAFT` 为保持既有链接而保留，不表示设计仍待讨论。当前下一实施任务是 TODO 状态的 TASK-026。
+详细设计以 Accepted `PHASE3_ARCHITECTURE_DRAFT.md` 和 `DATABASE_DESIGN_PHASE3_DRAFT.md` 为准。文件名中的 `_DRAFT` 为保持既有链接而保留，不表示设计仍待讨论。当前下一实施任务是 TODO 状态的 TASK-027。

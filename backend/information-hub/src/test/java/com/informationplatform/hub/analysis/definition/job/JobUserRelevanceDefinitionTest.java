@@ -92,7 +92,7 @@ class JobUserRelevanceDefinitionTest {
         assertThat(input.sourceSkillTags()).containsExactly("Spring Boot");
         assertThat(input.welfare()).containsExactly("五险一金");
         assertThat(rendered).doesNotContain("must-not-leak").doesNotContain("rawPayload");
-        JsonNode renderedInput = objectMapper.readTree(rendered.split(System.lineSeparator())[1]);
+        JsonNode renderedInput = objectMapper.readTree(rendered.split("\n")[1]);
         assertThat(iterable(renderedInput.fieldNames()))
                 .containsExactlyInAnyOrderElementsOf(Set.of(
                         "title",
@@ -121,7 +121,7 @@ class JobUserRelevanceDefinitionTest {
         assertThat(input.companyName()).isNull();
         assertThat(input.sourceTags()).isNull();
         JsonNode renderedNulls = objectMapper.readTree(
-                definition.renderUserMessage(input).split(System.lineSeparator())[1]);
+                definition.renderUserMessage(input).split("\n")[1]);
         assertThat(renderedNulls.has("companyName")).isTrue();
         assertThat(renderedNulls.path("companyName").isNull()).isTrue();
         assertThat(renderedNulls.has("sourceTags")).isTrue();
@@ -185,7 +185,7 @@ class JobUserRelevanceDefinitionTest {
                 payload);
 
         String rendered = definition.renderUserMessage(definition.projectInput(source));
-        String[] lines = rendered.split(System.lineSeparator());
+        String[] lines = rendered.split("\n");
 
         assertThat(lines).hasSize(3);
         assertThat(lines[0]).isEqualTo("<UNTRUSTED_SOURCE_DATA>");
