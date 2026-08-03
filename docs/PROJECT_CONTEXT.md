@@ -80,4 +80,4 @@ Collector
 - Actual Token 只能来自每次 Provider Invocation 的 Usage。
 - Manual 与 Schedule 共用 Batch Engine；Schedule 默认关闭、用户本地 02:00。
 - 第一版 Worker/Scheduler 复用 Spring + MySQL，不引入新基础设施。
-- Accepted 物理设计在 TASK-024 实施前仍不是当前数据库事实。
+- TASK-024 已按 Accepted 物理设计实施 V2 Migration、8 张核心表及对应 PO/Mapper；当前下一实施任务是 TODO 状态的 TASK-021 Identity MVP，Phase 3 业务能力尚未实现。

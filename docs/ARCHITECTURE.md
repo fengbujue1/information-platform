@@ -12,8 +12,8 @@ Information Hub
     ├── ingestion
     ├── information
     ├── job
-    ├── identity（Phase 3 计划）
-    ├── analysis（Phase 3 计划）
+    ├── identity（Phase 3 持久化基础已实施）
+    ├── analysis（Phase 3 持久化基础已实施）
     ├── recommendation（后续）
     └── notification（后续）
     │
@@ -21,7 +21,11 @@ Information Hub
 MySQL
     ├── information_item
     ├── job_information
-    └── information_snapshot
+    ├── information_snapshot
+    ├── user_account
+    ├── ai_prompt_profile / ai_prompt_version
+    ├── information_analysis / ai_model_invocation
+    └── ai_analysis_batch / item / schedule
 ```
 
 Collector 不直接连接 MySQL。
@@ -146,9 +150,9 @@ A → B → A
 - 主表、Job 扩展和快照继续使用同一个 Spring 事务。
 - Flyway SQL 仍是数据库结构的最终事实来源，MyBatis-Plus 不负责自动建表。
 
-## 11. Phase 3 Accepted 目标架构（尚未实施）
+## 11. Phase 3 Accepted 架构与实施边界
 
-TASK-020 已冻结、TASK-024 起逐步实施：
+TASK-020 已冻结 Phase 3 设计，TASK-024 已实施数据库与 MyBatis-Plus 持久化基础：
 
 ```text
 Information Hub Web
@@ -170,4 +174,20 @@ Information Hub Web
 - Worker/Scheduler 使用 Spring + MySQL 短事务；外部 HTTP 调用不持有数据库事务。
 - Actual Token 的唯一事实来源是 `ai_model_invocation`。
 
-详细设计以 Accepted `PHASE3_ARCHITECTURE_DRAFT.md` 和 `DATABASE_DESIGN_PHASE3_DRAFT.md` 为准。在 TASK-024 migration 完成前，本节不得解释为已落地能力。
+当前已实施：
+
+- V2 Flyway Migration；
+- 8 张 Phase 3 核心表及 FIRST_INGESTED 查询索引；
+- `identity` 的 `UserAccountPo` / Mapper；
+- `analysis` 的 7 组 PO/Mapper；
+- 数据库结构、升级、空库 Migration 和 Mapper 集成测试。
+
+当前尚未实施：
+
+- Identity 登录、Bootstrap、Session、CSRF 与 Owner 上下文；
+- Prompt Profile / Version 业务 Service 和 API；
+- Analysis Definition、Provider、Prompt Assembly 与单条 Analysis；
+- Candidate Preview、Batch Worker、Schedule Dispatcher；
+- Phase 3 Web 页面与真实模型 E2E。
+
+详细设计以 Accepted `PHASE3_ARCHITECTURE_DRAFT.md` 和 `DATABASE_DESIGN_PHASE3_DRAFT.md` 为准。文件名中的 `_DRAFT` 为保持既有链接而保留，不表示设计仍待讨论。当前下一实施任务是 TODO 状态的 TASK-021。

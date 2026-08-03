@@ -17,7 +17,7 @@ BOSS Collector
 → Information Hub Web
 ```
 
-Phase 3 设计已冻结，当前准备实施数据库结构，尚未开始 AI 业务代码。
+Phase 3 设计已冻结。TASK-024 已完成 V2 Migration、8 张核心表及对应 PO/Mapper 持久化基础；当前准备进入 TASK-021 Identity MVP，Phase 3 业务能力尚未实现。
 
 ## Phase 3 Accepted Design
 
