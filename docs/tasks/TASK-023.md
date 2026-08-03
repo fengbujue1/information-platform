@@ -1,6 +1,6 @@
 # TASK-023：落地 Analysis Definition 与 Phase 3 Contracts
 
-状态：TODO  
+状态：DONE
 所属阶段：Phase 3  
 优先级：P0  
 负责人：User + Codex
@@ -50,15 +50,15 @@
 
 ## 6. 验收标准
 
-- [ ] Registry 可按 key/version 获取 Definition
-- [ ] 仅 JOB_USER_RELEVANCE_V1 实现
-- [ ] 输入字段与真实 Snapshot 数据一致
-- [ ] System Prompt 有明确版本
-- [ ] Output Schema 可程序校验
-- [ ] 来源文本不能覆盖平台规则
-- [ ] Score/Confidence 范围规则已测试
-- [ ] Contract 与实现一致
-- [ ] CURRENT_STATUS 指向 TASK-025
+- [x] Registry 可按 key/version 获取 Definition
+- [x] 仅 JOB_USER_RELEVANCE_V1 实现
+- [x] 输入字段与真实 Snapshot 数据一致
+- [x] System Prompt 有明确版本
+- [x] Output Schema 可程序校验
+- [x] 来源文本不能覆盖平台规则
+- [x] Score/Confidence 范围规则已测试
+- [x] Contract 与实现一致
+- [x] CURRENT_STATUS 指向 TASK-025
 
 ## 7. 实施前必须汇报
 
@@ -73,21 +73,36 @@
 
 ## 8. 实施记录
 
-待填写。
+- 新增通用 `AnalysisDefinition`、稳定 key/version 标识、Information Type、Analysis Purpose、Snapshot 输入边界与代码级 Registry。
+- Registry 按 `JOB_USER_RELEVANCE` / `1` 查询，启动时拒绝重复 key/version，未知 Definition 立即失败。
+- 仅实现 `JOB_USER_RELEVANCE_V1`，未创建 NEWS、HOUSE、POLICY 或其他 Definition。
+- 输入投影固定为 Contract 的 13 个字段：标题/正文取不可变 Snapshot 冻结列，其余字段只取 `standardizedPayload.job`；缺失和显式 NULL 均保持 NULL。
+- 输入边界类型不包含 `rawPayload`，也不接收 Collector Token、Cookie 或其他认证信息。
+- System Prompt 与 JSON Output Schema 均使用 classpath 版本化资源，版本固定为 1，`maxOutputTokens=1000`。
+- 来源输入先 JSON 序列化，再由平台添加 `<UNTRUSTED_SOURCE_DATA>` 边界；System Prompt 明确禁止执行来源数据中的指令，并要求缺失信息显式说明不足、所有信号均有输入事实依据。
+- 输出校验严格拒绝缺失字段、未知字段、错误类型、越界 Score/Confidence、过长字符串和过大数组，并转换为不可变输出 Domain。
+- 本任务没有数据库访问、事务、外部 HTTP 调用、API、Migration、Provider、Analysis 执行、Batch、Schedule 或前端变更。
 
 ## 9. 测试结果
 
-必须填写实际执行命令和结果，禁止编造。
+- `.\mvnw.cmd "-Dtest=AnalysisDefinitionRegistryTest,JobUserRelevanceDefinitionTest,JobUserRelevanceOutputValidatorTest" test`
+  - 结果：通过；11 tests，0 failures，0 errors，0 skipped。
+- 清除当前 Maven 进程的 `INFORMATION_HUB_TEST_DB_*` 与 `INFORMATION_HUB_TEST_EMPTY_DB_*` 后执行 `.\mvnw.cmd test`
+  - 结果：通过；94 tests，0 failures，0 errors，19 skipped，即 75 tests 通过。
+  - 19 个跳过项均为需要真实 MySQL 的既有数据库集成测试；Spring Application Context、Identity、Prompt、Ingestion、Job Query 与 TASK-023 非数据库回归均通过。
+- `.\mvnw.cmd -DskipTests package`
+  - 结果：通过；编译、资源复制、JAR 与 Spring Boot 重打包成功。
 
 ## 10. 遗留问题
 
-待填写。
+- 完整数据库集成测试需在 SSH 通道恢复并监听 `127.0.0.1:13306` 后重跑；最终审查时该端口未监听。本任务不修改数据库，当前未发现 TASK-023 代码遗留问题。
+- TASK-025 及后续任务负责 Provider、Prompt Assembly、Analysis 执行、Candidate、Batch、Schedule 与 Web，本任务未提前实现。
 
 ## 11. 完成确认
 
-- [ ] 当前 TASK 文档已更新
-- [ ] `docs/CURRENT_STATUS.md` 已更新
-- [ ] `git diff --check` 通过
+- [x] 当前 TASK 文档已更新
+- [x] `docs/CURRENT_STATUS.md` 已更新
+- [x] `git diff --check` 通过
 - [ ] 用户已检查 `git diff`
 - [ ] 用户确认测试结果
 - [ ] 用户完成 commit / push

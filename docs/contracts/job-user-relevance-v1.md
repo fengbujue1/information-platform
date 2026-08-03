@@ -1,6 +1,6 @@
 # Job User Relevance V1
 
-状态：Accepted
+状态：Accepted / Implemented
 接受日期：2026-08-03
 Definition：`JOB_USER_RELEVANCE_V1`
 
@@ -30,7 +30,7 @@ sourceSkillTags
 welfare
 ```
 
-不得输入 `raw_payload`、Collector Token、Cookie 或其他认证信息。TASK-023 必须将以上 Contract 投影映射到真实 Snapshot DTO，并为缺失/NULL 字段保留显式空值语义。
+不得输入 `raw_payload`、Collector Token、Cookie 或其他认证信息。TASK-023 已将以上 Contract 投影映射到真实 Snapshot 数据，并为缺失/NULL 字段保留显式空值语义。
 
 ## 3. 输出
 
@@ -136,3 +136,13 @@ V1 上限：
 - 数组单项最多 500 字符；
 - 不允许 Schema 未定义字段；
 - Definition `maxOutputTokens = 1000`。
+
+## 11. 实现映射
+
+- Registry：`AnalysisDefinitionRegistry`，按 `analysisDefinitionKey` / `analysisDefinitionVersion` 获取并拒绝重复注册；
+- 唯一实现：`JobUserRelevanceDefinition`，持久化标识为 `JOB_USER_RELEVANCE` / `1`；
+- 输入投影：`JobUserRelevanceInputProjector`，标题和正文取 Snapshot 冻结列，其余字段只取 `standardizedPayload.job`；
+- System Prompt：`ai/definitions/job-user-relevance-v1-system-prompt-v1.txt`，版本 `1`；
+- Output Schema：`ai/definitions/job-user-relevance-v1-output-schema-v1.json`，版本 `1`；
+- 程序校验：`JobUserRelevanceOutputValidator`，严格校验字段集合、类型、范围与长度；
+- 来源边界：平台添加 `<UNTRUSTED_SOURCE_DATA>` / `</UNTRUSTED_SOURCE_DATA>`，来源输入以 JSON 序列化后放入边界。

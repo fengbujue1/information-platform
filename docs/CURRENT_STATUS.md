@@ -11,7 +11,8 @@
 - TASK-024 已完成 Phase 3 V2 migration、8 张表、PO/Mapper 和真实 MySQL 验证。
 - TASK-021 已完成 Identity MVP：受控账号 Bootstrap、密码摘要、同源 Session、CSRF、Login / Logout / Me、Owner 上下文，以及 Job Query/Web/E2E 的认证适配。
 - TASK-022 已完成账号级 Prompt Profile、不可变 Prompt Version、Active Version 切换、Owner 隔离及对应 API。
-- Phase 3 Analysis Definition、Provider、Analysis Engine、Batch Worker、Schedule 和对应 Web 业务实现尚未开始。
+- TASK-023 已完成通用 Analysis Definition Registry、唯一的 `JOB_USER_RELEVANCE_V1`、Snapshot 输入投影、版本化平台 System Prompt / Output Schema 与严格输出校验。
+- Phase 3 Provider、Analysis Engine、Batch Worker、Schedule 和对应 Web 业务实现尚未开始。
 
 ## 当前真实可用链路
 
@@ -37,7 +38,7 @@ BOSS Collector
 当前没有：
 
 - AI Provider；
-- Analysis Definition、Analysis、Batch、Schedule 的业务 Service/API；
+- Analysis、Batch、Schedule 的业务 Service/API；
 - Prompt、Analysis、Batch、Schedule 的 Phase 3 Web 页面。
 
 当前已经具备的 Phase 3 持久化基础：
@@ -82,15 +83,14 @@ JOB_USER_RELEVANCE_V1
 
 ## 当前任务
 
-TASK-023：Analysis Definition 与 Contracts 代码落地。
+TASK-025：AI Provider、Usage Adapter 与 Fake Provider。
 
-TASK-022 已完成账号级 Prompt Profile、不可变 Prompt Version、稳定 contentHash、事务内 Active Version 切换和 Owner 隔离。下一任务只应落地 Accepted Analysis Definition 与 Contracts，不得提前实现 Provider、Analysis Engine、推荐或通知。
+TASK-023 已完成代码级 Definition Registry、`JOB_USER_RELEVANCE_V1` 输入/输出边界及平台控制资源。下一任务只应实现 Accepted Provider 边界、Usage Adapter 与 Fake/OpenAI-compatible Provider，不得提前实现业务 Prompt Assembly、Analysis Engine、推荐或通知。
 
 ## 下一步执行顺序
 
-1. TASK-023：Analysis Definition 与 Contracts 代码落地；
-2. TASK-025：AI Provider 与 Fake Provider；
-3. TASK-026～TASK-032：按 Roadmap 继续。
+1. TASK-025：AI Provider 与 Fake Provider；
+2. TASK-026～TASK-032：按 Roadmap 继续。
 
 任务编号不变；顺序调整是因为 Identity、Prompt 和 Analysis 的持久化依赖 TASK-024 的 Accepted 表结构。
 

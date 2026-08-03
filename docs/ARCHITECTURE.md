@@ -185,11 +185,12 @@ Information Hub Web
 - Job Query API 与 Information Hub Web 的 Session 认证适配；
 - 保持独立 Bearer Token 认证的 Collector 安全边界。
 - 账号级 Prompt Profile、不可变 Prompt Version、稳定 contentHash、事务内 Active Version 切换与 Owner 隔离 API。
+- 通用 Analysis Definition Registry、唯一的 `JOB_USER_RELEVANCE_V1`、Snapshot 输入投影、版本化平台 System Prompt / Output Schema 与严格输出校验。
 
 当前尚未实施：
 
-- Analysis Definition、Provider、Prompt Assembly 与单条 Analysis；
+- Provider、Prompt Assembly 与单条 Analysis；
 - Candidate Preview、Batch Worker、Schedule Dispatcher；
 - Prompt、Analysis、Batch、Schedule 等 Phase 3 Web 页面与真实模型 E2E。
 
-详细设计以 Accepted `PHASE3_ARCHITECTURE_DRAFT.md` 和 `DATABASE_DESIGN_PHASE3_DRAFT.md` 为准。文件名中的 `_DRAFT` 为保持既有链接而保留，不表示设计仍待讨论。当前下一实施任务是 TODO 状态的 TASK-023。
+详细设计以 Accepted `PHASE3_ARCHITECTURE_DRAFT.md` 和 `DATABASE_DESIGN_PHASE3_DRAFT.md` 为准。文件名中的 `_DRAFT` 为保持既有链接而保留，不表示设计仍待讨论。当前下一实施任务是 TODO 状态的 TASK-025。

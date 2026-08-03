@@ -17,7 +17,7 @@ BOSS Collector
 → Information Hub Web
 ```
 
-Phase 3 设计已冻结。TASK-024 已完成 V2 Migration、8 张核心表及对应 PO/Mapper 持久化基础，TASK-021 已完成 Identity MVP，TASK-022 已完成账号级 Prompt Profile 与不可变 Prompt Version；当前下一实施任务是 TASK-023 Analysis Definition 与 Contracts 代码落地。Provider、Analysis、Batch、Schedule 和 Phase 3 Web 等业务能力尚未实现。
+Phase 3 设计已冻结。TASK-024 已完成 V2 Migration、8 张核心表及对应 PO/Mapper 持久化基础，TASK-021 已完成 Identity MVP，TASK-022 已完成账号级 Prompt Profile 与不可变 Prompt Version，TASK-023 已完成 Analysis Definition 与 `JOB_USER_RELEVANCE_V1` 代码落地；当前下一实施任务是 TASK-025 AI Provider、Usage Adapter 与 Fake Provider。Analysis、Batch、Schedule 和 Phase 3 Web 等业务能力尚未实现。
 
 ## Phase 3 Accepted Design
 
