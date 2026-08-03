@@ -203,6 +203,7 @@ git diff --check
 - 不提前实现 NEWS/HOUSE/POLICY。
 - 不提前实现推荐、通知、RAG、Vector DB、Kafka、Redis、Elasticsearch。
 - 完成后更新 TASK 和 CURRENT_STATUS。
+- 如果涉及新增文件，需要使用 git add进行git追踪；
 - 不提交 Git。
 ```
 

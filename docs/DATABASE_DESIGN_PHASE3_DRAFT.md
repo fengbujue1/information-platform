@@ -1,23 +1,24 @@
 # Information Platform Phase 3 数据库设计
 
-设计版本：1.0 Accepted
-状态：Accepted
+设计版本：1.1 Accepted / Implemented
+状态：Accepted，已由 TASK-024 实施
 接受日期：2026-08-03
 数据库：MySQL 8.x  
 字符集：utf8mb4  
 时间存储：UTC
 
-> 文件名保留 `_DRAFT` 以维持既有链接。本文已经 TASK-020 真实仓库审查并由用户确认，是 TASK-024 的物理数据库设计输入，但不是“已经实施”的数据库事实。
+> 文件名保留 `_DRAFT` 以维持既有链接。本文已经 TASK-020 真实仓库审查并由用户确认，并已由 TASK-024 严格实现。
 >
-> 当前已实施事实仍以 `docs/DATABASE_DESIGN.md` 和现有 Flyway migration 为准。TASK-024 完成后才把真实 migration 合并到 `DATABASE_DESIGN.md`。
+> 当前已实施事实以 `docs/DATABASE_DESIGN.md` 和 `V2__create_phase3_ai_processing_tables.sql` 为准；本文继续保存 Accepted 设计输入和逐表审查依据。
 
 ## 1. 已核对的现有数据库事实
 
-真实 Flyway 只有：
+TASK-024 实施后的真实 Flyway 为：
 
 ```text
 backend/information-hub/src/main/resources/db/migration/
-└── V1__create_information_job_and_snapshot_tables.sql
+├── V1__create_information_job_and_snapshot_tables.sql
+└── V2__create_phase3_ai_processing_tables.sql
 ```
 
 与 Phase 3 FK 相关的真实事实：
@@ -498,9 +499,9 @@ TASK-024 必须先读取真实最新 Flyway 版本号，再创建下一条 migra
 
 该顺序允许 `ai_model_invocation.batch_item_id` 直接建立 FK，不需要临时移除约束。
 
-## 16. TASK-024 实施纪律
+## 16. TASK-024 实施结果
 
-TASK-024 只能实现：
+TASK-024 已严格实现：
 
 ```text
 本 Accepted 设计
@@ -508,7 +509,7 @@ TASK-024 只能实现：
 + 当前真实 Flyway
 ```
 
-不得临场修改：
+实施过程中未临场修改：
 
 - 表数量；
 - 字段语义和 NULL/default；
@@ -518,12 +519,22 @@ TASK-024 只能实现：
 - Actual Token 事实源；
 - Batch/Schedule 幂等。
 
-如发现真实冲突，必须停止 SQL 实施、修订设计并重新获得用户确认。
+实际 migration 文件：
 
-TASK-024 完成后：
+```text
+backend/information-hub/src/main/resources/db/migration/
+└── V2__create_phase3_ai_processing_tables.sql
+```
 
-1. 将真实 migration 文件名和最终 SQL 合并到 `docs/DATABASE_DESIGN.md`；
-2. 校验空库全量 migrate；
-3. 校验已有库 upgrade；
-4. 对照 PO/Mapper/测试；
-5. 若 SQL 与文档不一致，先修正并重新确认，不能静默漂移。
+实施与验证结果：
+
+1. V1 未修改；
+2. V2 新增 FIRST_INGESTED 索引和本文冻结的 8 张表；
+3. 空库从无 Flyway History 一次性执行 V1、V2 成功；
+4. 既有 `information_hub_test` 从 V1 升级到 V2 成功；
+5. 全部核心索引、UNIQUE、21 条 Phase 3 FK、Batch CHECK、Schedule 默认值和 Usage NULL 语义通过数据库测试；
+6. 8 张表的 MyBatis-Plus PO/Mapper 写入和回读通过；
+7. `docs/DATABASE_DESIGN.md` 已合并为数据库事实；
+8. 未增加本文明确排除的 Session、Preview、Definition、Usage Summary 或 Cost 表。
+
+测试配置一度将 `INFORMATION_HUB_TEST_DB_URL` 指向开发库，导致开发库也从 V1 安全升级到 V2。未执行 clean、降级或数据删除；随后新增测试目标安全校验，所有数据库集成测试拒绝名称包含 `dev` 的目标，空库测试还要求数据库名包含 `test` 和 `empty`。

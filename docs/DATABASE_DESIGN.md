@@ -1,15 +1,15 @@
 # Information Platform 数据库设计
 
-设计版本：1.3  
+设计版本：2.0
 状态：Accepted
-当前阶段：Phase 1  
+当前阶段：Phase 3 数据模型已实施
 数据库：MySQL 8.x  
 字符集：utf8mb4  
 时间存储：UTC
 
 ## 1. 设计目标
 
-Phase 1 支持 BOSS 职位接入、当前版本查询和历史版本归档，但公共数据库模型不能绑定 BOSS。
+当前数据库同时支持 Phase 1/2 的职位采集与浏览，以及 Phase 3 Identity、Prompt、Analysis、Schedule、Batch 和 Model Invocation 的持久化基础；公共数据库模型不能绑定 BOSS。
 
 Phase 1 创建：
 
@@ -17,7 +17,7 @@ Phase 1 创建：
 - `job_information`
 - `information_snapshot`
 
-后续通过新的 Flyway 迁移增加 AI、推荐、用户和通知相关表。
+Phase 3 已通过 V2 增加账号与 AI 处理持久化表，但尚未实现推荐和通知。
 
 ## 2. 实际输入数据事实
 
@@ -570,21 +570,34 @@ UNIQUE (information_id, content_hash)
 - 不参与 contentHash。
 - 不得包含 Cookie、Token 或浏览器指纹。
 
-## 14. Phase 1 Flyway 规划
+## 14. 已实施 Flyway migration
 
-第一版迁移：
+当前真实 migration：
 
 ```text
 V1__create_information_job_and_snapshot_tables.sql
+V2__create_phase3_ai_processing_tables.sql
 ```
 
-创建：
+V1 创建：
 
 - `information_item`
 - `job_information`
 - `information_snapshot`
 
-后续 migration 必须读取真实最新版本后命名，不在长期文档中预占 V2/V3 文件名。
+V2 实施：
+
+- 为 `information_item` 增加 `idx_information_item_type_first_seen_id (information_type, first_seen_time, id)`；
+- 创建 `user_account`；
+- 创建 `ai_prompt_profile`；
+- 创建 `ai_prompt_version`；
+- 创建 `information_analysis`；
+- 创建 `ai_analysis_schedule`；
+- 创建 `ai_analysis_batch`；
+- 创建 `ai_analysis_batch_item`；
+- 创建 `ai_model_invocation`。
+
+V1 未被修改。后续 migration 必须读取真实最新版本后命名。
 
 ## 15. 已冻结设计决策
 
@@ -603,9 +616,9 @@ V1__create_information_job_and_snapshot_tables.sql
 13. BOSS `bossOnline=true` 记录带时区的 Collector 在线观测时间；false 或缺失时不清空已有观测时间。
 14. `recruiter_active_text` 不参与 contentHash，仅该字段变化时不创建职位快照。
 
-## 16. Phase 3 Accepted 设计（待 TASK-024 实施）
+## 16. Phase 3 已实施数据库事实
 
-TASK-020 已接受 Phase 3 物理设计，但以下内容尚未出现在当前 Flyway，因此不是当前数据库事实：
+TASK-024 已严格按 Accepted `docs/DATABASE_DESIGN_PHASE3_DRAFT.md` 实施 V2。以下 8 张表已经是 Flyway 和 MyBatis-Plus 的真实持久化事实：
 
 ```text
 user_account
@@ -618,22 +631,98 @@ ai_analysis_batch_item
 ai_model_invocation
 ```
 
-同时计划在新 migration 为 `information_item` 增加：
+### 16.1 账号与 Prompt
+
+`user_account`：
+
+- `BIGINT UNSIGNED` 自增主键；
+- 规范化 `username` 唯一；
+- 只保存 `password_hash`，不保存明文密码；
+- 默认时区 `Asia/Shanghai`，默认状态 `ACTIVE`。
+
+`ai_prompt_profile`：
+
+- 以 `user_id` 隔离 Owner；
+- `(user_id, name)` 唯一；
+- `active_version_id` 可空并受 RESTRICT FK 保护；
+- 数据库 FK 不负责校验 Active Version 是否属于同一 Profile，该约束由后续 Service 事务校验。
+
+`ai_prompt_version`：
+
+- `(prompt_profile_id, version_no)` 唯一；
+- `(prompt_profile_id, content_hash)` 唯一；
+- Prompt 正文和 SHA-256 Hash 形成不可变历史；
+- Profile 和 Version 之间全部使用 `ON DELETE/UPDATE RESTRICT`。
+
+### 16.2 Snapshot 级 Analysis
+
+`information_analysis`：
+
+- 同时绑定 `information_item.id` 与不可变 `information_snapshot.id`；
+- 逻辑幂等键为：
 
 ```text
-INDEX (information_type, first_seen_time, id)
+(user_id, snapshot_id, prompt_version_id,
+ analysis_definition_key, analysis_definition_version)
 ```
 
-冻结原则：
+- 所有状态共用该唯一键，失败重试更新同一 Analysis 并追加 Invocation；
+- Estimate 字段只表达调用前预算，不是 Actual Usage；
+- `result_json` 只保存经过平台 Schema 校验的结果。
 
-- 现有 `information_item.id` 与 `information_snapshot.id` 均为 `BIGINT UNSIGNED`，Phase 3 FK 类型兼容；
-- Analysis 绑定 `information_snapshot.id`，不增加 `current_snapshot_id`；
-- FIRST_INGESTED 使用 `information_item.first_seen_time`；
-- 所有 AI 历史链 FK 使用 `ON DELETE RESTRICT`；
-- Analysis 逻辑唯一键覆盖 user/snapshot/prompt version/definition key+version；
-- 失败重试复用 Analysis 并追加 Invocation；
+### 16.3 Schedule 与 Batch
+
+`ai_analysis_schedule`：
+
+- 默认 `enabled = 0`；
+- 默认用户本地执行时间 `02:00:00`；
+- 默认时区 `Asia/Shanghai`；
+- 默认 `window_days = 3`、`max_candidates = 20`、`max_estimated_tokens = 75000`；
+- Scheduler 索引为 `(enabled, next_run_at, id)`。
+
+`ai_analysis_batch`：
+
+- Manual 使用 `(user_id, manual_request_id)` 幂等；
+- Schedule 使用 `(schedule_id, scheduled_for)` 幂等；
+- `ck_ai_analysis_batch_trigger_fields` 保证 Manual/Scheduled 字段组合；
+- Batch 冻结 Information Type、Definition、Prompt Version、时间窗口和预算。
+
+`ai_analysis_batch_item`：
+
+- `(batch_id, snapshot_id)` 和 `(batch_id, selection_order)` 唯一；
+- 明细绑定 Information 与不可变 Snapshot；
+- 可关联创建或复用的 Analysis；
+- 所有历史 FK 使用 RESTRICT，不级联删除来源事实。
+
+### 16.4 Model Invocation 与 Actual Usage
+
+`ai_model_invocation`：
+
+- `(analysis_id, attempt_no)` 唯一；
 - Invocation 是 Actual Token 唯一事实源；
-- Manual 和 Schedule 分别使用 `manual_request_id` 与 `(schedule_id, scheduled_for)` 幂等；
-- 第一版不增加 Spring Session JDBC、Preview、Definition、Usage Summary 或 Cost 表。
+- `input_tokens`、`output_tokens`、`total_tokens`、`cached_input_tokens`、`reasoning_tokens` 全部允许 `NULL`；
+- Provider 未返回 Usage 时，`usage_status = UNAVAILABLE` 且所有 Usage 字段保持 `NULL`；
+- 禁止把 Analysis/Batch 的 Estimated Token 写入 Usage 字段；
+- 不保存 API Key、Authorization 或 Provider 原始敏感响应。
 
-TASK-024 必须严格按 `docs/DATABASE_DESIGN_PHASE3_DRAFT.md` 实现，完成 migration 和数据库测试后，再把真实字段、索引及 migration 文件名合并到本文的已实施事实章节。
+### 16.5 FIRST_INGESTED 查询
+
+V2 已为 `information_item` 增加：
+
+```text
+INDEX idx_information_item_type_first_seen_id
+      (information_type, first_seen_time, id)
+```
+
+候选查询固定使用：
+
+```sql
+WHERE information_type = 'JOB'
+  AND first_seen_time >= :window_start
+  AND first_seen_time < :window_end
+ORDER BY first_seen_time DESC, id DESC
+```
+
+### 16.6 明确未建表
+
+V2 未创建 Spring Session JDBC、Preview、Definition、System Prompt、Usage Summary、Cost、推荐或通知表。字段类型、NULL/default、全部索引、UNIQUE、CHECK 和 FK 的逐项物理定义以 V2 migration 为 SQL 事实，并与 Accepted `docs/DATABASE_DESIGN_PHASE3_DRAFT.md` 一致。

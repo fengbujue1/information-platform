@@ -16,6 +16,7 @@ import com.informationplatform.hub.ingestion.api.dto.InformationEnvelopeRequest;
 import com.informationplatform.hub.ingestion.api.dto.IngestionResult;
 import com.informationplatform.hub.ingestion.api.dto.JobExtensionRequest;
 import com.informationplatform.hub.ingestion.infrastructure.persistence.InformationArchiveRepository;
+import com.informationplatform.hub.testing.DatabaseIntegrationTestSafety;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -38,7 +39,9 @@ class InformationIngestionIntegrationTest {
 
     @DynamicPropertySource
     static void databaseProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", () -> required("INFORMATION_HUB_TEST_DB_URL"));
+        String databaseUrl = DatabaseIntegrationTestSafety.requireTestDatabase(
+                required("INFORMATION_HUB_TEST_DB_URL"));
+        registry.add("spring.datasource.url", () -> databaseUrl);
         registry.add(
                 "spring.datasource.username",
                 () -> required("INFORMATION_HUB_TEST_DB_USERNAME"));

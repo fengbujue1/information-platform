@@ -14,6 +14,7 @@ import com.informationplatform.hub.job.api.dto.JobListItemResponse;
 import com.informationplatform.hub.job.api.dto.JobQueryRequest;
 import com.informationplatform.hub.job.api.dto.JobSnapshotResponse;
 import com.informationplatform.hub.job.api.dto.PageResponse;
+import com.informationplatform.hub.testing.DatabaseIntegrationTestSafety;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -33,7 +34,9 @@ class JobQueryIntegrationTest {
 
     @DynamicPropertySource
     static void databaseProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", () -> required("INFORMATION_HUB_TEST_DB_URL"));
+        String databaseUrl = DatabaseIntegrationTestSafety.requireTestDatabase(
+                required("INFORMATION_HUB_TEST_DB_URL"));
+        registry.add("spring.datasource.url", () -> databaseUrl);
         registry.add(
                 "spring.datasource.username",
                 () -> required("INFORMATION_HUB_TEST_DB_USERNAME"));

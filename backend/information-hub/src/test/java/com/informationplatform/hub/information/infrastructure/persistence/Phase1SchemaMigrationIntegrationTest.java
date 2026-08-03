@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.informationplatform.hub.testing.DatabaseIntegrationTestSafety;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -42,7 +43,8 @@ class Phase1SchemaMigrationIntegrationTest {
 
     @BeforeAll
     static void migrateSchema() {
-        databaseUrl = requiredEnvironmentVariable(DB_URL_ENV);
+        databaseUrl = DatabaseIntegrationTestSafety.requireTestDatabase(
+                requiredEnvironmentVariable(DB_URL_ENV));
         databaseUsername = requiredEnvironmentVariable(DB_USERNAME_ENV);
         databasePassword = requiredEnvironmentVariable(DB_PASSWORD_ENV);
 
@@ -56,7 +58,7 @@ class Phase1SchemaMigrationIntegrationTest {
         MigrateResult result = flyway.migrate();
 
         assertTrue(result.success, "Flyway migration must succeed");
-        assertEquals(1, flyway.info().current().getVersion().getMajor().intValue());
+        assertEquals(2, flyway.info().current().getVersion().getMajor().intValue());
     }
 
     @Test
