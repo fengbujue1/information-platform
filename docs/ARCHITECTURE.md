@@ -189,10 +189,11 @@ Information Hub Web
 - 通用 AiProviderClient、OpenAI-compatible Adapter、Provider Usage/错误语义、默认禁用配置与 CI Fake Provider。
 - 稳定三消息 Prompt Assembly、版本化执行上下文、1 MiB 响应上限、单一 JSON 解析与 Definition Schema 后处理。
 - 绑定不可变 Snapshot 与 Prompt Version 的单条 Analysis 执行、逻辑身份幂等、Invocation attempt、Actual Usage 持久化、短事务和 Owner 隔离 API。
+- Manual Preview Confirm、原子 Batch/Items 冻结、Candidate/Token Budget Guard、串行 MySQL Worker、重启 UNKNOWN 保护和 Batch Actual Usage 聚合。
 
 当前尚未实施：
 
-- Batch Worker、Schedule Dispatcher；
+- Schedule Dispatcher；
 - Prompt、Analysis、Batch、Schedule 等 Phase 3 Web 页面与真实模型 E2E。
 
-详细设计以 Accepted `PHASE3_ARCHITECTURE_DRAFT.md` 和 `DATABASE_DESIGN_PHASE3_DRAFT.md` 为准。文件名中的 `_DRAFT` 为保持既有链接而保留，不表示设计仍待讨论。TASK-028 已完成 Candidate Resolver、无 AI 调用 Preview、Token Estimate 与 HMAC 确认令牌；当前下一实施任务是 TODO 状态的 TASK-029。
+详细设计以 Accepted `PHASE3_ARCHITECTURE_DRAFT.md` 和 `DATABASE_DESIGN_PHASE3_DRAFT.md` 为准。文件名中的 `_DRAFT` 为保持既有链接而保留，不表示设计仍待讨论。TASK-029 已完成异步 Analysis Batch 与 Budget Guard；当前下一实施任务是 TODO 状态的 TASK-030。

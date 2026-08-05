@@ -3,7 +3,7 @@
 状态：Accepted
 接受日期：2026-08-03
 适用阶段：Phase 3
-实现状态：TASK-028 已实现 Preview；Confirm、Batch 与 Worker 由 TASK-029 实现。
+实现状态：TASK-028 已实现 Preview；TASK-029 已实现 Confirm、Batch、Budget Guard、Worker 与查询 API。
 
 ## 1. Trigger
 
@@ -73,6 +73,26 @@ previewToken
 
 Confirm 必须重新计算相同窗口和指纹。过期、篡改或候选漂移返回稳定冲突错误，不创建 Batch。`(userId, manualRequestId)` 保证重复 Confirm 返回同一 Batch。
 
+TASK-029 冻结接口：
+
+```http
+POST /api/v1/ai/analysis-batches/confirm
+```
+
+请求仅包含 `previewToken`。成功原子创建或复用 Batch 后返回 HTTP `202 Accepted`
+和 `batchId`；HTTP 请求不执行完整批次。重复 Confirm 在 Token 有效期内返回同一 Batch。
+
+Owner 查询接口：
+
+```http
+GET /api/v1/ai/analysis-batches?limit=20
+GET /api/v1/ai/analysis-batches/{batchId}
+GET /api/v1/ai/analysis-batches/{batchId}/progress
+```
+
+列表 `limit` 默认 20、范围 1～100。Detail 返回有序 Items；Progress 返回 Item 状态计数、
+Provider Usage 报告/缺失数量和 Actual Token 聚合。跨 Owner 与不存在统一为 404。
+
 ## 4. Estimate
 
 ```text
@@ -118,6 +138,11 @@ FAILED
 NOOP
 ```
 
+没有可执行 Item（无候选或全部被 Token Budget 延后）时使用
+`NOOP/NO_EXECUTABLE_ITEMS`。DEFERRED 不算失败；全部可执行 Item 成功或复用成功为
+`COMPLETED`，成功/复用与失败并存为 `PARTIAL_FAILED`，全部执行失败或结果不确定为
+`FAILED`。
+
 Item：
 
 ```text
@@ -137,6 +162,8 @@ DEFERRED
 - 领取和完成分别短事务；
 - Provider 调用不持有事务；
 - 进程中断留下的 Invocation 结果不确定时标记 UNKNOWN，不自动重复收费。
+- Worker 默认关闭；只有同时启用服务端 Worker 和 Provider 后，Confirm 才允许创建有可执行
+  Item 的 Batch，避免留下永远无法处理的 PENDING Batch。
 
 ## 8. Usage
 

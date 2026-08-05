@@ -18,8 +18,9 @@ import com.informationplatform.hub.analysis.processing.domain.AnalysisTokenEstim
 import com.informationplatform.hub.analysis.processing.domain.AssembledAnalysisPrompt;
 import com.informationplatform.hub.analysis.preview.domain.AnalysisPreview;
 import com.informationplatform.hub.analysis.preview.domain.AnalysisPreviewLimits;
-import com.informationplatform.hub.analysis.preview.domain.PreviewCandidateEstimate;
 import com.informationplatform.hub.analysis.preview.domain.PreviewTokenPayload;
+import com.informationplatform.hub.analysis.preview.domain.ResolvedAnalysisPreview;
+import com.informationplatform.hub.analysis.preview.domain.ResolvedPreviewCandidate;
 import com.informationplatform.hub.analysis.prompt.domain.PromptVersion;
 import com.informationplatform.hub.identity.application.CurrentUserProvider;
 import java.time.Clock;
@@ -101,16 +102,112 @@ public class AnalysisPreviewService {
         }
         AnalysisPreviewLimits limits =
                 AnalysisPreviewLimits.resolve(windowDays, maxCandidates, maxEstimatedTokens);
-        long userId = currentUserProvider.requireCurrentUser().id();
-        AiPromptProfilePo profile = requireProfile(promptProfileId, userId);
-        AiPromptVersionPo version = requireActiveVersion(profile);
-        AnalysisDefinition<?, ?> definition = requireDefinition(profile);
-        PromptVersion promptVersion = toPromptVersion(version);
-
         // 只读取一次时钟并截断到 MySQL DATETIME(3) 精度，冻结绝对半开窗口。
         Instant issuedAt = clock.instant().truncatedTo(ChronoUnit.MILLIS);
         Instant windowEnd = issuedAt;
         Instant windowStart = windowEnd.minus(limits.windowDays(), ChronoUnit.DAYS);
+        long userId = currentUserProvider.requireCurrentUser().id();
+        ResolvedAnalysisPreview resolved = resolve(
+                userId,
+                promptProfileId,
+                null,
+                null,
+                null,
+                windowStart,
+                windowEnd,
+                limits);
+        Instant expiresAt = issuedAt.plus(TOKEN_TTL);
+        PreviewTokenPayload payload = new PreviewTokenPayload(
+                1,
+                userId,
+                resolved.promptProfileId(),
+                resolved.promptVersionId(),
+                resolved.definitionKey(),
+                resolved.definitionVersion(),
+                windowStart,
+                windowEnd,
+                limits.windowDays(),
+                limits.maxCandidates(),
+                limits.maxEstimatedTokens(),
+                resolved.totalInWindow(),
+                resolved.eligibleCount(),
+                resolved.alreadyAnalyzedCount(),
+                resolved.selectedCount(),
+                resolved.deferredByItemLimitCount(),
+                resolved.deferredByTokenBudgetCount(),
+                resolved.estimatedInputTokens(),
+                resolved.estimatedOutputTokens(),
+                resolved.estimatedTotalTokens(),
+                resolved.estimateMethod(),
+                resolved.candidateFingerprint(),
+                UUID.randomUUID().toString(),
+                issuedAt,
+                expiresAt);
+        String token = tokenService.issue(payload);
+        return new AnalysisPreview(
+                windowStart,
+                windowEnd,
+                resolved.totalInWindow(),
+                resolved.eligibleCount(),
+                resolved.eligibleCount(),
+                resolved.alreadyAnalyzedCount(),
+                resolved.selectedCount(),
+                resolved.deferredByItemLimitCount(),
+                resolved.deferredByTokenBudgetCount(),
+                resolved.estimatedInputTokens(),
+                resolved.estimatedOutputTokens(),
+                resolved.estimatedTotalTokens(),
+                resolved.estimateMethod(),
+                expiresAt,
+                token);
+    }
+
+    /**
+     * 使用 Token 冻结的绝对窗口和版本重新解析候选，供 Confirm 在同一事务内校验漂移。
+     */
+    public ResolvedAnalysisPreview recompute(PreviewTokenPayload payload) {
+        long userId = currentUserProvider.requireCurrentUser().id();
+        if (payload.userId() != userId) {
+            throw new AnalysisPreviewConflictException(
+                    "PREVIEW_TOKEN_OWNER_MISMATCH",
+                    "Preview Token does not belong to the current user");
+        }
+        AnalysisPreviewLimits limits = AnalysisPreviewLimits.resolve(
+                payload.windowDays(), payload.maxCandidates(), payload.maxEstimatedTokens());
+        return resolve(
+                userId,
+                payload.promptProfileId(),
+                payload.promptVersionId(),
+                payload.definitionKey(),
+                payload.definitionVersion(),
+                payload.windowStart(),
+                payload.windowEnd(),
+                limits);
+    }
+
+    /** 在调用方事务快照内解析 Profile、版本、候选、Estimate 和预算决策。 */
+    private ResolvedAnalysisPreview resolve(
+            long userId,
+            long promptProfileId,
+            Long expectedVersionId,
+            String expectedDefinitionKey,
+            Integer expectedDefinitionVersion,
+            Instant windowStart,
+            Instant windowEnd,
+            AnalysisPreviewLimits limits) {
+        AiPromptProfilePo profile = requireProfile(promptProfileId, userId);
+        AiPromptVersionPo version = requireActiveVersion(profile);
+        AnalysisDefinition<?, ?> definition = requireDefinition(profile);
+        if ((expectedVersionId != null && !expectedVersionId.equals(version.getId()))
+                || (expectedDefinitionKey != null
+                        && !expectedDefinitionKey.equals(definition.id().key()))
+                || (expectedDefinitionVersion != null
+                        && expectedDefinitionVersion != definition.id().version())) {
+            throw new AnalysisPreviewConflictException(
+                    "PREVIEW_CONTEXT_DRIFTED",
+                    "Prompt or Analysis Definition changed after Preview");
+        }
+        PromptVersion promptVersion = toPromptVersion(version);
         CandidateResolution resolution = candidateResolverRegistry
                 .require(definition.informationType())
                 .resolve(new CandidateResolutionRequest(
@@ -121,18 +218,19 @@ public class AnalysisPreviewService {
                         LocalDateTime.ofInstant(windowStart, ZoneOffset.UTC),
                         LocalDateTime.ofInstant(windowEnd, ZoneOffset.UTC),
                         limits.maxCandidates()));
-
         BudgetResult budget = applyBudget(
                 definition, promptVersion, resolution.candidates(), limits.maxEstimatedTokens());
         long deferredByItemLimit =
                 resolution.eligibleCount() - resolution.candidates().size();
-        String fingerprint = fingerprintCalculator.calculate(budget.decisions());
-        Instant expiresAt = issuedAt.plus(TOKEN_TTL);
-        PreviewTokenPayload payload = new PreviewTokenPayload(
-                1,
+        String fingerprint = fingerprintCalculator.calculate(
+                budget.candidates().stream()
+                        .map(ResolvedPreviewCandidate::fingerprintValue)
+                        .toList());
+        return new ResolvedAnalysisPreview(
                 userId,
                 profile.getId(),
                 version.getId(),
+                definition.informationType().name(),
                 definition.id().key(),
                 definition.id().version(),
                 windowStart,
@@ -151,26 +249,7 @@ public class AnalysisPreviewService {
                 budget.estimatedTotalTokens(),
                 AnalysisTokenEstimator.METHOD,
                 fingerprint,
-                UUID.randomUUID().toString(),
-                issuedAt,
-                expiresAt);
-        String token = tokenService.issue(payload);
-        return new AnalysisPreview(
-                windowStart,
-                windowEnd,
-                resolution.totalInWindow(),
-                resolution.eligibleCount(),
-                resolution.eligibleCount(),
-                resolution.alreadyAnalyzedCount(),
-                budget.selectedCount(),
-                deferredByItemLimit,
-                budget.deferredByTokenBudgetCount(),
-                budget.estimatedInputTokens(),
-                budget.estimatedOutputTokens(),
-                budget.estimatedTotalTokens(),
-                AnalysisTokenEstimator.METHOD,
-                expiresAt,
-                token);
+                budget.candidates());
     }
 
     /** 按稳定候选顺序选择预算前缀，防止跳过较早候选后挑选较晚候选。 */
@@ -179,7 +258,7 @@ public class AnalysisPreviewService {
             PromptVersion promptVersion,
             List<AnalysisCandidate> candidates,
             long maxEstimatedTokens) {
-        List<PreviewCandidateEstimate> decisions = new ArrayList<>();
+        List<ResolvedPreviewCandidate> decisions = new ArrayList<>();
         long input = 0;
         long output = 0;
         long total = 0;
@@ -198,14 +277,8 @@ public class AnalysisPreviewService {
             } else {
                 budgetExhausted = true;
             }
-            decisions.add(new PreviewCandidateEstimate(
-                    candidate.informationId(),
-                    candidate.snapshotId(),
-                    candidate.firstSeenTime(),
-                    estimate.inputTokens(),
-                    estimate.outputTokens(),
-                    estimate.totalTokens(),
-                    withinBudget));
+            decisions.add(new ResolvedPreviewCandidate(
+                    candidate, estimate, withinBudget, assembled.providerRequest()));
         }
         return new BudgetResult(
                 selected, candidates.size() - selected, input, output, total, decisions);
@@ -281,10 +354,10 @@ public class AnalysisPreviewService {
             /** 预算内 Estimated 输入 Token。 */ long estimatedInputTokens,
             /** 预算内 Estimated 输出 Token。 */ long estimatedOutputTokens,
             /** 预算内 Estimated 总 Token。 */ long estimatedTotalTokens,
-            /** Candidate Limit 内全部有序决策。 */ List<PreviewCandidateEstimate> decisions) {
+            /** Candidate Limit 内全部有序决策。 */ List<ResolvedPreviewCandidate> candidates) {
 
         private BudgetResult {
-            decisions = List.copyOf(decisions);
+            candidates = List.copyOf(candidates);
         }
     }
 }

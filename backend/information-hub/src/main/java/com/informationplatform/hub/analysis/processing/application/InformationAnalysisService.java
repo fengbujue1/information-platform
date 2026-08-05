@@ -51,6 +51,15 @@ public class InformationAnalysisService {
         long userId = currentUserProvider.requireCurrentUser().id();
         AnalysisPreparation preparation = transactionService.prepare(
                 userId, informationId, snapshotId, promptProfileId, retryFailed);
+        return executePrepared(preparation);
+    }
+
+    /**
+     * 执行已经由短事务冻结的 Analysis，供同步 API 与异步 Batch Worker 共用。
+     *
+     * <p>该入口不读取 Session；可信 Owner 和 Invocation 已由准备事务持久化。
+     */
+    public InformationAnalysisView executePrepared(AnalysisPreparation preparation) {
         if (preparation.reused() != null) {
             return preparation.reused();
         }

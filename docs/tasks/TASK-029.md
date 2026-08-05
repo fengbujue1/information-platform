@@ -1,6 +1,6 @@
 # TASK-029：实现异步 Analysis Batch 与 Budget Guard
 
-状态：TODO  
+状态：DONE
 所属阶段：Phase 3  
 优先级：P0  
 负责人：User + Codex
@@ -54,18 +54,18 @@
 
 ## 6. 验收标准
 
-- [ ] HTTP Create Batch 快速返回 batchId
-- [ ] 候选集合被冻结
-- [ ] 新入库信息不加入已创建 Batch
-- [ ] maxCandidates 生效
-- [ ] estimated Token Budget 生效
-- [ ] Deferred 原因可见
-- [ ] Worker 重启不重复 SUCCEEDED
-- [ ] 单 Item 失败不回滚整 Batch
-- [ ] Actual Token 可按 Batch 聚合
-- [ ] PARTIAL_FAILED/FAILED/COMPLETED 语义正确
-- [ ] 测试通过
-- [ ] CURRENT_STATUS 指向 TASK-030
+- [x] HTTP Create Batch 快速返回 batchId
+- [x] 候选集合被冻结
+- [x] 新入库信息不加入已创建 Batch
+- [x] maxCandidates 生效
+- [x] estimated Token Budget 生效
+- [x] Deferred 原因可见
+- [x] Worker 重启不重复 SUCCEEDED
+- [x] 单 Item 失败不回滚整 Batch
+- [x] Actual Token 可按 Batch 聚合
+- [x] PARTIAL_FAILED/FAILED/COMPLETED 语义正确
+- [x] 定向测试通过；完整数据库回归因本机 SSH 隧道关闭待补充
+- [x] CURRENT_STATUS 指向 TASK-030
 
 ## 7. 实施前必须汇报
 
@@ -80,21 +80,56 @@
 
 ## 8. 实施记录
 
-待填写。
+- 抽取 Preview/Confirm 共用的确定性候选解析结果；Confirm 使用 Token 冻结的 Owner、
+  Profile/Prompt Version、Definition、绝对窗口、limits、统计、Estimate 与候选指纹重算，
+  任一漂移均返回稳定冲突且不创建 Batch。
+- 新增 `POST /api/v1/ai/analysis-batches/confirm`，只接收 `previewToken`，在单个
+  `REPEATABLE_READ` 事务内原子创建 Batch 和 Candidate Limit 内的全部 Items，并返回
+  HTTP 202。
+- `(user_id, manual_request_id)` 同时处理顺序重复与并发 Confirm；并发唯一键失败事务回滚
+  后读取胜出 Batch，不产生半批次。
+- Token Budget 使用稳定候选前缀；预算内 Item 为 `SELECTED`，预算外 Item 为
+  `DEFERRED/TOKEN_BUDGET`；Candidate Limit 外只保留 Batch 聚合计数。
+- 没有可执行 Item 时统一为 `NOOP/NO_EXECUTABLE_ITEMS`；DEFERRED 不算失败；终态按
+  `COMPLETED/PARTIAL_FAILED/FAILED` 的冻结规则派生。
+- 扩展单条 Analysis 的内部执行边界：Worker 使用 Batch 冻结 Prompt Version、
+  Definition Version 和 Snapshot，Invocation 显式绑定 `batch_item_id`；现有 Session 单条
+  API 行为不变。
+- 新增单并发 Spring/MySQL Worker，使用 `FOR UPDATE SKIP LOCKED`；领取和完成分别使用
+  短事务，Provider HTTP 在事务外执行。
+- 首次 Worker 轮询把崩溃遗留 RUNNING Invocation 转为 UNKNOWN，并令 Analysis/Item
+  失败；不会对结果不确定的 Provider 请求自动重试。
+- 新增 Batch list/detail/progress API；Actual Usage 只从绑定 Batch Item 的 Invocation
+  聚合，并显式返回 Usage reported/unavailable 数量，Estimate 不回填 Actual。
+- Worker 默认关闭；有可执行候选时，Confirm 要求 Worker 与 Provider 均已配置，避免产生
+  无法处理的 PENDING Batch。
+- 未新增或修改 Flyway；未实现 Schedule、前端、推荐、通知或新基础设施。
 
 ## 9. 测试结果
 
-必须填写实际执行命令和结果，禁止编造。
+- `java -version`：Java 21.0.11。
+- `.\mvnw.cmd -version`：Maven Wrapper 3.9.16，Java 21.0.11。
+- `.\mvnw.cmd -DskipTests compile`：200 个主代码源文件编译成功。
+- `.\mvnw.cmd "-Dtest=AnalysisBatchControllerTest,AnalysisBatchServiceTest,AnalysisBatchTransactionServiceTest,AnalysisBatchWorkerTest,AnalysisBatchWorkerTransactionServiceTest,AnalysisPreviewServiceTest,PreviewTokenServiceTest,InformationAnalysisServiceTest" test`
+  ：19 项测试，0 失败、0 错误、0 跳过。
+- `.\mvnw.cmd "-Dtest=*Test,!*IntegrationTest" test`：包含 Worker
+  `COMPLETED/PARTIAL_FAILED/FAILED` 与重启 UNKNOWN 保护在内的 123 项非数据库测试，
+  0 失败、0 错误、0 跳过。
+- `.\mvnw.cmd -o -DskipTests package`：离线可执行 Spring Boot JAR 打包成功。
+- `.\mvnw.cmd test`：本轮曾启动完整回归，但当前 `127.0.0.1:13306` SSH 隧道未开启，
+  既有真实 MySQL 集成测试在创建 Spring 上下文时连接失败；这是环境阻断，不是测试断言
+  失败。未对相同连接根因重复执行。
 
 ## 10. 遗留问题
 
-待填写。
+- 需要恢复远程 MySQL SSH 隧道后补跑完整 Maven 回归和真实 MySQL Worker/锁查询验证。
+- Schedule、Phase 3 Web 和真实 Provider E2E 分别属于 TASK-030～TASK-032。
 
 ## 11. 完成确认
 
-- [ ] 当前 TASK 文档已更新
-- [ ] `docs/CURRENT_STATUS.md` 已更新
-- [ ] `git diff --check` 通过
+- [x] 当前 TASK 文档已更新
+- [x] `docs/CURRENT_STATUS.md` 已更新
+- [x] `git diff --check` 通过
 - [ ] 用户已检查 `git diff`
 - [ ] 用户确认测试结果
 - [ ] 用户完成 commit / push

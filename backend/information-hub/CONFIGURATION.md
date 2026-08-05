@@ -107,6 +107,9 @@ java -jar information-hub.jar
 - `information-hub.collector-api.token`：Collector 调用接入 API 时使用的 Bearer Token。
 - `information-hub.collector-api.max-request-bytes`：Collector 单次请求体的字节上限。
 - `information-hub.ai.preview.hmac-secret`：Preview Token 服务端 HMAC 秘密，至少 32 UTF-8 字节。
+- `information-hub.ai.batch.worker-enabled`：异步 Batch Worker 开关，默认 `false`。
+- `information-hub.ai.batch.worker-initial-delay`：应用启动后的首次 Worker 轮询延迟。
+- `information-hub.ai.batch.worker-fixed-delay`：串行 Worker 两次轮询之间的间隔。
 - `mybatis-plus.configuration`：MyBatis-Plus 基础映射配置。
 
 Collector 中配置的 `collector_token` 必须与服务端的 `information-hub.collector-api.token` 一致。
@@ -123,6 +126,9 @@ INFORMATION_HUB_FLYWAY_ENABLED
 INFORMATION_HUB_COLLECTOR_TOKEN
 INFORMATION_HUB_COLLECTOR_MAX_REQUEST_BYTES
 INFORMATION_HUB_PREVIEW_HMAC_SECRET
+INFORMATION_HUB_AI_BATCH_WORKER_ENABLED
+INFORMATION_HUB_AI_BATCH_WORKER_INITIAL_DELAY
+INFORMATION_HUB_AI_BATCH_WORKER_FIXED_DELAY
 ```
 
 ## 7. 安全要求
@@ -132,6 +138,8 @@ INFORMATION_HUB_PREVIEW_HMAC_SECRET
 - 开发库、测试库和生产库使用不同账号及不同密码。
 - 生产数据库必须与共享开发和测试数据库隔离。
 - Preview HMAC Secret 不得进入前端、数据库业务表或日志；部署时使用独立随机值。
+- 启用 Batch Worker 前必须同时完成 Provider 配置并显式设置
+  `INFORMATION_HUB_AI_BATCH_WORKER_ENABLED=true`；默认关闭可避免意外产生模型费用。
 
 ## 8. token生成方式
     $generator = [System.Security.Cryptography.RandomNumberGenerator]::Create()

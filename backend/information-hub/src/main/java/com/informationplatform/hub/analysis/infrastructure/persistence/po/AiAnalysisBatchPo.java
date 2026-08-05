@@ -91,7 +91,7 @@ public class AiAnalysisBatchPo {
     /** Token 预估算法标识，用于解释预估值来源。 */
     private String estimateMethod;
 
-    /** 批次状态，例如 PENDING、RUNNING、SUCCEEDED 或 FAILED。 */
+    /** 批次状态，例如 PENDING、RUNNING、COMPLETED、PARTIAL_FAILED 或 FAILED。 */
     private String status;
 
     /** 批次未执行时的平台稳定跳过原因。 */

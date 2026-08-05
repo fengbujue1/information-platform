@@ -118,6 +118,6 @@
 - [x] 当前 TASK 文档已更新
 - [x] `docs/CURRENT_STATUS.md` 已更新
 - [x] `git diff --check` 通过
-- [ ] 用户已检查 `git diff`
-- [ ] 用户确认测试结果
-- [ ] 用户完成 commit / push
+- [x] 用户已检查 `git diff`
+- [x] 用户确认测试结果
+- [x] 用户完成 commit / push（`72915f5` 已位于 `origin/dev`）

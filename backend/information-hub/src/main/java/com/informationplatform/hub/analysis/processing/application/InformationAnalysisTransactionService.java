@@ -142,6 +142,84 @@ public class InformationAnalysisTransactionService {
         if (snapshot == null) {
             throw notFound("ANALYSIS_SNAPSHOT_NOT_FOUND", "Information Snapshot does not exist");
         }
+        return prepareResolved(
+                userId,
+                profile,
+                version,
+                definition,
+                snapshot,
+                retryFailed,
+                null);
+    }
+
+    /**
+     * 使用 Batch 已冻结的 Prompt/Definition/Snapshot 创建或复用 Analysis。
+     *
+     * <p>调用方 Worker 领取事务会参与本事务；Invocation 必须绑定 batchItemId。
+     */
+    @Transactional
+    public AnalysisPreparation prepareFrozen(
+            long userId,
+            long informationId,
+            long snapshotId,
+            long promptProfileId,
+            long promptVersionId,
+            String definitionKey,
+            int definitionVersion,
+            long batchItemId) {
+        requirePositive(userId, "userId");
+        requirePositive(informationId, "informationId");
+        requirePositive(snapshotId, "snapshotId");
+        requirePositive(promptProfileId, "promptProfileId");
+        requirePositive(promptVersionId, "promptVersionId");
+        requirePositive(batchItemId, "batchItemId");
+
+        // Batch 已冻结版本，因此只验证 Owner/归属，不读取后来切换的 Active Version。
+        AiPromptProfilePo profile = profileMapper.selectOwnedByIdForUpdate(
+                promptProfileId, userId);
+        if (profile == null) {
+            throw notFound("PROMPT_PROFILE_NOT_FOUND", "Prompt Profile does not exist");
+        }
+        AiPromptVersionPo version = versionMapper.selectOne(
+                Wrappers.<AiPromptVersionPo>lambdaQuery()
+                        .eq(AiPromptVersionPo::getId, promptVersionId)
+                        .eq(AiPromptVersionPo::getPromptProfileId, promptProfileId));
+        if (version == null) {
+            throw new AnalysisPersistenceException(
+                    "Frozen Prompt Version does not belong to its Profile");
+        }
+        AnalysisDefinition<?, ?> definition;
+        try {
+            definition = definitionRegistry.require(definitionKey, definitionVersion);
+        } catch (IllegalArgumentException exception) {
+            throw request(
+                    "ANALYSIS_DEFINITION_UNAVAILABLE",
+                    "Frozen Analysis Definition is unavailable");
+        }
+        AnalysisSnapshotRow snapshot =
+                snapshotQueryMapper.selectExplicit(informationId, snapshotId);
+        if (snapshot == null) {
+            throw notFound("ANALYSIS_SNAPSHOT_NOT_FOUND", "Information Snapshot does not exist");
+        }
+        return prepareResolved(
+                userId,
+                profile,
+                version,
+                definition,
+                snapshot,
+                true,
+                batchItemId);
+    }
+
+    /** 使用已经解析并校验的冻结上下文创建 Analysis 和 RUNNING Invocation。 */
+    private AnalysisPreparation prepareResolved(
+            long userId,
+            AiPromptProfilePo profile,
+            AiPromptVersionPo version,
+            AnalysisDefinition<?, ?> definition,
+            AnalysisSnapshotRow snapshot,
+            boolean retryFailed,
+            Long batchItemId) {
         AnalysisSnapshotSource snapshotSource = toSnapshotSource(snapshot);
         PromptVersion promptVersion = new PromptVersion(
                 version.getId(),
@@ -196,6 +274,7 @@ public class InformationAnalysisTransactionService {
         AiModelInvocationPo invocation = new AiModelInvocationPo();
         invocation.setAnalysisId(analysis.getId());
         invocation.setUserId(userId);
+        invocation.setBatchItemId(batchItemId);
         invocation.setProvider(providerClient.providerId());
         invocation.setModelName(providerClient.modelName());
         invocation.setAttemptNo(invocationMapper.selectMaxAttemptNo(analysis.getId()) + 1);

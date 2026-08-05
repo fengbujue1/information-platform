@@ -16,7 +16,8 @@
 - TASK-026 已完成稳定 Prompt Assembly、版本化执行上下文、1 MiB 响应上限、单一 JSON 解析和 Definition Schema 后处理。
 - TASK-027 已完成单条 Information Analysis、逻辑身份幂等、Invocation attempt、Actual Usage、短事务执行和 Owner 隔离 API。
 - TASK-028 已完成通用 Candidate Resolver、JOB 最近 N 天候选解析、无 AI 调用 Preview、Token Estimate、候选指纹和 10 分钟 HMAC 确认令牌。
-- Phase 3 Batch Worker、Schedule 和对应 Web 业务实现尚未开始。
+- TASK-029 已完成 Manual Confirm、异步 Batch/Items、Budget Guard、串行 MySQL Worker、重启恢复、Actual Usage 聚合和 Owner 查询 API。
+- Phase 3 Schedule 和对应 Web 业务实现尚未开始。
 
 ## 当前真实可用链路
 
@@ -42,10 +43,12 @@ BOSS Collector
 - 平台 System Prompt / Schema、User Prompt Version 与 Snapshot Input 的安全组装及严格结构化输出处理。
 - 绑定不可变 Snapshot 与 Prompt Version 的单条 Analysis 执行及 Owner 查询 API。
 - 需要 Session + CSRF 的 Analysis Batch Preview API，可返回候选规模、已分析/待分析计数、Token Estimate 汇总和短期确认令牌。
+- 需要 Session + CSRF 的 Manual Batch Confirm API，以及 Batch list/detail/progress API。
+- 默认关闭的单并发 Batch Worker；启用后使用 MySQL 短事务和 `SKIP LOCKED`，Provider HTTP 不持有事务。
 
 当前没有：
 
-- Batch、Schedule 的业务 Service/API；
+- Schedule 的业务 Service/API；
 - Prompt、Analysis、Batch、Schedule 的 Phase 3 Web 页面。
 
 当前已经具备的 Phase 3 持久化基础：
@@ -62,7 +65,7 @@ ai_model_invocation
 ```
 
 其中 `user_account` 已由 Identity MVP 使用，`ai_prompt_profile` / `ai_prompt_version`
-已由 TASK-022 业务 API 使用；`information_analysis` / `ai_model_invocation` 已由 TASK-027 使用；Schedule、Batch 表尚待后续 TASK 暴露业务能力。
+已由 TASK-022 业务 API 使用；`information_analysis` / `ai_model_invocation` 已由 TASK-027 使用；Batch 表已由 TASK-029 使用，Schedule 表尚待 TASK-030 暴露业务能力。
 
 ## 已冻结的 Phase 3 目标
 
@@ -90,14 +93,14 @@ JOB_USER_RELEVANCE_V1
 
 ## 当前任务
 
-TASK-029：异步 Analysis Batch 与 Budget Guard。
+TASK-030：每日 Analysis Schedule。
 
-TASK-028 已完成固定 FIRST_INGESTED 绝对窗口、当前 Snapshot 候选解析、已成功逻辑身份排除、稳定排序、预算 Estimate，以及不落库的 HMAC Preview。下一任务只应实现 Manual Confirm、异步 Batch/Items、Budget Guard 与 Worker，不得提前实现 Schedule、Phase 3 Web、推荐或通知。
+TASK-029 已完成 Preview Confirm 一致性校验、Batch/Items 冻结、Manual 幂等、Budget Guard、串行 Worker、重启 UNKNOWN 保护和 Actual Usage 聚合。下一任务只应实现每日 Schedule 并复用现有 Batch Engine，不得修改 Worker 核心或提前实现 Phase 3 Web、推荐和通知。
 
 ## 下一步执行顺序
 
-1. TASK-029：异步 Analysis Batch 与 Budget Guard；
-2. TASK-030～TASK-032：按 Roadmap 继续。
+1. TASK-030：每日 Analysis Schedule；
+2. TASK-031～TASK-032：按 Roadmap 继续。
 
 任务编号不变；顺序调整是因为 Identity、Prompt 和 Analysis 的持久化依赖 TASK-024 的 Accepted 表结构。
 
@@ -105,6 +108,8 @@ TASK-028 已完成固定 FIRST_INGESTED 绝对窗口、当前 Snapshot 候选解
 
 - Job Query/Web/E2E 已采用 Session 认证前置条件，后续测试必须继续使用认证夹具。
 - Provider timeout 可能已计费但结果未知，后续 Worker 不得自动盲重试。
+- Batch Worker 默认关闭；联调或部署必须同时启用 Worker 和 Provider，否则 Confirm 会拒绝创建有可执行 Item 的 Batch。
+- 当前本机 `127.0.0.1:13306` SSH 隧道未开启，TASK-029 完整真实 MySQL 回归仍需在隧道恢复后补跑。
 - Schedule 时区、DST、misfire 和 overlap 必须按 Accepted Contract 实现并测试。
 - Provider API Key、Bootstrap 密码、Session Cookie 和 Collector Token 均不得进入 Git、前端或日志。
 - MySQL 8.4 当前会触发 Flyway“最新已测试版本为 8.1”的提示；TASK-024 真实 migration 与回归均成功，后续依赖维护任务再评估升级。

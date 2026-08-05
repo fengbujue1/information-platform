@@ -18,6 +18,10 @@ information-hub:
     max-request-bytes: 2097152
 
   ai:
+    batch:
+      worker-enabled: false
+      worker-initial-delay: 3s
+      worker-fixed-delay: 1s
     preview:
       hmac-secret: CHANGE_ME_RANDOM_PREVIEW_HMAC_SECRET_AT_LEAST_32_BYTES
 
