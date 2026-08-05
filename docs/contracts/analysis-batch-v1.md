@@ -3,6 +3,7 @@
 状态：Accepted
 接受日期：2026-08-03
 适用阶段：Phase 3
+实现状态：TASK-028 已实现 Preview；Confirm、Batch 与 Worker 由 TASK-029 实现。
 
 ## 1. Trigger
 
@@ -35,6 +36,17 @@ Preview：
 - 解析候选对应当前 Snapshot；
 - 排除相同逻辑身份已成功项；
 - 计算每项 Estimate 并应用限制。
+
+已实现接口：
+
+```text
+POST /api/v1/ai/analysis-batches/preview
+```
+
+请求体使用上述四个字段，响应实现第 3 节汇总字段并显式返回 `pendingCount`。
+候选版本、Estimate、顺序和决策指纹冻结在签名 Token 中，Confirm 无需信任客户端
+回传这些内部字段。接口要求 Session + CSRF 和 Owner 隔离；未配置至少 32 字节的
+`INFORMATION_HUB_PREVIEW_HMAC_SECRET` 时返回服务不可用。
 
 ## 3. Preview 输出与确认
 

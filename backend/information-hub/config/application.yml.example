@@ -17,6 +17,10 @@ information-hub:
     token: CHANGE_ME_COLLECTOR_TOKEN
     max-request-bytes: 2097152
 
+  ai:
+    preview:
+      hmac-secret: CHANGE_ME_RANDOM_PREVIEW_HMAC_SECRET_AT_LEAST_32_BYTES
+
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true

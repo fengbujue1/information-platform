@@ -15,6 +15,7 @@
 - TASK-025 已完成通用 AiProviderClient、OpenAI-compatible Adapter、统一 Usage/错误语义及 CI Fake Provider，真实 AI 默认 disabled。
 - TASK-026 已完成稳定 Prompt Assembly、版本化执行上下文、1 MiB 响应上限、单一 JSON 解析和 Definition Schema 后处理。
 - TASK-027 已完成单条 Information Analysis、逻辑身份幂等、Invocation attempt、Actual Usage、短事务执行和 Owner 隔离 API。
+- TASK-028 已完成通用 Candidate Resolver、JOB 最近 N 天候选解析、无 AI 调用 Preview、Token Estimate、候选指纹和 10 分钟 HMAC 确认令牌。
 - Phase 3 Batch Worker、Schedule 和对应 Web 业务实现尚未开始。
 
 ## 当前真实可用链路
@@ -40,6 +41,7 @@ BOSS Collector
 - 默认禁用的 OpenAI-compatible Provider 基础、统一 Usage Adapter 和无网络 Fake Provider。
 - 平台 System Prompt / Schema、User Prompt Version 与 Snapshot Input 的安全组装及严格结构化输出处理。
 - 绑定不可变 Snapshot 与 Prompt Version 的单条 Analysis 执行及 Owner 查询 API。
+- 需要 Session + CSRF 的 Analysis Batch Preview API，可返回候选规模、已分析/待分析计数、Token Estimate 汇总和短期确认令牌。
 
 当前没有：
 
@@ -88,14 +90,14 @@ JOB_USER_RELEVANCE_V1
 
 ## 当前任务
 
-TASK-028：Candidate Resolver、Preview 与 Token Estimate。
+TASK-029：异步 Analysis Batch 与 Budget Guard。
 
-TASK-027 已完成认证用户针对确定 Snapshot 和 Prompt Version 的可追溯单条 Analysis、Invocation 与 Actual Usage 链路。下一任务只应实现 Candidate Resolver、无 AI 调用的 Preview、HMAC Token 与预算 Estimate，不得提前实现 Batch、Schedule、推荐或通知。
+TASK-028 已完成固定 FIRST_INGESTED 绝对窗口、当前 Snapshot 候选解析、已成功逻辑身份排除、稳定排序、预算 Estimate，以及不落库的 HMAC Preview。下一任务只应实现 Manual Confirm、异步 Batch/Items、Budget Guard 与 Worker，不得提前实现 Schedule、Phase 3 Web、推荐或通知。
 
 ## 下一步执行顺序
 
-1. TASK-028：Candidate Resolver、Preview 与 Token Estimate；
-2. TASK-029～TASK-032：按 Roadmap 继续。
+1. TASK-029：异步 Analysis Batch 与 Budget Guard；
+2. TASK-030～TASK-032：按 Roadmap 继续。
 
 任务编号不变；顺序调整是因为 Identity、Prompt 和 Analysis 的持久化依赖 TASK-024 的 Accepted 表结构。
 

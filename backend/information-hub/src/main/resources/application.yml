@@ -31,6 +31,8 @@ information-hub:
       display-name: ${INFORMATION_HUB_BOOTSTRAP_DISPLAY_NAME:}
       timezone: ${INFORMATION_HUB_BOOTSTRAP_TIMEZONE:Asia/Shanghai}
   ai:
+    preview:
+      hmac-secret: ${INFORMATION_HUB_PREVIEW_HMAC_SECRET:}
     provider:
       enabled: ${INFORMATION_HUB_AI_ENABLED:false}
       base-url: ${INFORMATION_HUB_AI_BASE_URL:}

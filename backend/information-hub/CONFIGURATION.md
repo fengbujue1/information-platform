@@ -106,6 +106,7 @@ java -jar information-hub.jar
 - `spring.flyway`：迁移开关、迁移目录和安全选项。
 - `information-hub.collector-api.token`：Collector 调用接入 API 时使用的 Bearer Token。
 - `information-hub.collector-api.max-request-bytes`：Collector 单次请求体的字节上限。
+- `information-hub.ai.preview.hmac-secret`：Preview Token 服务端 HMAC 秘密，至少 32 UTF-8 字节。
 - `mybatis-plus.configuration`：MyBatis-Plus 基础映射配置。
 
 Collector 中配置的 `collector_token` 必须与服务端的 `information-hub.collector-api.token` 一致。
@@ -121,6 +122,7 @@ INFORMATION_HUB_DB_PASSWORD
 INFORMATION_HUB_FLYWAY_ENABLED
 INFORMATION_HUB_COLLECTOR_TOKEN
 INFORMATION_HUB_COLLECTOR_MAX_REQUEST_BYTES
+INFORMATION_HUB_PREVIEW_HMAC_SECRET
 ```
 
 ## 7. 安全要求
@@ -129,6 +131,7 @@ INFORMATION_HUB_COLLECTOR_MAX_REQUEST_BYTES
 - 服务器上的 `application.yml` 应只允许部署账号读取。
 - 开发库、测试库和生产库使用不同账号及不同密码。
 - 生产数据库必须与共享开发和测试数据库隔离。
+- Preview HMAC Secret 不得进入前端、数据库业务表或日志；部署时使用独立随机值。
 
 ## 8. token生成方式
     $generator = [System.Security.Cryptography.RandomNumberGenerator]::Create()

@@ -11,6 +11,24 @@ import org.apache.ibatis.annotations.Update;
 @Mapper
 public interface AiPromptProfileMapper extends BaseMapper<AiPromptProfilePo> {
 
+    /** 按 Owner 只读解析 Profile；不存在和跨账号统一返回空。 */
+    @Select("""
+            SELECT id,
+                   user_id,
+                   name,
+                   analysis_definition_key,
+                   active_version_id,
+                   status,
+                   created_at,
+                   updated_at
+            FROM ai_prompt_profile
+            WHERE id = #{profileId}
+              AND user_id = #{userId}
+            """)
+    AiPromptProfilePo selectOwnedById(
+            @Param("profileId") long profileId,
+            @Param("userId") long userId);
+
     /** 按 Owner 锁定 Profile，串行化 Version 编号和 Active Version 切换。 */
     @Select("""
             SELECT id,
