@@ -49,8 +49,8 @@
 5. [TASK-023：Analysis Definition 与 Phase 3 Contracts（已完成）](tasks/TASK-023.md)
 6. [TASK-025：AI Provider、Usage Adapter 与 Fake Provider（已完成）](tasks/TASK-025.md)
 7. [TASK-026：Prompt Assembly 与结构化输出（已完成）](tasks/TASK-026.md)
-8. [TASK-027：单条 Information Analysis（当前下一任务，TODO）](tasks/TASK-027.md)
-9. [TASK-028：Candidate Resolver、Preview 与 Token Estimate](tasks/TASK-028.md)
+8. [TASK-027：单条 Information Analysis（已完成）](tasks/TASK-027.md)
+9. [TASK-028：Candidate Resolver、Preview 与 Token Estimate（当前下一任务，TODO）](tasks/TASK-028.md)
 10. [TASK-029：异步 Analysis Batch 与 Budget Guard](tasks/TASK-029.md)
 11. [TASK-030：每日 Analysis Schedule](tasks/TASK-030.md)
 12. [TASK-031：Phase 3 Web](tasks/TASK-031.md)
@@ -65,4 +65,4 @@
 
 ## 当前任务
 
-[TASK-027：单条 Information Analysis（TODO）](tasks/TASK-027.md)
+[TASK-028：Candidate Resolver、Preview 与 Token Estimate（TODO）](tasks/TASK-028.md)

@@ -36,6 +36,17 @@ public class AnalysisDefinitionRegistry {
         return definition;
     }
 
+    /** 返回指定 Key 的当前最高版本，供单条执行和后续 Schedule 在触发时冻结版本。 */
+    public AnalysisDefinition<?, ?> requireCurrent(String key) {
+        return definitions.entrySet().stream()
+                .filter(entry -> entry.getKey().key().equals(key))
+                .max(Map.Entry.comparingByKey(
+                        java.util.Comparator.comparingInt(AnalysisDefinitionId::version)))
+                .map(Map.Entry::getValue)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Unknown Analysis Definition key: " + key));
+    }
+
     public List<AnalysisDefinition<?, ?>> all() {
         return List.copyOf(definitions.values());
     }

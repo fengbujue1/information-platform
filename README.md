@@ -17,7 +17,7 @@ BOSS Collector
 → Information Hub Web
 ```
 
-Phase 3 设计已冻结。数据库基础、Identity、Prompt Version、Analysis Definition、Provider 与 Prompt Assembly/结构化输出基础已完成；当前下一实施任务是 TASK-027 单条 Information Analysis。Analysis 持久化、Batch、Schedule 和 Phase 3 Web 等业务能力尚未实现。
+Phase 3 设计已冻结。数据库基础、Identity、Prompt Version、Analysis Definition、Provider、Prompt Assembly/结构化输出及单条 Information Analysis 已完成；当前下一实施任务是 TASK-028 Candidate Resolver、Preview 与 Token Estimate。Batch、Schedule 和 Phase 3 Web 等业务能力尚未实现。
 
 ## Phase 3 Accepted Design
 
@@ -51,6 +51,7 @@ User Relevance MVP
 - 统一协议接入 Information Hub；
 - MySQL 幂等归档、非破坏性合并和历史快照；
 - 职位列表、详情和快照只读 API；
+- 需要 Session + CSRF 的单条 Analysis 执行 API，以及按 Owner 隔离的 Analysis 查询 API；
 - 受控账号 Bootstrap、安全密码摘要、同源 Session、CSRF、登录/登出和当前用户接口；
 - 需要 Session 的 Job Query API，以及 Vue 3 登录、职位搜索、筛选、排序、分页和历史查看；
 - 保持独立 Bearer Token 认证的 Collector 接口；

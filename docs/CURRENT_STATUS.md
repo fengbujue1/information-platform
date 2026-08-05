@@ -1,6 +1,6 @@
 # 当前开发状态
 
-更新时间：2026-08-03
+更新时间：2026-08-05
 当前分支：dev
 
 ## 当前阶段
@@ -14,7 +14,8 @@
 - TASK-023 已完成通用 Analysis Definition Registry、唯一的 `JOB_USER_RELEVANCE_V1`、Snapshot 输入投影、版本化平台 System Prompt / Output Schema 与严格输出校验。
 - TASK-025 已完成通用 AiProviderClient、OpenAI-compatible Adapter、统一 Usage/错误语义及 CI Fake Provider，真实 AI 默认 disabled。
 - TASK-026 已完成稳定 Prompt Assembly、版本化执行上下文、1 MiB 响应上限、单一 JSON 解析和 Definition Schema 后处理。
-- Phase 3 Analysis Engine、Batch Worker、Schedule 和对应 Web 业务实现尚未开始。
+- TASK-027 已完成单条 Information Analysis、逻辑身份幂等、Invocation attempt、Actual Usage、短事务执行和 Owner 隔离 API。
+- Phase 3 Batch Worker、Schedule 和对应 Web 业务实现尚未开始。
 
 ## 当前真实可用链路
 
@@ -38,10 +39,11 @@ BOSS Collector
 - 需要 Session + CSRF 的 Prompt Profile / Version API。
 - 默认禁用的 OpenAI-compatible Provider 基础、统一 Usage Adapter 和无网络 Fake Provider。
 - 平台 System Prompt / Schema、User Prompt Version 与 Snapshot Input 的安全组装及严格结构化输出处理。
+- 绑定不可变 Snapshot 与 Prompt Version 的单条 Analysis 执行及 Owner 查询 API。
 
 当前没有：
 
-- Analysis、Batch、Schedule 的业务 Service/API；
+- Batch、Schedule 的业务 Service/API；
 - Prompt、Analysis、Batch、Schedule 的 Phase 3 Web 页面。
 
 当前已经具备的 Phase 3 持久化基础：
@@ -58,7 +60,7 @@ ai_model_invocation
 ```
 
 其中 `user_account` 已由 Identity MVP 使用，`ai_prompt_profile` / `ai_prompt_version`
-已由 TASK-022 业务 API 使用；其余 Analysis、Schedule、Batch、Invocation 表尚待后续 TASK 暴露业务能力。
+已由 TASK-022 业务 API 使用；`information_analysis` / `ai_model_invocation` 已由 TASK-027 使用；Schedule、Batch 表尚待后续 TASK 暴露业务能力。
 
 ## 已冻结的 Phase 3 目标
 
@@ -86,14 +88,14 @@ JOB_USER_RELEVANCE_V1
 
 ## 当前任务
 
-TASK-027：单条 Information Analysis。
+TASK-028：Candidate Resolver、Preview 与 Token Estimate。
 
-TASK-026 已完成 Prompt Assembly 与结构化输出处理。下一任务只应实现一个认证用户针对确定 Snapshot 和 Prompt Version 的可追溯单条 Analysis、Invocation 与 Actual Usage 链路，不得提前实现 Batch、Schedule、推荐或通知。
+TASK-027 已完成认证用户针对确定 Snapshot 和 Prompt Version 的可追溯单条 Analysis、Invocation 与 Actual Usage 链路。下一任务只应实现 Candidate Resolver、无 AI 调用的 Preview、HMAC Token 与预算 Estimate，不得提前实现 Batch、Schedule、推荐或通知。
 
 ## 下一步执行顺序
 
-1. TASK-027：单条 Information Analysis；
-2. TASK-028～TASK-032：按 Roadmap 继续。
+1. TASK-028：Candidate Resolver、Preview 与 Token Estimate；
+2. TASK-029～TASK-032：按 Roadmap 继续。
 
 任务编号不变；顺序调整是因为 Identity、Prompt 和 Analysis 的持久化依赖 TASK-024 的 Accepted 表结构。
 

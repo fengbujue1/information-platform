@@ -39,10 +39,15 @@ public final class FakeAiProviderClient implements AiProviderClient {
     }
 
     @Override
-    public AiProviderResult execute(AiProviderRequest request) {
+    public void validateRequest(AiProviderRequest request) {
         if (request == null) {
             throw new IllegalArgumentException("AI Provider request must not be null");
         }
+    }
+
+    @Override
+    public AiProviderResult execute(AiProviderRequest request) {
+        validateRequest(request);
         return new AiProviderResult(
                 providerId(),
                 modelName(),

@@ -1,6 +1,7 @@
 # Information Analysis V1
 
 状态：Accepted
+实施状态：TASK-027 已实现（2026-08-05）
 接受日期：2026-08-03
 适用阶段：Phase 3
 
@@ -83,3 +84,36 @@ Actual Token 只能来自 Provider Usage。Estimate 保存在明确的 `estimate
 所有读取通过认证用户过滤 Owner。普通 GET 不触发 AI，不创建 Invocation，不产生 Token。
 
 Phase 3 可新增按 `snapshotId` 的内部 Reader，但不得把 Snapshot raw payload 暴露给前端。
+
+## 8. HTTP API
+
+执行、显式重试或复用单条 Analysis：
+
+```http
+POST /api/v1/ai/analyses
+```
+
+请求字段：
+
+- `informationId`：必填；
+- `snapshotId`：可选，为空时解析 Information 当前 Snapshot；
+- `promptProfileId`：必填，必须属于当前认证用户；
+- `retryFailed`：可选，仅 `true` 时允许重试同一逻辑身份的 FAILED Analysis。
+
+按 Owner 查询既有 Analysis：
+
+```http
+GET /api/v1/ai/analyses/{analysisId}
+```
+
+POST 使用同源 Session 与 CSRF；Owner 只来自认证上下文，不接受客户端传入。跨 Owner 与不存在统一按 404 处理。AI disabled 或 Provider 配置不完整在任何 Analysis/Invocation 写入及网络访问前失败。
+
+## 9. Estimate 与事务边界
+
+- 单条 Estimate 使用版本化方法 `UTF8_BYTES_DIV3_MARGIN20_V1`，只写入 `estimated*` 字段；
+- 输入估算覆盖稳定消息的 role、换行和 content UTF-8 字节，输出估算使用冻结的 `maxOutputTokens`；
+- 准备事务冻结 Owner Profile、Active Prompt Version、Definition、Snapshot、逻辑身份与 Invocation；
+- Provider HTTP 调用在数据库事务外执行；
+- Provider 成功、输出校验失败、Provider 失败分别在新的短事务中完成状态与 Usage 持久化；
+- Provider 已返回 Usage 但输出校验失败时，Invocation 保持成功并保留 Actual Usage，Analysis 标记 FAILED；
+- timeout/unknown 不自动重试。

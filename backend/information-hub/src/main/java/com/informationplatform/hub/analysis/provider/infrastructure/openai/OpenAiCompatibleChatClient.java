@@ -73,7 +73,7 @@ public class OpenAiCompatibleChatClient implements AiProviderClient {
      */
     @Override
     public AiProviderResult execute(AiProviderRequest request) {
-        requireCallable(request);
+        validateRequest(request);
         URI endpoint = endpoint();
         ObjectNode requestBody = requestBody(request);
         long startedNanos = System.nanoTime();
@@ -140,7 +140,8 @@ public class OpenAiCompatibleChatClient implements AiProviderClient {
     }
 
     /** 在组装 URI 或 Authorization 前拒绝 disabled/不完整配置，保证禁用时零网络请求。 */
-    private void requireCallable(AiProviderRequest request) {
+    @Override
+    public void validateRequest(AiProviderRequest request) {
         if (request == null) {
             throw new IllegalArgumentException("AI Provider request must not be null");
         }

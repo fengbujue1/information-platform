@@ -22,6 +22,7 @@ class AnalysisDefinitionRegistryTest {
         AnalysisDefinitionRegistry registry = new AnalysisDefinitionRegistry(List.of(definition));
 
         assertThat(registry.require("JOB_USER_RELEVANCE", 1)).isSameAs(definition);
+        assertThat(registry.requireCurrent("JOB_USER_RELEVANCE")).isSameAs(definition);
         assertThat(registry.all()).containsExactly(definition);
     }
 
@@ -32,6 +33,9 @@ class AnalysisDefinitionRegistryTest {
         assertThatThrownBy(() -> registry.require("JOB_USER_RELEVANCE", 2))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Unknown Analysis Definition");
+        assertThatThrownBy(() -> registry.requireCurrent("UNKNOWN"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Unknown Analysis Definition key");
         assertThatThrownBy(() -> new AnalysisDefinitionRegistry(List.of(definition, definition)))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Duplicate Analysis Definition");

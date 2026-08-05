@@ -27,7 +27,7 @@ Copy-Item backend/information-hub/config/application.yml.example backend/informa
 已按部署说明配置本机 OpenSSH 别名后，在单独的 PowerShell 窗口中运行：
 
 ```powershell
-ssh -N -L 13306:127.0.0.1:3306 information-platform-server
+ssh -N -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o ExitOnForwardFailure=yes -L 13306:127.0.0.1:3306 information-platform-server
 ```
 
 该命令运行期间不会返回正常命令提示符。Information Hub 使用数据库期间必须保持此窗口和 SSH 连接开启，停止时在该窗口按 `Ctrl+C`。
