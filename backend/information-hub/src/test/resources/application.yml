@@ -1,0 +1,5 @@
+information-hub:
+  ai:
+    schedule:
+      # 自动化测试只通过显式方法调用验证 Dispatcher，禁止后台线程触发测试库计划。
+      dispatcher-enabled: false

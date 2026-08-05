@@ -35,6 +35,12 @@ information-hub:
       worker-enabled: ${INFORMATION_HUB_AI_BATCH_WORKER_ENABLED:false}
       worker-initial-delay: ${INFORMATION_HUB_AI_BATCH_WORKER_INITIAL_DELAY:3s}
       worker-fixed-delay: ${INFORMATION_HUB_AI_BATCH_WORKER_FIXED_DELAY:1s}
+    schedule:
+      dispatcher-enabled: ${INFORMATION_HUB_AI_SCHEDULE_DISPATCHER_ENABLED:true}
+      dispatcher-initial-delay: ${INFORMATION_HUB_AI_SCHEDULE_DISPATCHER_INITIAL_DELAY:5s}
+      dispatcher-fixed-delay: ${INFORMATION_HUB_AI_SCHEDULE_DISPATCHER_FIXED_DELAY:30s}
+      misfire-grace: ${INFORMATION_HUB_AI_SCHEDULE_MISFIRE_GRACE:5m}
+      max-schedules-per-poll: ${INFORMATION_HUB_AI_SCHEDULE_MAX_PER_POLL:100}
     preview:
       hmac-secret: ${INFORMATION_HUB_PREVIEW_HMAC_SECRET:}
     provider:

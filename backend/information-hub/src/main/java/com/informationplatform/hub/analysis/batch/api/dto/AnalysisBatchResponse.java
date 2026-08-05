@@ -6,10 +6,12 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 
-/** Manual Analysis Batch 列表和详情响应。 */
+/** Manual 与 Scheduled Analysis Batch 列表和详情响应。 */
 public record AnalysisBatchResponse(
         /** Batch 主键。 */ long id,
         /** 触发类型。 */ String triggerType,
+        /** Scheduled Batch 对应 Schedule 主键；Manual 时为空。 */ Long scheduleId,
+        /** Scheduled Batch 的 UTC 计划点；Manual 时为空。 */ Instant scheduledFor,
         /** Prompt Profile 主键。 */ long promptProfileId,
         /** 冻结 Prompt Version 主键。 */ long promptVersionId,
         /** 信息类型。 */ String informationType,
@@ -48,6 +50,8 @@ public record AnalysisBatchResponse(
         return new AnalysisBatchResponse(
                 view.id(),
                 view.triggerType(),
+                view.scheduleId(),
+                toInstant(view.scheduledFor()),
                 view.promptProfileId(),
                 view.promptVersionId(),
                 view.informationType(),

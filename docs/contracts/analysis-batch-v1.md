@@ -92,6 +92,8 @@ GET /api/v1/ai/analysis-batches/{batchId}/progress
 
 列表 `limit` 默认 20、范围 1～100。Detail 返回有序 Items；Progress 返回 Item 状态计数、
 Provider Usage 报告/缺失数量和 Actual Token 聚合。跨 Owner 与不存在统一为 404。
+TASK-030 起列表和详情对 Scheduled Batch 额外返回 `scheduleId` 与 UTC
+`scheduledFor`；Manual Batch 对应字段为 `null`。
 
 ## 4. Estimate
 

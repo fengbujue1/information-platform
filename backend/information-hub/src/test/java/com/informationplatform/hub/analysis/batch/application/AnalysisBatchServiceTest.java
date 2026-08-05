@@ -64,7 +64,7 @@ class AnalysisBatchServiceTest {
 
     private AnalysisBatchView view() {
         return new AnalysisBatchView(
-                31, "MANUAL", 11, 12, "JOB", "JOB_USER_RELEVANCE", 1,
+                31, "MANUAL", null, null, 11, 12, "JOB", "JOB_USER_RELEVANCE", 1,
                 "FIRST_INGESTED", 3,
                 null, null, 20, 75_000, 1, 1, 0, 1, 0, 0,
                 100L, 1000L, 1100L, "UTF8_BYTES_DIV3_MARGIN20_V1",

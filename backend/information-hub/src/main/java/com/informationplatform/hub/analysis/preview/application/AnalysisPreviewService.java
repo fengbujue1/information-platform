@@ -185,6 +185,36 @@ public class AnalysisPreviewService {
                 limits);
     }
 
+    /**
+     * 按 Schedule 冻结的 Owner、计划点和限制解析候选。
+     *
+     * <p>该内部入口不依赖浏览器 Session、不签发 Preview Token，也不调用 Provider。
+     */
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
+    public ResolvedAnalysisPreview resolveScheduled(
+            long userId,
+            long promptProfileId,
+            Instant windowEnd,
+            AnalysisPreviewLimits limits) {
+        if (userId <= 0 || promptProfileId <= 0) {
+            throw request(
+                    "SCHEDULE_CONTEXT_INVALID",
+                    "Schedule owner and Prompt Profile must be positive");
+        }
+        Instant normalizedEnd = windowEnd.truncatedTo(ChronoUnit.MILLIS);
+        Instant windowStart =
+                normalizedEnd.minus(limits.windowDays(), ChronoUnit.DAYS);
+        return resolve(
+                userId,
+                promptProfileId,
+                null,
+                null,
+                null,
+                windowStart,
+                normalizedEnd,
+                limits);
+    }
+
     /** 在调用方事务快照内解析 Profile、版本、候选、Estimate 和预算决策。 */
     private ResolvedAnalysisPreview resolve(
             long userId,

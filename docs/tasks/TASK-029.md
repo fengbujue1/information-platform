@@ -64,7 +64,7 @@
 - [x] 单 Item 失败不回滚整 Batch
 - [x] Actual Token 可按 Batch 聚合
 - [x] PARTIAL_FAILED/FAILED/COMPLETED 语义正确
-- [x] 定向测试通过；完整数据库回归因本机 SSH 隧道关闭待补充
+- [x] 定向测试和完整数据库回归通过
 - [x] CURRENT_STATUS 指向 TASK-030
 
 ## 7. 实施前必须汇报
@@ -116,13 +116,12 @@
   `COMPLETED/PARTIAL_FAILED/FAILED` 与重启 UNKNOWN 保护在内的 123 项非数据库测试，
   0 失败、0 错误、0 跳过。
 - `.\mvnw.cmd -o -DskipTests package`：离线可执行 Spring Boot JAR 打包成功。
-- `.\mvnw.cmd test`：本轮曾启动完整回归，但当前 `127.0.0.1:13306` SSH 隧道未开启，
-  既有真实 MySQL 集成测试在创建 Spring 上下文时连接失败；这是环境阻断，不是测试断言
-  失败。未对相同连接根因重复执行。
+- `.\mvnw.cmd test`：SSH 隧道恢复后补跑成功；152 项测试，0 失败、0 错误、1 个独立
+  空库条件测试因未配置 `INFORMATION_HUB_EMPTY_TEST_DB_URL` 跳过。
 
 ## 10. 遗留问题
 
-- 需要恢复远程 MySQL SSH 隧道后补跑完整 Maven 回归和真实 MySQL Worker/锁查询验证。
+- 完整真实 MySQL 回归已补跑；MySQL 8.4 仍有 Flyway 已测试版本提示。
 - Schedule、Phase 3 Web 和真实 Provider E2E 分别属于 TASK-030～TASK-032。
 
 ## 11. 完成确认

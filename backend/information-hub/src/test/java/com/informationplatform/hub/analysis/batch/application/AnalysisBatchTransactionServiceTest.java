@@ -15,6 +15,7 @@ import com.informationplatform.hub.analysis.infrastructure.persistence.mapper.Ai
 import com.informationplatform.hub.analysis.infrastructure.persistence.mapper.AiModelInvocationMapper;
 import com.informationplatform.hub.analysis.infrastructure.persistence.po.AiAnalysisBatchItemPo;
 import com.informationplatform.hub.analysis.infrastructure.persistence.po.AiAnalysisBatchPo;
+import com.informationplatform.hub.analysis.infrastructure.persistence.po.AiAnalysisSchedulePo;
 import com.informationplatform.hub.analysis.preview.application.AnalysisPreviewService;
 import com.informationplatform.hub.analysis.preview.domain.PreviewTokenPayload;
 import com.informationplatform.hub.analysis.preview.domain.ResolvedAnalysisPreview;
@@ -82,6 +83,118 @@ class AnalysisBatchTransactionServiceTest {
                 .containsExactly("SELECTED", "DEFERRED");
         assertThat(insertedItems.get(1).getDecisionReason()).isEqualTo("TOKEN_BUDGET");
         verify(provider).validateRequest(resolved.candidates().get(0).providerRequest());
+    }
+
+    @Test
+    void scheduledBatchFreezesTriggerAndReusesBudgetItems() {
+        AiAnalysisBatchMapper batches = mock(AiAnalysisBatchMapper.class);
+        AiAnalysisBatchItemMapper items = mock(AiAnalysisBatchItemMapper.class);
+        AiModelInvocationMapper invocations = mock(AiModelInvocationMapper.class);
+        AnalysisPreviewService previews = mock(AnalysisPreviewService.class);
+        AiProviderClient provider = mock(AiProviderClient.class);
+        AnalysisBatchProperties properties = new AnalysisBatchProperties();
+        properties.setWorkerEnabled(true);
+        List<AiAnalysisBatchItemPo> insertedItems = new ArrayList<>();
+        when(batches.insert(any(AiAnalysisBatchPo.class))).thenAnswer(invocation -> {
+            AiAnalysisBatchPo batch = invocation.getArgument(0);
+            batch.setId(31L);
+            return 1;
+        });
+        when(items.insert(any(AiAnalysisBatchItemPo.class))).thenAnswer(invocation -> {
+            insertedItems.add(invocation.getArgument(0));
+            return 1;
+        });
+        AnalysisBatchTransactionService service = new AnalysisBatchTransactionService(
+                batches, items, invocations, previews, provider, properties);
+        AiAnalysisSchedulePo schedule = new AiAnalysisSchedulePo();
+        schedule.setId(21L);
+        schedule.setUserId(7L);
+
+        AiAnalysisBatchPo created = service.createScheduled(
+                schedule,
+                LocalDateTime.of(2026, 8, 5, 6, 0),
+                resolved(),
+                null);
+
+        assertThat(created.getTriggerType()).isEqualTo("SCHEDULED");
+        assertThat(created.getScheduleId()).isEqualTo(21);
+        assertThat(created.getManualRequestId()).isNull();
+        assertThat(created.getPromptVersionId()).isEqualTo(12);
+        assertThat(created.getAnalysisDefinitionVersion()).isEqualTo(1);
+        assertThat(created.getWindowEnd())
+                .isEqualTo(LocalDateTime.of(2026, 8, 5, 6, 0));
+        assertThat(created.getStatus()).isEqualTo("PENDING");
+        assertThat(insertedItems).extracting(AiAnalysisBatchItemPo::getStatus)
+                .containsExactly("SELECTED", "DEFERRED");
+    }
+
+    @Test
+    void forcedScheduleSkipCreatesNoopWithoutItems() {
+        AiAnalysisBatchMapper batches = mock(AiAnalysisBatchMapper.class);
+        AiAnalysisBatchItemMapper items = mock(AiAnalysisBatchItemMapper.class);
+        AiModelInvocationMapper invocations = mock(AiModelInvocationMapper.class);
+        AnalysisPreviewService previews = mock(AnalysisPreviewService.class);
+        AiProviderClient provider = mock(AiProviderClient.class);
+        AnalysisBatchProperties properties = new AnalysisBatchProperties();
+        when(batches.insert(any(AiAnalysisBatchPo.class))).thenAnswer(invocation -> {
+            AiAnalysisBatchPo batch = invocation.getArgument(0);
+            batch.setId(31L);
+            return 1;
+        });
+        AnalysisBatchTransactionService service = new AnalysisBatchTransactionService(
+                batches, items, invocations, previews, provider, properties);
+        AiAnalysisSchedulePo schedule = new AiAnalysisSchedulePo();
+        schedule.setId(21L);
+        schedule.setUserId(7L);
+
+        AiAnalysisBatchPo created = service.createScheduled(
+                schedule,
+                LocalDateTime.of(2026, 8, 5, 6, 0),
+                resolved(),
+                "CONCURRENT_RUN");
+
+        assertThat(created.getStatus()).isEqualTo("NOOP");
+        assertThat(created.getSkipReason()).isEqualTo("CONCURRENT_RUN");
+        assertThat(created.getSelectedCount()).isZero();
+        verify(items, org.mockito.Mockito.never())
+                .insert(any(AiAnalysisBatchItemPo.class));
+    }
+
+    @Test
+    void scheduleWithNoCandidatesCreatesNoopWithoutProviderValidation() {
+        AiAnalysisBatchMapper batches = mock(AiAnalysisBatchMapper.class);
+        AiAnalysisBatchItemMapper items = mock(AiAnalysisBatchItemMapper.class);
+        AiModelInvocationMapper invocations = mock(AiModelInvocationMapper.class);
+        AnalysisPreviewService previews = mock(AnalysisPreviewService.class);
+        AiProviderClient provider = mock(AiProviderClient.class);
+        AnalysisBatchProperties properties = new AnalysisBatchProperties();
+        when(batches.insert(any(AiAnalysisBatchPo.class))).thenAnswer(invocation -> {
+            AiAnalysisBatchPo batch = invocation.getArgument(0);
+            batch.setId(31L);
+            return 1;
+        });
+        AnalysisBatchTransactionService service = new AnalysisBatchTransactionService(
+                batches, items, invocations, previews, provider, properties);
+        AiAnalysisSchedulePo schedule = new AiAnalysisSchedulePo();
+        schedule.setId(21L);
+        schedule.setUserId(7L);
+        PreviewTokenPayload payload = payload();
+        ResolvedAnalysisPreview empty = new ResolvedAnalysisPreview(
+                7, 11, 12, "JOB", "JOB_USER_RELEVANCE", 1,
+                payload.windowStart(), payload.windowEnd(), 3, 20, 75_000,
+                0, 0, 0, 0, 0, 0,
+                0, 0, 0, "UTF8_BYTES_DIV3_MARGIN20_V1",
+                "b".repeat(64), List.of());
+
+        AiAnalysisBatchPo created = service.createScheduled(
+                schedule,
+                LocalDateTime.of(2026, 8, 5, 6, 0),
+                empty,
+                null);
+
+        assertThat(created.getStatus()).isEqualTo("NOOP");
+        assertThat(created.getSkipReason()).isEqualTo("NO_EXECUTABLE_ITEMS");
+        verify(provider, org.mockito.Mockito.never()).validateRequest(any());
     }
 
     private PreviewTokenPayload payload() {

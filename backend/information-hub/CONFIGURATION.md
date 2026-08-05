@@ -110,6 +110,11 @@ java -jar information-hub.jar
 - `information-hub.ai.batch.worker-enabled`：异步 Batch Worker 开关，默认 `false`。
 - `information-hub.ai.batch.worker-initial-delay`：应用启动后的首次 Worker 轮询延迟。
 - `information-hub.ai.batch.worker-fixed-delay`：串行 Worker 两次轮询之间的间隔。
+- `information-hub.ai.schedule.dispatcher-enabled`：每日 Schedule Dispatcher 开关，默认 `true`；每条新 Schedule 仍默认关闭。
+- `information-hub.ai.schedule.dispatcher-initial-delay`：应用启动后的首次 Schedule 扫描延迟，默认 5 秒。
+- `information-hub.ai.schedule.dispatcher-fixed-delay`：两次 Schedule 扫描间隔，默认 30 秒。
+- `information-hub.ai.schedule.misfire-grace`：允许按原计划点触发的延迟窗口，默认 5 分钟。
+- `information-hub.ai.schedule.max-schedules-per-poll`：单轮最多处理的到期 Schedule 数，默认 100。
 - `mybatis-plus.configuration`：MyBatis-Plus 基础映射配置。
 
 Collector 中配置的 `collector_token` 必须与服务端的 `information-hub.collector-api.token` 一致。
@@ -129,6 +134,11 @@ INFORMATION_HUB_PREVIEW_HMAC_SECRET
 INFORMATION_HUB_AI_BATCH_WORKER_ENABLED
 INFORMATION_HUB_AI_BATCH_WORKER_INITIAL_DELAY
 INFORMATION_HUB_AI_BATCH_WORKER_FIXED_DELAY
+INFORMATION_HUB_AI_SCHEDULE_DISPATCHER_ENABLED
+INFORMATION_HUB_AI_SCHEDULE_DISPATCHER_INITIAL_DELAY
+INFORMATION_HUB_AI_SCHEDULE_DISPATCHER_FIXED_DELAY
+INFORMATION_HUB_AI_SCHEDULE_MISFIRE_GRACE
+INFORMATION_HUB_AI_SCHEDULE_MAX_PER_POLL
 ```
 
 ## 7. 安全要求

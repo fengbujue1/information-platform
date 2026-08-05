@@ -3,6 +3,7 @@
 状态：Accepted
 接受日期：2026-08-03
 适用阶段：Phase 3
+实现状态：TASK-030 已实现。
 
 ## 1. 默认值与限制
 
@@ -46,6 +47,8 @@ updatedAt
 - `nextRunAt/scheduledFor` 按 UTC 存储；
 - 修改 timezone/local time/enabled 时重新计算下一个未来执行点；
 - 不使用服务器本地时区推断用户日程。
+- DST gap 向后移动到首个有效墙上时间；
+- DST overlap 选择较早 offset，同一本地日期最多触发一次。
 
 ## 4. Prompt Version
 
@@ -82,6 +85,10 @@ resolve Profile
 - 超过 grace：不补跑历史，创建 NOOP 或记录本计划点跳过并推进到下一个未来执行点；
 - 不循环追赶停机期间所有计划。
 
+TASK-030 使用 `NOOP/MISFIRE` 保留可构造 Batch 的历史计划点。若 Profile/Version
+配置已经损坏到无法满足 Batch 非空 FK，则不调用 Provider，推进下一未来计划点并返回
+脱敏调度结果，避免 due row 永久阻塞。
+
 ## 8. 幂等
 
 ```text
@@ -104,6 +111,27 @@ UNIQUE(scheduleId, scheduledFor)
 - 查看历史 Batch。
 
 测试配置复用 Preview，不创建 Invocation。所有操作要求 Session Owner 隔离，写操作要求 CSRF。
+
+TASK-030 冻结 API：
+
+```http
+GET  /api/v1/ai/analysis-schedules
+POST /api/v1/ai/analysis-schedules
+GET  /api/v1/ai/analysis-schedules/{scheduleId}
+PUT  /api/v1/ai/analysis-schedules/{scheduleId}
+PUT  /api/v1/ai/analysis-schedules/{scheduleId}/status
+POST /api/v1/ai/analysis-schedules/{scheduleId}/preview
+```
+
+创建请求允许省略 `enabled`，省略时固定为 `false`。完整更新不隐式改变启停状态；
+启停必须使用独立 status 接口。Schedule 不提供物理删除，停用使用
+`enabled=false` 且 `nextRunAt=NULL`。列表和详情从最近 Scheduled Batch 派生
+`lastRun`，不冗余 `lastTriggeredAt`。
+
+Dispatcher 默认启用并每 30 秒扫描一次；每条 Schedule 仍必须由用户显式启用。
+若存在可执行候选但 Worker 或 Provider 未配置，则创建
+`NOOP/WORKER_DISABLED` 或 `NOOP/PROVIDER_UNAVAILABLE`，不会留下无法消费的
+`PENDING` Batch。
 
 ## 11. 不包含
 

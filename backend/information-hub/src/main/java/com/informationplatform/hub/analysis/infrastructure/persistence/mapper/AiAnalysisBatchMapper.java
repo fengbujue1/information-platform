@@ -20,6 +20,35 @@ public interface AiAnalysisBatchMapper extends BaseMapper<AiAnalysisBatchPo> {
             @Param("userId") long userId,
             @Param("manualRequestId") String manualRequestId);
 
+    /** 按 Schedule 计划点读取幂等 Batch。 */
+    @Select("""
+            SELECT * FROM ai_analysis_batch
+            WHERE schedule_id = #{scheduleId}
+              AND scheduled_for = #{scheduledFor}
+            """)
+    AiAnalysisBatchPo selectScheduled(
+            @Param("scheduleId") long scheduleId,
+            @Param("scheduledFor") java.time.LocalDateTime scheduledFor);
+
+    /** 判断同一 Schedule 是否已有仍在执行的 Batch。 */
+    @Select("""
+            SELECT * FROM ai_analysis_batch
+            WHERE schedule_id = #{scheduleId}
+              AND status IN ('PENDING', 'RUNNING')
+            ORDER BY created_at DESC, id DESC
+            LIMIT 1
+            """)
+    AiAnalysisBatchPo selectActiveScheduled(@Param("scheduleId") long scheduleId);
+
+    /** 派生 Schedule 最近一次运行信息，不新增冗余 lastTriggeredAt。 */
+    @Select("""
+            SELECT * FROM ai_analysis_batch
+            WHERE schedule_id = #{scheduleId}
+            ORDER BY scheduled_for DESC, id DESC
+            LIMIT 1
+            """)
+    AiAnalysisBatchPo selectLatestScheduled(@Param("scheduleId") long scheduleId);
+
     /** Worker 完成事务中锁定 Batch。 */
     @Select("""
             SELECT * FROM ai_analysis_batch

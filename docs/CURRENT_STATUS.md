@@ -17,7 +17,8 @@
 - TASK-027 已完成单条 Information Analysis、逻辑身份幂等、Invocation attempt、Actual Usage、短事务执行和 Owner 隔离 API。
 - TASK-028 已完成通用 Candidate Resolver、JOB 最近 N 天候选解析、无 AI 调用 Preview、Token Estimate、候选指纹和 10 分钟 HMAC 确认令牌。
 - TASK-029 已完成 Manual Confirm、异步 Batch/Items、Budget Guard、串行 MySQL Worker、重启恢复、Actual Usage 聚合和 Owner 查询 API。
-- Phase 3 Schedule 和对应 Web 业务实现尚未开始。
+- TASK-030 已完成每日 Analysis Schedule、Owner 配置 API、IANA/DST 计划点、due Dispatcher、Scheduled Batch 幂等、overlap/misfire NOOP 和配置 Preview。
+- Phase 3 对应 Web 业务实现尚未开始。
 
 ## 当前真实可用链路
 
@@ -45,10 +46,10 @@ BOSS Collector
 - 需要 Session + CSRF 的 Analysis Batch Preview API，可返回候选规模、已分析/待分析计数、Token Estimate 汇总和短期确认令牌。
 - 需要 Session + CSRF 的 Manual Batch Confirm API，以及 Batch list/detail/progress API。
 - 默认关闭的单并发 Batch Worker；启用后使用 MySQL 短事务和 `SKIP LOCKED`，Provider HTTP 不持有事务。
+- 默认启用的 Schedule Dispatcher；每条 Schedule 默认关闭，启用后按用户 IANA 时区每日触发并复用现有 Batch Worker。
 
 当前没有：
 
-- Schedule 的业务 Service/API；
 - Prompt、Analysis、Batch、Schedule 的 Phase 3 Web 页面。
 
 当前已经具备的 Phase 3 持久化基础：
@@ -65,7 +66,7 @@ ai_model_invocation
 ```
 
 其中 `user_account` 已由 Identity MVP 使用，`ai_prompt_profile` / `ai_prompt_version`
-已由 TASK-022 业务 API 使用；`information_analysis` / `ai_model_invocation` 已由 TASK-027 使用；Batch 表已由 TASK-029 使用，Schedule 表尚待 TASK-030 暴露业务能力。
+已由 TASK-022 业务 API 使用；`information_analysis` / `ai_model_invocation` 已由 TASK-027 使用；Batch 表已由 TASK-029 使用，Schedule 表已由 TASK-030 暴露业务能力。
 
 ## 已冻结的 Phase 3 目标
 
@@ -93,14 +94,14 @@ JOB_USER_RELEVANCE_V1
 
 ## 当前任务
 
-TASK-030：每日 Analysis Schedule。
+TASK-031：Phase 3 Web 的 Prompt、Analysis、Batch 与 Schedule 页面。
 
-TASK-029 已完成 Preview Confirm 一致性校验、Batch/Items 冻结、Manual 幂等、Budget Guard、串行 Worker、重启 UNKNOWN 保护和 Actual Usage 聚合。下一任务只应实现每日 Schedule 并复用现有 Batch Engine，不得修改 Worker 核心或提前实现 Phase 3 Web、推荐和通知。
+TASK-030 已完成每日 Schedule 配置、时区/DST 计算、Active Prompt Version 冻结、Scheduled Batch、幂等、overlap、misfire 和现有 Worker 复用。下一任务只应实现冻结范围内的 Phase 3 Web，不得扩张推荐、通知或新基础设施。
 
 ## 下一步执行顺序
 
-1. TASK-030：每日 Analysis Schedule；
-2. TASK-031～TASK-032：按 Roadmap 继续。
+1. TASK-031：Phase 3 Web；
+2. TASK-032：按 Roadmap 继续。
 
 任务编号不变；顺序调整是因为 Identity、Prompt 和 Analysis 的持久化依赖 TASK-024 的 Accepted 表结构。
 
@@ -109,8 +110,8 @@ TASK-029 已完成 Preview Confirm 一致性校验、Batch/Items 冻结、Manual
 - Job Query/Web/E2E 已采用 Session 认证前置条件，后续测试必须继续使用认证夹具。
 - Provider timeout 可能已计费但结果未知，后续 Worker 不得自动盲重试。
 - Batch Worker 默认关闭；联调或部署必须同时启用 Worker 和 Provider，否则 Confirm 会拒绝创建有可执行 Item 的 Batch。
-- 当前本机 `127.0.0.1:13306` SSH 隧道未开启，TASK-029 完整真实 MySQL 回归仍需在隧道恢复后补跑。
-- Schedule 时区、DST、misfire 和 overlap 必须按 Accepted Contract 实现并测试。
+- TASK-029 后续已通过 `127.0.0.1:13306` SSH 隧道完成 152 项完整 Maven 回归，0 失败、0 错误、1 个独立空库条件测试因未配置专用环境变量而跳过。
+- Schedule Dispatcher 默认启用，但每条 Schedule 默认关闭；实际产生 AI 调用还要求用户启用 Schedule，并正确配置 Batch Worker 和 Provider。
 - Provider API Key、Bootstrap 密码、Session Cookie 和 Collector Token 均不得进入 Git、前端或日志。
 - MySQL 8.4 当前会触发 Flyway“最新已测试版本为 8.1”的提示；TASK-024 真实 migration 与回归均成功，后续依赖维护任务再评估升级。
 - 数据库测试环境变量必须指向名称包含 `test` 且不包含 `dev` 的库；测试代码已强制校验，避免误迁移开发库。

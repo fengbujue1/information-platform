@@ -11,18 +11,21 @@ import com.informationplatform.hub.analysis.infrastructure.persistence.mapper.Ai
 import com.informationplatform.hub.analysis.infrastructure.persistence.mapper.AiModelInvocationMapper;
 import com.informationplatform.hub.analysis.infrastructure.persistence.po.AiAnalysisBatchItemPo;
 import com.informationplatform.hub.analysis.infrastructure.persistence.po.AiAnalysisBatchPo;
+import com.informationplatform.hub.analysis.infrastructure.persistence.po.AiAnalysisSchedulePo;
 import com.informationplatform.hub.analysis.preview.application.AnalysisPreviewConflictException;
 import com.informationplatform.hub.analysis.preview.application.AnalysisPreviewService;
 import com.informationplatform.hub.analysis.preview.domain.PreviewTokenPayload;
 import com.informationplatform.hub.analysis.preview.domain.ResolvedAnalysisPreview;
 import com.informationplatform.hub.analysis.preview.domain.ResolvedPreviewCandidate;
 import com.informationplatform.hub.analysis.provider.application.AiProviderClient;
+import com.informationplatform.hub.analysis.provider.domain.AiProviderException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Objects;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 /** 承担 Manual Confirm 冻结写入和 Owner 安全 Batch 查询事务。 */
@@ -83,19 +86,44 @@ public class AnalysisBatchTransactionService {
                 .ifPresent(candidate -> providerClient.validateRequest(candidate.providerRequest()));
 
         LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
-        AiAnalysisBatchPo batch = newBatch(payload, resolved, now);
-        if (batchMapper.insert(batch) != 1 || batch.getId() == null) {
-            throw new AnalysisBatchPersistenceException("Analysis Batch insert affected no row");
-        }
-        int order = 1;
-        for (ResolvedPreviewCandidate candidate : resolved.candidates()) {
-            AiAnalysisBatchItemPo item = newItem(batch.getId(), order++, candidate, now);
-            if (itemMapper.insert(item) != 1) {
-                throw new AnalysisBatchPersistenceException(
-                        "Analysis Batch Item insert affected no row");
+        AiAnalysisBatchPo batch = newManualBatch(payload, resolved, now);
+        insertBatchAndItems(batch, resolved, now);
+        return toView(batch, true);
+    }
+
+    /**
+     * 在 Scheduler 已持有的事务中冻结 Scheduled Batch 与 Items。
+     *
+     * <p>强制跳过原因存在时只创建 NOOP Batch；正常路径与 Manual 共用预算决策和 Item 写入。
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public AiAnalysisBatchPo createScheduled(
+            AiAnalysisSchedulePo schedule,
+            LocalDateTime scheduledFor,
+            ResolvedAnalysisPreview resolved,
+            String forcedSkipReason) {
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+        String skipReason = forcedSkipReason;
+        if (skipReason == null && resolved.selectedCount() > 0) {
+            if (!batchProperties.isWorkerEnabled()) {
+                skipReason = "WORKER_DISABLED";
+            } else {
+                try {
+                    resolved.candidates().stream()
+                            .filter(ResolvedPreviewCandidate::selected)
+                            .findFirst()
+                            .ifPresent(candidate ->
+                                    providerClient.validateRequest(candidate.providerRequest()));
+                } catch (AiProviderException exception) {
+                    // Schedule 不保留无法消费的 PENDING Batch，Provider 配置异常转为稳定 NOOP。
+                    skipReason = "PROVIDER_UNAVAILABLE";
+                }
             }
         }
-        return toView(batch, true);
+        AiAnalysisBatchPo batch =
+                newScheduledBatch(schedule, scheduledFor, resolved, skipReason, now);
+        insertBatchAndItems(batch, skipReason == null ? resolved : null, now);
+        return batch;
     }
 
     /** 按幂等键返回既有 Batch，供并发唯一键冲突事务回滚后复用。 */
@@ -134,7 +162,7 @@ public class AnalysisBatchTransactionService {
         return progress(batchId, userId, items(batchId));
     }
 
-    private AiAnalysisBatchPo newBatch(
+    private AiAnalysisBatchPo newManualBatch(
             PreviewTokenPayload payload,
             ResolvedAnalysisPreview resolved,
             LocalDateTime now) {
@@ -142,6 +170,29 @@ public class AnalysisBatchTransactionService {
         batch.setUserId(payload.userId());
         batch.setTriggerType("MANUAL");
         batch.setManualRequestId(payload.manualRequestId());
+        populateResolvedBatch(batch, resolved);
+        applyExecutionState(batch, resolved, null, now);
+        return batch;
+    }
+
+    private AiAnalysisBatchPo newScheduledBatch(
+            AiAnalysisSchedulePo schedule,
+            LocalDateTime scheduledFor,
+            ResolvedAnalysisPreview resolved,
+            String forcedSkipReason,
+            LocalDateTime now) {
+        AiAnalysisBatchPo batch = new AiAnalysisBatchPo();
+        batch.setUserId(schedule.getUserId());
+        batch.setTriggerType("SCHEDULED");
+        batch.setScheduleId(schedule.getId());
+        batch.setScheduledFor(scheduledFor);
+        populateResolvedBatch(batch, resolved);
+        applyExecutionState(batch, resolved, forcedSkipReason, now);
+        return batch;
+    }
+
+    private void populateResolvedBatch(
+            AiAnalysisBatchPo batch, ResolvedAnalysisPreview resolved) {
         batch.setInformationType(resolved.informationType());
         batch.setAnalysisDefinitionKey(resolved.definitionKey());
         batch.setAnalysisDefinitionVersion(resolved.definitionVersion());
@@ -163,14 +214,48 @@ public class AnalysisBatchTransactionService {
         batch.setEstimatedOutputTokens(resolved.estimatedOutputTokens());
         batch.setEstimatedTotalTokens(resolved.estimatedTotalTokens());
         batch.setEstimateMethod(resolved.estimateMethod());
-        if (resolved.selectedCount() == 0) {
+    }
+
+    private void applyExecutionState(
+            AiAnalysisBatchPo batch,
+            ResolvedAnalysisPreview resolved,
+            String forcedSkipReason,
+            LocalDateTime now) {
+        if (forcedSkipReason != null) {
+            batch.setStatus("NOOP");
+            batch.setSkipReason(forcedSkipReason);
+            batch.setSelectedCount(0);
+            batch.setEstimatedInputTokens(0L);
+            batch.setEstimatedOutputTokens(0L);
+            batch.setEstimatedTotalTokens(0L);
+            batch.setCompletedAt(now);
+        } else if (resolved.selectedCount() == 0) {
             batch.setStatus("NOOP");
             batch.setSkipReason("NO_EXECUTABLE_ITEMS");
             batch.setCompletedAt(now);
         } else {
             batch.setStatus("PENDING");
         }
-        return batch;
+    }
+
+    private void insertBatchAndItems(
+            AiAnalysisBatchPo batch,
+            ResolvedAnalysisPreview resolved,
+            LocalDateTime now) {
+        if (batchMapper.insert(batch) != 1 || batch.getId() == null) {
+            throw new AnalysisBatchPersistenceException("Analysis Batch insert affected no row");
+        }
+        if (resolved == null) {
+            return;
+        }
+        int order = 1;
+        for (ResolvedPreviewCandidate candidate : resolved.candidates()) {
+            AiAnalysisBatchItemPo item = newItem(batch.getId(), order++, candidate, now);
+            if (itemMapper.insert(item) != 1) {
+                throw new AnalysisBatchPersistenceException(
+                        "Analysis Batch Item insert affected no row");
+            }
+        }
     }
 
     private AiAnalysisBatchItemPo newItem(
@@ -238,6 +323,8 @@ public class AnalysisBatchTransactionService {
         return new AnalysisBatchView(
                 batch.getId(),
                 batch.getTriggerType(),
+                batch.getScheduleId(),
+                batch.getScheduledFor(),
                 batch.getPromptProfileId(),
                 batch.getPromptVersionId(),
                 batch.getInformationType(),

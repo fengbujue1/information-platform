@@ -17,7 +17,7 @@ BOSS Collector
 → Information Hub Web
 ```
 
-Phase 3 设计已冻结。数据库基础、Identity、Prompt Version、Analysis Definition、Provider、Prompt Assembly/结构化输出、单条 Information Analysis、Candidate Resolver/Preview/Token Estimate，以及异步 Analysis Batch/Budget Guard 已完成；当前下一实施任务是 TASK-030 每日 Analysis Schedule。Schedule 和 Phase 3 Web 等业务能力尚未实现。
+Phase 3 设计已冻结。数据库基础、Identity、Prompt Version、Analysis Definition、Provider、Prompt Assembly/结构化输出、单条 Information Analysis、Candidate Resolver/Preview/Token Estimate、异步 Analysis Batch/Budget Guard，以及每日 Analysis Schedule 已完成；当前下一实施任务是 TASK-031 Phase 3 Web。
 
 ## Phase 3 Accepted Design
 

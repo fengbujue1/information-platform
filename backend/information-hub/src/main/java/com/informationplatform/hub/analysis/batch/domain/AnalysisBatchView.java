@@ -7,8 +7,12 @@ import java.util.List;
 public record AnalysisBatchView(
         /** Batch 主键。 */
         long id,
-        /** 触发类型，当前 TASK 只创建 MANUAL。 */
+        /** 触发类型，为 MANUAL 或 SCHEDULED。 */
         String triggerType,
+        /** Scheduled Batch 对应的 Schedule 主键；Manual 时为空。 */
+        Long scheduleId,
+        /** Scheduled Batch 的 UTC 计划点；Manual 时为空。 */
+        LocalDateTime scheduledFor,
         /** Prompt Profile 主键。 */
         long promptProfileId,
         /** 冻结 Prompt Version 主键。 */
