@@ -3,6 +3,9 @@ import { computed } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { ElButton } from 'element-plus'
 
+import 'element-plus/dist/index.css'
+import '@/styles/ai.css'
+
 import '@/styles/task017.css'
 import '@/styles/task017-overflow.css'
 import { authState, logout } from '@/stores/authSession'
@@ -38,6 +41,41 @@ async function signOut(): Promise<void> {
             class="app-navigation-link"
           >
             职位浏览
+          </RouterLink>
+          <RouterLink
+            v-if="authState.currentUser.value"
+            to="/ai/prompts"
+            class="app-navigation-link"
+          >
+            Prompt
+          </RouterLink>
+          <RouterLink
+            v-if="authState.currentUser.value"
+            to="/ai/analyze"
+            class="app-navigation-link"
+          >
+            手动分析
+          </RouterLink>
+          <RouterLink
+            v-if="authState.currentUser.value"
+            to="/ai/batches"
+            class="app-navigation-link"
+          >
+            Batches
+          </RouterLink>
+          <RouterLink
+            v-if="authState.currentUser.value"
+            to="/ai/schedules"
+            class="app-navigation-link"
+          >
+            Schedules
+          </RouterLink>
+          <RouterLink
+            v-if="authState.currentUser.value"
+            to="/ai/usage"
+            class="app-navigation-link"
+          >
+            Usage
           </RouterLink>
           <span v-if="authState.currentUser.value" class="app-user">
             {{ userLabel }}

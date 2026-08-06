@@ -18,6 +18,8 @@ import com.informationplatform.hub.analysis.infrastructure.persistence.po.AiMode
 import com.informationplatform.hub.analysis.infrastructure.persistence.po.AiPromptProfilePo;
 import com.informationplatform.hub.analysis.infrastructure.persistence.po.AiPromptVersionPo;
 import com.informationplatform.hub.analysis.infrastructure.persistence.po.InformationAnalysisPo;
+import com.informationplatform.hub.analysis.usage.infrastructure.persistence.AnalysisUsageMapper;
+import com.informationplatform.hub.analysis.usage.infrastructure.persistence.UserUsageAggregateRow;
 import com.informationplatform.hub.identity.infrastructure.persistence.mapper.UserAccountMapper;
 import com.informationplatform.hub.identity.infrastructure.persistence.po.UserAccountPo;
 import com.informationplatform.hub.information.infrastructure.persistence.mapper.InformationItemMapper;
@@ -88,6 +90,9 @@ class Phase3MapperIntegrationTest {
     @Autowired
     private AiModelInvocationMapper modelInvocationMapper;
 
+    @Autowired
+    private AnalysisUsageMapper analysisUsageMapper;
+
     @Test
     @Transactional
     void mappersPersistAndReadTheAcceptedPhase3Graph() {
@@ -128,7 +133,20 @@ class Phase3MapperIntegrationTest {
         assertNull(persistedInvocation.getTotalTokens());
         assertNull(persistedInvocation.getCachedInputTokens());
         assertNull(persistedInvocation.getReasoningTokens());
-    }
+
+        // User Usage 只聚合当前 Owner 的 Provider 实际报告值，不使用 Estimate 补算。
+        persistedInvocation.setUsageStatus("REPORTED");
+        persistedInvocation.setInputTokens(100L);
+        persistedInvocation.setOutputTokens(50L);
+        persistedInvocation.setTotalTokens(150L);
+        assertEquals(1, modelInvocationMapper.updateById(persistedInvocation));
+        UserUsageAggregateRow usage = analysisUsageMapper.aggregateUserUsage(user.getId());
+        assertEquals(1L, usage.getInvocationCount());
+        assertEquals(1L, usage.getReportedInvocationCount());
+        assertEquals(0L, usage.getUnavailableInvocationCount());
+        assertEquals(100L, usage.getInputTokens());
+        assertEquals(50L, usage.getOutputTokens());
+        assertEquals(150L, usage.getTotalTokens());    }
 
     private UserAccountPo insertUser() {
         UserAccountPo po = new UserAccountPo();

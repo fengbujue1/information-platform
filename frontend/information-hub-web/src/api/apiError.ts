@@ -37,6 +37,17 @@ const ERROR_MESSAGES: Readonly<Record<string, string>> = {
   INVALID_PROMPT_PROFILE_STATUS: 'Prompt Profile 状态不受支持',
   UNSUPPORTED_ANALYSIS_DEFINITION: '当前 Analysis Definition 不受支持',
   PROMPT_PERSISTENCE_FAILED: 'Prompt 数据暂时无法保存，请稍后重试',
+  ANALYSIS_NOT_FOUND: 'Analysis 不存在或无权访问',
+  INFORMATION_ANALYSIS_NOT_FOUND: 'Analysis 不存在或无权访问',
+  ANALYSIS_BATCH_NOT_FOUND: 'Batch 不存在或无权访问',
+  ANALYSIS_SCHEDULE_NOT_FOUND: 'Schedule 不存在或无权访问',
+  ANALYSIS_PREVIEW_TOKEN_EXPIRED: 'Preview 已过期，请重新 Preview',
+  ANALYSIS_PREVIEW_TOKEN_INVALID: 'Preview 已失效，请重新 Preview',
+  ANALYSIS_PREVIEW_DRIFTED: '候选或配置已经变化，请重新 Preview',
+  ANALYSIS_PROVIDER_DISABLED: 'AI Provider 当前未启用',
+  ANALYSIS_WORKER_DISABLED: 'Batch Worker 当前未启用',
+  ANALYSIS_CONFIGURATION_INVALID: 'Analysis 配置当前不可执行',
+  ANALYSIS_SCHEDULE_NAME_CONFLICT: '当前账号已存在同名 Schedule',
   INTERNAL_ERROR: '服务暂时不可用，请稍后重试',
 }
 

@@ -17,7 +17,7 @@ BOSS Collector
 → Information Hub Web
 ```
 
-Phase 3 设计已冻结。数据库基础、Identity、Prompt Version、Analysis Definition、Provider、Prompt Assembly/结构化输出、单条 Information Analysis、Candidate Resolver/Preview/Token Estimate、异步 Analysis Batch/Budget Guard，以及每日 Analysis Schedule 已完成；当前下一实施任务是 TASK-031 Phase 3 Web。
+Phase 3 设计已冻结。数据库基础、Identity、Prompt Version、Analysis Definition、Provider、Prompt Assembly/结构化输出、单条 Information Analysis、Candidate Resolver/Preview/Token Estimate、异步 Analysis Batch/Budget Guard、每日 Analysis Schedule，以及 Phase 3 Web 和用户 Usage 查询已完成；当前下一实施任务是 TASK-032 真实模型与 Phase 3 E2E 验收。
 
 ## Phase 3 Accepted Design
 
@@ -54,6 +54,7 @@ User Relevance MVP
 - 需要 Session + CSRF 的单条 Analysis 执行 API，以及按 Owner 隔离的 Analysis 查询 API；
 - 受控账号 Bootstrap、安全密码摘要、同源 Session、CSRF、登录/登出和当前用户接口；
 - 需要 Session 的 Job Query API，以及 Vue 3 登录、职位搜索、筛选、排序、分页和历史查看；
+- Phase 3 Web 的 Prompt、Manual Preview/Confirm、Batch、Analysis Result、Schedule 和今日/月度/累计 Actual Usage；
 - 保持独立 Bearer Token 认证的 Collector 接口；
 - 需要 Session + CSRF 的账号级 Prompt Profile / Version API；
 - Java、Python、Vue 和浏览器 E2E CI；

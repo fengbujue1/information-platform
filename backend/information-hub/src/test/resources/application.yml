@@ -1,3 +1,12 @@
+server:
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        same-site: lax
+        secure: false
+        path: /
+
 information-hub:
   ai:
     schedule:

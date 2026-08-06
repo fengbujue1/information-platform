@@ -117,3 +117,23 @@ POST 使用同源 Session 与 CSRF；Owner 只来自认证上下文，不接受�
 - Provider 成功、输出校验失败、Provider 失败分别在新的短事务中完成状态与 Usage 持久化；
 - Provider 已返回 Usage 但输出校验失败时，Invocation 保持成功并保留 Actual Usage，Analysis 标记 FAILED；
 - timeout/unknown 不自动重试。
+## 10. 用户维度 Usage API
+
+TASK-031 为 Phase 3 Web 补齐当前 Owner 的实时 Actual Usage 查询：
+
+```http
+GET /api/v1/ai/usage
+```
+
+响应一次返回 `today`、`month` 和 `allTime`，每个范围包含：
+
+- Invocation 总数；
+- `REPORTED/UNAVAILABLE` 数量；
+- Actual input/output/total token；
+- 有时间范围的 UTC `periodStart/periodEnd`。
+
+今日和本月按当前账号 IANA timezone 计算自然日/月边界，再转换为 UTC 半开区间。时间归属使用 `ai_model_invocation.created_at`，并复用 `(user_id, created_at)` 索引；累计范围不限制时间。
+
+该接口只从当前 Session Owner 的 `ai_model_invocation` 聚合。只有 `usage_status=REPORTED` 的 Provider 字段进入 Actual 合计；完全未知时 token 保持 `NULL`，不得使用 Analysis/Batch Estimate 补算。接口为只读 GET，不要求 CSRF，但要求认证 Session。跨 Owner 数据不会进入聚合。
+
+第一版不创建 Usage Summary/Cost 表，不提供金额、价格或账单语义。

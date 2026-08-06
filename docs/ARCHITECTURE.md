@@ -194,6 +194,6 @@ Information Hub Web
 
 当前尚未实施：
 
-- Prompt、Analysis、Batch、Schedule 等 Phase 3 Web 页面与真实模型 E2E。
+- 真实模型与 Phase 3 E2E。
 
-详细设计以 Accepted `PHASE3_ARCHITECTURE_DRAFT.md` 和 `DATABASE_DESIGN_PHASE3_DRAFT.md` 为准。文件名中的 `_DRAFT` 为保持既有链接而保留，不表示设计仍待讨论。TASK-030 已完成每日 Analysis Schedule；当前下一实施任务是 TASK-031。
+详细设计以 Accepted `PHASE3_ARCHITECTURE_DRAFT.md` 和 `DATABASE_DESIGN_PHASE3_DRAFT.md` 为准。文件名中的 `_DRAFT` 为保持既有链接而保留，不表示设计仍待讨论。TASK-031 已完成 Phase 3 Web 与用户维度 Actual Usage 查询；当前下一实施任务是 TASK-032。

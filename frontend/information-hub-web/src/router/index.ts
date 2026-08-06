@@ -52,6 +52,41 @@ export function createAppRouter(
         component: JobSnapshotsView,
       },
       {
+        path: '/ai/prompts',
+        name: 'ai-prompts',
+        component: () => import('@/views/PromptProfilesView.vue'),
+      },
+      {
+        path: '/ai/analyze',
+        name: 'ai-analyze',
+        component: () => import('@/views/ManualAnalysisView.vue'),
+      },
+      {
+        path: '/ai/analyses/:id',
+        name: 'ai-analysis-result',
+        component: () => import('@/views/AnalysisResultView.vue'),
+      },
+      {
+        path: '/ai/batches',
+        name: 'ai-batches',
+        component: () => import('@/views/BatchListView.vue'),
+      },
+      {
+        path: '/ai/batches/:id',
+        name: 'ai-batch-detail',
+        component: () => import('@/views/BatchDetailView.vue'),
+      },
+      {
+        path: '/ai/schedules',
+        name: 'ai-schedules',
+        component: () => import('@/views/SchedulesView.vue'),
+      },
+      {
+        path: '/ai/usage',
+        name: 'ai-usage',
+        component: () => import('@/views/UsageView.vue'),
+      },
+      {
         path: '/:pathMatch(.*)*',
         name: 'not-found',
         component: NotFoundView,

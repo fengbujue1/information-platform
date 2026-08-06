@@ -77,6 +77,12 @@ function localDate(value: string | null): string {
         <RouterLink :to="snapshotsTarget" class="internal-link">
           查看历史快照
         </RouterLink>
+        <RouterLink
+          :to="{ path: '/ai/analyze', query: { informationId: job.id } }"
+          class="internal-link"
+        >
+          分析当前职位
+        </RouterLink>
       </div>
     </header>
 
