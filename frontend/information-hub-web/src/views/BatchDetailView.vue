@@ -46,7 +46,9 @@ const percentage = computed(() => {
     : Math.round((completedCount.value / total) * 100)
 })
 const isTerminal = computed(() =>
-  ['SUCCEEDED', 'FAILED', 'NOOP'].includes(batch.value?.status ?? ''),
+  ['COMPLETED', 'PARTIAL_FAILED', 'FAILED', 'NOOP'].includes(
+    batch.value?.status ?? '',
+  ),
 )
 
 async function load(): Promise<void> {

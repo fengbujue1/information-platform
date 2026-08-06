@@ -190,6 +190,6 @@ Preview 不创建 Invocation；Confirm 只传服务端签名的 `previewToken`�
 - [x] 当前 TASK 文档已更新
 - [x] `docs/CURRENT_STATUS.md` 已更新
 - [x] `git diff --check` 通过
-- [ ] 用户已检查 `git diff`
-- [ ] 用户确认测试结果
-- [ ] 用户完成 commit / push
+- [x] 用户已检查 `git diff`
+- [x] 用户确认测试结果
+- [x] 用户完成 commit / push

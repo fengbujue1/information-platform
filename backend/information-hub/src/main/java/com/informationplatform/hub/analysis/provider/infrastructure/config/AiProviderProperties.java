@@ -4,6 +4,7 @@ import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+/** OpenAI-compatible Provider 配置；地址、Key 和模型均以 Provider 官方资料为准。 */
 @Component
 @ConfigurationProperties(prefix = "information-hub.ai.provider")
 public class AiProviderProperties {
@@ -11,16 +12,16 @@ public class AiProviderProperties {
     /** 是否允许调用真实 Provider；默认关闭。 */
     private boolean enabled;
 
-    /** OpenAI-compatible API 基础地址。 */
+    /** OpenAI-compatible 基础地址；从官方文档获取，通常含 /v1，不含 /chat/completions。 */
     private String baseUrl = "";
 
-    /** 仅存在服务端内存中的 Provider API Key。 */
+    /** Provider 控制台创建的 API Key；仅存在服务端内存或部署 Secret。 */
     private String apiKey = "";
 
-    /** Provider 实际使用的模型名称。 */
+    /** Provider 官方模型列表中的 API 模型 ID，不是页面展示名称。 */
     private String model = "";
 
-    /** 连接和读取超时。 */
+    /** Provider HTTP 连接和读取超时；Spring Duration，示例 30s，必须为正。 */
     private Duration timeout = Duration.ofSeconds(30);
 
     /** Provider 配置允许的单次最大输出 Token，范围 1 至 1000。 */

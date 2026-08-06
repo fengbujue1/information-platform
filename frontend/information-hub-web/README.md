@@ -94,6 +94,24 @@ npm run build
 
 PowerShell 存在执行策略限制时，将命令中的 `npm` 和 `npx` 分别替换为 `npm.cmd` 和 `npx.cmd`。
 
+## Phase 3 全栈 E2E
+
+TASK-032 使用真实 Web、真实 Information Hub、专用 MySQL 测试库和本机 Fake Provider：
+
+```powershell
+npm.cmd run test:e2e:phase3
+```
+
+运行前需设置 `INFORMATION_HUB_E2E_DB_URL/USERNAME/PASSWORD`、
+`INFORMATION_HUB_E2E_USERNAME/PASSWORD`、`INFORMATION_HUB_E2E_COLLECTOR_TOKEN`
+和 `INFORMATION_HUB_E2E_PREVIEW_HMAC_SECRET`。数据库名称必须包含 `test` 或 `e2e`，
+且不得包含 `dev`；HMAC Secret 至少 32 个 UTF-8 字节。后端可执行 JAR 需先通过
+`backend/information-hub` 下的 `mvnw -DskipTests package` 构建。
+
+该命令只使用合成 JOB 和运行时随机 Fake Provider Key，覆盖登录、Prompt、单条分析、
+Preview、Item/Token Budget、Manual Batch、失败 Usage、Schedule 触发和用户 Usage；
+验收完成后临时 Schedule 会在 `finally` 中关闭。真实 Provider Key 只允许进入服务端环境变量，
+不得放入前端 `.env`、Git 或浏览器。
 ## 生产构建与受控部署
 
 本地只生成生产静态文件：

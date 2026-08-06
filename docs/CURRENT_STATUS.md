@@ -48,10 +48,11 @@ BOSS Collector
 - 默认关闭的单并发 Batch Worker；启用后使用 MySQL 短事务和 `SKIP LOCKED`，Provider HTTP 不持有事务。
 - 默认启用的 Schedule Dispatcher；每条 Schedule 默认关闭，启用后按用户 IANA 时区每日触发并复用现有 Batch Worker。
 - Phase 3 Web 的 Prompt、Analysis、Batch、Schedule、Usage 页面，以及按用户时区统计今日/月度/累计 Actual Token 的只读 API。
+- 真实 Web、Information Hub、MySQL 与本机 Fake Provider 的 Phase 3 全栈 E2E，覆盖 Prompt、Single、Preview、Batch、Budget、失败 Usage、Schedule 与用户 Usage。
 
 当前没有：
 
-- 真实 Provider 与完整 Phase 3 E2E 验收；该范围属于 TASK-032。
+- 小规模真实 Provider 受控验收；自动化 Fake Provider 全栈 E2E 已完成，真实 Provider 环境变量尚未配置。
 
 当前已经具备的 Phase 3 持久化基础：
 
@@ -95,13 +96,13 @@ JOB_USER_RELEVANCE_V1
 
 ## 当前任务
 
-TASK-032：真实模型、定时任务与 Phase 3 E2E 验收。
+TASK-032：真实模型、定时任务与 Phase 3 E2E 验收（进行中）。
 
-TASK-031 已完成冻结范围内的 Phase 3 Web，并补齐经确认的用户维度只读 Usage API。下一任务只应执行小规模真实 Provider 和完整 E2E 验收，不得扩大到推荐、通知或新基础设施。
+TASK-032 已完成本地 Fake Provider 全栈自动化、CI 工作流和 Batch 状态契约修复；仍需小规模真实 Provider 受控验收及提交后 GitHub CI。不得扩大到推荐、通知或新基础设施。
 
 ## 下一步执行顺序
 
-1. TASK-032：真实模型、定时任务与 Phase 3 E2E 验收。
+1. TASK-032：真实模型、定时任务与 Phase 3 E2E 验收（进行中）。
 
 任务编号不变；顺序调整是因为 Identity、Prompt 和 Analysis 的持久化依赖 TASK-024 的 Accepted 表结构。
 
@@ -110,7 +111,7 @@ TASK-031 已完成冻结范围内的 Phase 3 Web，并补齐经确认的用户�
 - Job Query/Web/E2E 已采用 Session 认证前置条件，后续测试必须继续使用认证夹具。
 - Provider timeout 可能已计费但结果未知，后续 Worker 不得自动盲重试。
 - Batch Worker 默认关闭；联调或部署必须同时启用 Worker 和 Provider，否则 Confirm 会拒绝创建有可执行 Item 的 Batch。
-- TASK-031 已通过 `127.0.0.1:13306` SSH 隧道完成 175 项完整 Maven 回归，0 失败、0 错误、1 个独立空库条件测试因未配置专用环境变量而跳过；Vue 23 个测试文件 78 项测试、typecheck 和 production build 全部通过。
+- TASK-032 已通过 `127.0.0.1:13306` SSH 隧道完成 175 项 Maven 回归（0 失败、0 错误、1 个空库条件测试跳过）、24 个文件 79 项 Vue 测试、6 项既有浏览器 E2E、1 项 Phase 3 全栈 E2E、typecheck 和 production build。
 - Schedule Dispatcher 默认启用，但每条 Schedule 默认关闭；实际产生 AI 调用还要求用户启用 Schedule，并正确配置 Batch Worker 和 Provider。
 - Provider API Key、Bootstrap 密码、Session Cookie 和 Collector Token 均不得进入 Git、前端或日志。
 - MySQL 8.4 当前会触发 Flyway“最新已测试版本为 8.1”的提示；TASK-024 真实 migration 与回归均成功，后续依赖维护任务再评估升级。

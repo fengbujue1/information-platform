@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "information-hub.ai.preview")
 public class AnalysisPreviewProperties {
 
-    /** 仅存在服务端内存中的 HMAC 秘密，至少 32 UTF-8 字节。 */
+    /** 自行随机生成的 HMAC 秘密；仅在服务端使用，至少 32 个 UTF-8 字节。 */
     private String hmacSecret = "";
 
     public String getHmacSecret() {

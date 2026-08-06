@@ -1,7 +1,8 @@
 export type AnalysisBatchStatus =
   | 'PENDING'
   | 'RUNNING'
-  | 'SUCCEEDED'
+  | 'COMPLETED'
+  | 'PARTIAL_FAILED'
   | 'FAILED'
   | 'NOOP'
 

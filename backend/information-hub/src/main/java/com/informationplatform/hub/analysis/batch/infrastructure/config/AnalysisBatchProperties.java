@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "information-hub.ai.batch")
 public class AnalysisBatchProperties {
 
-    /** 是否允许后台 Worker 领取 Batch Item；默认关闭以避免意外产生费用。 */
+    /** 是否允许 Worker 领取 Batch Item；部署管理员确认 Provider 完整后开启，默认关闭。 */
     private boolean workerEnabled;
 
     public boolean isWorkerEnabled() {

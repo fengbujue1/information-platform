@@ -24,7 +24,13 @@ try {
 
   const child = spawn(
     process.execPath,
-    [playwrightCli, 'test', ...process.argv.slice(2)],
+    [
+      playwrightCli,
+      'test',
+      'identity.spec.ts',
+      'jobs.spec.ts',
+      ...process.argv.slice(2),
+    ],
     {
       cwd: projectDirectory,
       env: process.env,

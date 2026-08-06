@@ -1,56 +1,92 @@
+# 应用内部名称：用于 Spring 日志、指标和上下文标识；由项目固定，不需要向外部申请。
 spring:
   application:
     name: information-hub
   datasource:
+    # MySQL JDBC 地址。格式：jdbc:mysql://主机:端口/库名?参数；地址、端口和库名由数据库管理员或 deploy 配置提供。
+    # 本地通过 SSH 隧道访问共享开发库示例：jdbc:mysql://127.0.0.1:13306/information_hub_dev?...。
     url: ${INFORMATION_HUB_DB_URL:jdbc:mysql://127.0.0.1:13306/information_hub_dev?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true&useUnicode=true&characterEncoding=UTF-8}
+    # 数据库登录用户名。由数据库管理员创建并授权；示例：information_hub_dev。
     username: ${INFORMATION_HUB_DB_USERNAME:information_hub_dev}
+    # 数据库密码。与上述账号配套，由数据库管理员或部署 Secret 提供；敏感，仓库不提供默认值。
     password: ${INFORMATION_HUB_DB_PASSWORD:}
   flyway:
+    # 是否在应用启动时执行数据库 Migration。格式：true/false；本地默认 false，部署或迁移验收时按运维方案显式开启。
     enabled: ${INFORMATION_HUB_FLYWAY_ENABLED:false}
+    # Migration 脚本的 classpath 目录；由项目结构固定，对应 src/main/resources/db/migration。
     locations: classpath:db/migration
+    # 执行 Migration 前校验已应用脚本；项目安全策略固定为 true。
     validate-on-migrate: true
+    # 禁止 Flyway clean 删除数据库对象；项目数据保护策略固定为 true。
     clean-disabled: true
 
 server:
   servlet:
     session:
       cookie:
+        # 禁止浏览器 JavaScript 读取 Session Cookie；安全策略固定为 true。
         http-only: true
+        # 同站请求携带 Cookie，降低 CSRF 风险；格式为 lax/strict/none，项目固定使用 lax。
         same-site: lax
+        # 是否只允许 HTTPS 传输 Session Cookie。格式：true/false；本地 HTTP 用 false，生产 HTTPS 必须设为 true。
         secure: ${INFORMATION_HUB_SESSION_COOKIE_SECURE:false}
+        # Session Cookie 对整个站点路径生效；同源 Web 与 API 共用，项目固定为 /。
         path: /
 
 information-hub:
   collector-api:
+    # Collector 写入接口的 Bearer Token。自行生成高强度随机值，并在 Collector 与后端配置相同值；敏感，不从第三方平台获取。
     token: ${INFORMATION_HUB_COLLECTOR_TOKEN:}
+    # 单次 Collector HTTP 请求体上限，单位字节。格式：正整数；默认 2097152，即 2 MiB。
     max-request-bytes: ${INFORMATION_HUB_COLLECTOR_MAX_REQUEST_BYTES:2097152}
   identity:
     bootstrap:
+      # 首次空账号库启动时创建的管理员登录名。由平台管理员自行确定；为空时不执行 Bootstrap。
       username: ${INFORMATION_HUB_BOOTSTRAP_USERNAME:}
+      # Bootstrap 账号初始明文密码。由管理员生成，只在启动内存中编码为摘要；敏感，不得写入 Git 或日志。
       password: ${INFORMATION_HUB_BOOTSTRAP_PASSWORD:}
+      # Bootstrap 账号在页面显示的名称。由管理员填写，可为空；示例：平台管理员。
       display-name: ${INFORMATION_HUB_BOOTSTRAP_DISPLAY_NAME:}
+      # Bootstrap 账号时区。格式：IANA Zone ID；从 IANA tz database 名称中选择，示例：Asia/Shanghai。
       timezone: ${INFORMATION_HUB_BOOTSTRAP_TIMEZONE:Asia/Shanghai}
   ai:
     batch:
-      worker-enabled: ${INFORMATION_HUB_AI_BATCH_WORKER_ENABLED:false}
+      # 是否允许后台 Worker 领取并执行 Batch Item。格式：true/false；默认关闭，启用前必须完成 Provider 配置。
+      worker-enabled: ${INFORMATION_HUB_AI_BATCH_WORKER_ENABLED:true}
+      # 应用启动后首次扫描 Batch 的等待时间。Spring Duration 格式；示例：200ms、3s、1m，默认 3s。
       worker-initial-delay: ${INFORMATION_HUB_AI_BATCH_WORKER_INITIAL_DELAY:3s}
+      # 上一轮 Worker 完成到下一轮开始的固定间隔。Spring Duration 格式；示例：1s，默认 1s。
       worker-fixed-delay: ${INFORMATION_HUB_AI_BATCH_WORKER_FIXED_DELAY:1s}
     schedule:
+      # 是否启用全局 Schedule Dispatcher。格式：true/false；默认 true，但每条新 Schedule 仍默认关闭。
       dispatcher-enabled: ${INFORMATION_HUB_AI_SCHEDULE_DISPATCHER_ENABLED:true}
+      # 应用启动后首次扫描到期 Schedule 的等待时间。Spring Duration 格式；默认 5s。
       dispatcher-initial-delay: ${INFORMATION_HUB_AI_SCHEDULE_DISPATCHER_INITIAL_DELAY:5s}
+      # 上一轮 Dispatcher 完成到下一轮开始的固定间隔。Spring Duration 格式；默认 30s。
       dispatcher-fixed-delay: ${INFORMATION_HUB_AI_SCHEDULE_DISPATCHER_FIXED_DELAY:30s}
+      # 计划点延迟后仍允许按原计划触发的宽限窗口。Spring Duration 格式；默认 5m，超过后按 misfire 规则处理。
       misfire-grace: ${INFORMATION_HUB_AI_SCHEDULE_MISFIRE_GRACE:5m}
+      # 单轮最多处理的到期 Schedule 数。格式：正整数；根据数据库容量和轮询频率调整，默认 100。
       max-schedules-per-poll: ${INFORMATION_HUB_AI_SCHEDULE_MAX_PER_POLL:100}
     preview:
+      # Preview Token 的 HmacSHA256 签名秘密。自行使用安全随机数生成，至少 32 个 UTF-8 字节；敏感，不是 Provider API Key。
       hmac-secret: ${INFORMATION_HUB_PREVIEW_HMAC_SECRET:}
     provider:
-      enabled: ${INFORMATION_HUB_AI_ENABLED:false}
+      # 是否允许后端调用真实 AI Provider。格式：true/false；默认关闭，其他 Provider 配置完整后再开启。
+      enabled: ${INFORMATION_HUB_AI_ENABLED:true}
+      # OpenAI-compatible API 基础地址，从 Provider 官方 API 文档获取；通常包含版本前缀 /v1，后端会追加 /chat/completions。
+      # 格式示例：https://provider.example.com/v1；不要填写前端控制台网址，也不要重复追加 /chat/completions。
       base-url: ${INFORMATION_HUB_AI_BASE_URL:}
+      # Provider API Key，从 Provider 官方控制台的 API Key/凭据页面创建；敏感，只能保存在服务端环境变量或部署 Secret。
       api-key: ${INFORMATION_HUB_AI_API_KEY:}
+      # Provider 模型 ID，从 Provider 官方模型列表获取，必须支持 OpenAI-compatible Chat Completions；示例：provider-model-id。
       model: ${INFORMATION_HUB_AI_MODEL:}
+      # 单次 Provider HTTP 连接和读取超时。Spring Duration 格式；示例：30s、1m，必须大于 0，默认 30s。
       timeout: ${INFORMATION_HUB_AI_TIMEOUT:30s}
+      # 单次请求允许的最大输出 Token。格式：1 至 1000 的整数；受 Phase 3 Definition 上限约束，默认 1000。
       max-output-tokens: ${INFORMATION_HUB_AI_MAX_OUTPUT_TOKENS:1000}
 
 mybatis-plus:
   configuration:
+    # 将数据库 snake_case 列名自动映射为 Java camelCase 字段；项目持久化命名约定固定为 true。
     map-underscore-to-camel-case: true

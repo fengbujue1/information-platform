@@ -8,16 +8,16 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "information-hub.identity.bootstrap")
 public class IdentityBootstrapProperties {
 
-    /** 初始登录名；为空时不执行 Bootstrap。 */
+    /** 初始登录名；由管理员确定，示例 admin；为空时不执行 Bootstrap。 */
     private String username = "";
 
-    /** 初始明文密码；只在启动时编码，禁止日志输出。 */
+    /** 初始明文密码；由管理员安全生成，只在启动时编码，禁止日志输出。 */
     private String password = "";
 
-    /** 初始页面显示名；允许为空。 */
+    /** 初始页面显示名；由管理员填写，示例“平台管理员”，允许为空。 */
     private String displayName = "";
 
-    /** 初始账号 IANA 时区。 */
+    /** 初始账号 IANA 时区；从 IANA tz database 选择，示例 Asia/Shanghai。 */
     private String timezone = "Asia/Shanghai";
 
     public String getUsername() {

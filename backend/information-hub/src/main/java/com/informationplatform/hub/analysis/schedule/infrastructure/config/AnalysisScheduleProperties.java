@@ -12,10 +12,10 @@ public class AnalysisScheduleProperties {
     /** 是否启用 Dispatcher；默认启用，但每条新 Schedule 仍默认关闭。 */
     private boolean dispatcherEnabled = true;
 
-    /** 允许延迟触发原计划点的最大时间，默认 5 分钟。 */
+    /** 延迟后仍允许按原计划点触发的宽限窗口；Spring Duration，默认 5 分钟。 */
     private Duration misfireGrace = Duration.ofMinutes(5);
 
-    /** 单次轮询最多处理的不同 Schedule 数量。 */
+    /** 单轮最多处理的到期 Schedule 数；根据数据库容量调整，默认 100。 */
     private int maxSchedulesPerPoll = 100;
 
     public boolean isDispatcherEnabled() {
