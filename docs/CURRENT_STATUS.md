@@ -1,60 +1,118 @@
 # 当前开发状态
 
-更新时间：2026-08-06
+更新时间：2026-08-07  
 当前分支：dev
 
 ## 当前阶段
 
-- Phase 1 已完成。
-- Phase 2 标准化职位 Web 浏览 MVP 已完成，并通过自动化浏览器测试和真实环境人工端到端验收。
-- Phase 3 的 Scope、Architecture、Data Model、Database Design、ADR 和 Contracts 已通过 TASK-020 审查并 Accepted。
-- TASK-024 已完成 Phase 3 V2 migration、8 张表、PO/Mapper 和真实 MySQL 验证。
-- TASK-021 已完成 Identity MVP：受控账号 Bootstrap、密码摘要、同源 Session、CSRF、Login / Logout / Me、Owner 上下文，以及 Job Query/Web/E2E 的认证适配。
-- TASK-022 已完成账号级 Prompt Profile、不可变 Prompt Version、Active Version 切换、Owner 隔离及对应 API。
-- TASK-023 已完成通用 Analysis Definition Registry、唯一的 `JOB_USER_RELEVANCE_V1`、Snapshot 输入投影、版本化平台 System Prompt / Output Schema 与严格输出校验。
-- TASK-025 已完成通用 AiProviderClient、OpenAI-compatible Adapter、统一 Usage/错误语义及 CI Fake Provider，真实 AI 默认 disabled。
-- TASK-026 已完成稳定 Prompt Assembly、版本化执行上下文、1 MiB 响应上限、单一 JSON 解析和 Definition Schema 后处理。
-- TASK-027 已完成单条 Information Analysis、逻辑身份幂等、Invocation attempt、Actual Usage、短事务执行和 Owner 隔离 API。
-- TASK-028 已完成通用 Candidate Resolver、JOB 最近 N 天候选解析、无 AI 调用 Preview、Token Estimate、候选指纹和 10 分钟 HMAC 确认令牌。
-- TASK-029 已完成 Manual Confirm、异步 Batch/Items、Budget Guard、串行 MySQL Worker、重启恢复、Actual Usage 聚合和 Owner 查询 API。
-- TASK-030 已完成每日 Analysis Schedule、Owner 配置 API、IANA/DST 计划点、due Dispatcher、Scheduled Batch 幂等、overlap/misfire NOOP 和配置 Preview。
-- TASK-031 已完成 Phase 3 Web：Prompt、单条 Analysis、Manual Preview/Confirm、Batch、Schedule、Analysis Result、用户 Usage 页面和职位详情 Analysis 入口。
+- Phase 0：已完成。
+- Phase 1：已完成。
+- Phase 2：已完成。
+- Phase 3：已完成。
+- Phase 4：未开始。
 
-## 当前真实可用链路
+## Phase 3 完成情况
+
+Phase 3：AI Processing Foundation & User Relevance MVP 已完成。
+
+已完成能力：
+
+- Phase 3 Scope / Architecture / Data Model / Database Design / ADR / Contracts；
+- Identity MVP；
+- Session / CSRF / Owner 隔离；
+- Prompt Profile / immutable Prompt Version；
+- Analysis Definition Registry；
+- JOB User Relevance Definition；
+- Snapshot Input Projection；
+- 平台 System Prompt / Output Schema；
+- OpenAI-compatible Provider；
+- Provider Usage；
+- Prompt Assembly；
+- strict structured output validation；
+- Single Information Analysis；
+- Invocation attempt / Actual Usage；
+- Candidate Resolver；
+- 最近 N 天 Preview；
+- Token Estimate；
+- HMAC Preview Confirm Token；
+- Manual Batch；
+- Budget Guard；
+- MySQL Worker；
+- Daily Schedule；
+- Schedule Dispatcher；
+- Phase 3 Web；
+- 用户 Actual Token Usage；
+- Fake Provider Full-stack E2E；
+- 真实 Provider 受控联调；
+- Phase 3 文档收尾。
+
+## 当前完整业务链
 
 ```text
 BOSS Collector
-→ 列表与详情合并
 → InformationEnvelope V1
 → Information Hub
-→ MySQL 当前版本与历史快照
-→ Job Query API V1
-→ Information Hub Web
+→ MySQL Current + Snapshot
+→ Job Query API
+→ Web
+
+User
+→ Login / Session / CSRF
+→ Prompt Profile / Version
+→ Snapshot
+→ Analysis / Preview
+→ Manual or Scheduled Batch
+→ AI Provider
+→ Structured Analysis Result
+→ Model Invocation Actual Usage
+→ Web
 ```
 
-当前已有：
+## Analysis Definition 当前版本
 
-- Spring Security 用户登录、登出和当前用户接口；
-- 受控 Bootstrap 与安全密码摘要；
-- 同源 Session、CSRF 和 Owner 上下文；
-- 需要 Session 的 Job Query API 与 Web 登录入口；
-- 保持独立 Bearer Token 语义的 Collector 接口。
-- 需要 Session + CSRF 的 Prompt Profile / Version API。
-- 默认禁用的 OpenAI-compatible Provider 基础、统一 Usage Adapter 和无网络 Fake Provider。
-- 平台 System Prompt / Schema、User Prompt Version 与 Snapshot Input 的安全组装及严格结构化输出处理。
-- 绑定不可变 Snapshot 与 Prompt Version 的单条 Analysis 执行及 Owner 查询 API。
-- 需要 Session + CSRF 的 Analysis Batch Preview API，可返回候选规模、已分析/待分析计数、Token Estimate 汇总和短期确认令牌。
-- 需要 Session + CSRF 的 Manual Batch Confirm API，以及 Batch list/detail/progress API。
-- 默认关闭的单并发 Batch Worker；启用后使用 MySQL 短事务和 `SKIP LOCKED`，Provider HTTP 不持有事务。
-- 默认启用的 Schedule Dispatcher；每条 Schedule 默认关闭，启用后按用户 IANA 时区每日触发并复用现有 Batch Worker。
-- Phase 3 Web 的 Prompt、Analysis、Batch、Schedule、Usage 页面，以及按用户时区统计今日/月度/累计 Actual Token 的只读 API。
-- 真实 Web、Information Hub、MySQL 与本机 Fake Provider 的 Phase 3 全栈 E2E，覆盖 Prompt、Single、Preview、Batch、Budget、失败 Usage、Schedule 与用户 Usage。
+历史 V1：
 
-当前没有：
+```text
+analysisDefinitionKey = JOB_USER_RELEVANCE
+analysisDefinitionVersion = 1
+maxOutputTokens = 1000
+```
 
-- 小规模真实 Provider 受控验收；自动化 Fake Provider 全栈 E2E 已完成，真实 Provider 环境变量尚未配置。
+当前 V2：
 
-当前已经具备的 Phase 3 持久化基础：
+```text
+analysisDefinitionKey = JOB_USER_RELEVANCE
+analysisDefinitionVersion = 2
+maxOutputTokens = 5000
+```
+
+V1 保持不可变。
+
+V2 继续复用 V1：
+
+- Input Projection；
+- System Prompt Version 1；
+- Output Schema Version 1；
+- Validator；
+- Source Content Boundary。
+
+新的 Analysis 使用 Registry 当前最高版本 V2。
+
+## 安全与运行边界
+
+- Provider 默认关闭；
+- Batch Worker 默认关闭；
+- Schedule 默认关闭；
+- API Key 只来自服务端；
+- Actual Token 只来自 Provider Usage；
+- Provider HTTP 在数据库事务之外；
+- timeout / ambiguous failure 不自动盲重试；
+- Preview 不持久化；
+- Collector Bearer Token 与用户 Session 分离；
+- rawPayload 不默认进入模型；
+- AI 结果不覆盖来源事实。
+
+## Phase 3 持久化表
 
 ```text
 user_account
@@ -67,52 +125,25 @@ ai_analysis_batch_item
 ai_model_invocation
 ```
 
-其中 `user_account` 已由 Identity MVP 使用，`ai_prompt_profile` / `ai_prompt_version`
-已由 TASK-022 业务 API 使用；`information_analysis` / `ai_model_invocation` 已由 TASK-027 使用；Batch 表已由 TASK-029 使用，Schedule 表已由 TASK-030 暴露业务能力。
-
-## 已冻结的 Phase 3 目标
-
-```text
-通用 Information AI Core
-+
-JOB_USER_RELEVANCE_V1
-```
-
-关键决策：
-
-- JOB 只是 Information 的一种类型，Phase 3 只真实实现 JOB；
-- Prompt 跟账号走并版本化，System Prompt/Schema 由平台控制；
-- Analysis 绑定 `information_snapshot.id`；
-- FIRST_INGESTED 使用 `information_item.first_seen_time`；
-- Actual Token 只能来自 `ai_model_invocation` 的 Provider Usage；
-- Manual/Schedule 共用 Batch Engine；
-- Preview 使用 10 分钟 HMAC token，不建 Preview 表；
-- 第一版使用内存 Session，不建 Spring Session JDBC 表；
-- Job Query API 在 Identity MVP 后要求 Session，Collector Bearer Token 保持独立；
-- Worker/Scheduler 使用 Spring + MySQL 短事务方案；
-- Schedule 默认关闭、默认用户本地 02:00；
-- 不引入 Kafka、Redis、Elasticsearch、Vector DB、RAG、Agent、微服务；
-- 不实现推荐和通知。
-
 ## 当前任务
 
-TASK-032：真实模型、定时任务与 Phase 3 E2E 验收（进行中）。
+无正在实施的 Phase 3 TASK。
 
-TASK-032 已完成本地 Fake Provider 全栈自动化、CI 工作流和 Batch 状态契约修复；仍需小规模真实 Provider 受控验收及提交后 GitHub CI。不得扩大到推荐、通知或新基础设施。
+Phase 3 已归档。后续仅接受缺陷修复、安全修复、依赖维护和运行参数维护，不再在 Phase 3 范围继续增加新功能。
 
-## 下一步执行顺序
+## CI
 
-1. TASK-032：真实模型、定时任务与 Phase 3 E2E 验收（进行中）。
+CI 后续作为独立工程维护事项处理，不作为本次 Phase 3 阶段关闭的阻塞条件。
 
-任务编号不变；顺序调整是因为 Identity、Prompt 和 Analysis 的持久化依赖 TASK-024 的 Accepted 表结构。
+## 下一步
 
-## 当前风险
+Phase 4 尚未开始。
 
-- Job Query/Web/E2E 已采用 Session 认证前置条件，后续测试必须继续使用认证夹具。
-- Provider timeout 可能已计费但结果未知，后续 Worker 不得自动盲重试。
-- Batch Worker 默认关闭；联调或部署必须同时启用 Worker 和 Provider，否则 Confirm 会拒绝创建有可执行 Item 的 Batch。
-- TASK-032 已通过 `127.0.0.1:13306` SSH 隧道完成 175 项 Maven 回归（0 失败、0 错误、1 个空库条件测试跳过）、24 个文件 79 项 Vue 测试、6 项既有浏览器 E2E、1 项 Phase 3 全栈 E2E、typecheck 和 production build。
-- Schedule Dispatcher 默认启用，但每条 Schedule 默认关闭；实际产生 AI 调用还要求用户启用 Schedule，并正确配置 Batch Worker 和 Provider。
-- Provider API Key、Bootstrap 密码、Session Cookie 和 Collector Token 均不得进入 Git、前端或日志。
-- MySQL 8.4 当前会触发 Flyway“最新已测试版本为 8.1”的提示；TASK-024 真实 migration 与回归均成功，后续依赖维护任务再评估升级。
-- 数据库测试环境变量必须指向名称包含 `test` 且不包含 `dev` 的库；测试代码已强制校验，避免误迁移开发库。
+进入 Phase 4 前必须先：
+
+1. 复盘 Phase 3 真实使用数据；
+2. 明确推荐与用户画像范围；
+3. 创建 Phase 4 Scope；
+4. 创建对应 ADR / Contract；
+5. 拆分 TASK；
+6. 用户确认后再实施。

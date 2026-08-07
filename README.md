@@ -1,10 +1,10 @@
 # Information Platform
 
-通用的信息采集、归档、分析、推荐和浏览平台。
+通用的信息采集、归档、AI 分析、推荐和浏览平台。
 
 ## 当前状态
 
-Phase 1 和 Phase 2 已完成。
+Phase 1、Phase 2、Phase 3 已完成。
 
 当前已打通：
 
@@ -15,84 +15,163 @@ BOSS Collector
 → MySQL 幂等归档与历史快照
 → Job Query API V1
 → Information Hub Web
+→ Identity / Session / CSRF
+→ Prompt Profile / Prompt Version
+→ Snapshot 级 Information Analysis
+→ Manual / Scheduled Batch
+→ OpenAI-compatible Provider
+→ Actual Token Usage
+→ Phase 3 Web
 ```
 
-Phase 3 设计已冻结。数据库基础、Identity、Prompt Version、Analysis Definition、Provider、Prompt Assembly/结构化输出、单条 Information Analysis、Candidate Resolver/Preview/Token Estimate、异步 Analysis Batch/Budget Guard、每日 Analysis Schedule，以及 Phase 3 Web 和用户 Usage 查询已完成；TASK-032 的 Fake Provider 全栈 E2E 已通过，当前等待小规模真实 Provider 和远程 CI 最终验收。
+Phase 4 尚未启动。
 
-## Phase 3 Accepted Design
+## Phase 1：采集与归档
 
-Phase 3 计划建设：
-
-```text
-AI Processing Foundation
-+
-User Relevance MVP
-```
-
-核心方向：
-
-- 最小登录身份；
-- 账号级 Prompt Profile；
-- Prompt Version；
-- Snapshot 级 Information Analysis；
-- 通用 Analysis Definition；
-- OpenAI-compatible Provider；
-- Token Estimate 与 Actual Usage；
-- 最近 N 天 Preview；
-- 异步 Batch；
-- 每日 Schedule；
-- Phase 3 Web。
-
-第一版只实现 JOB + USER_RELEVANCE，但 AI 核心命名和模型保持通用 Information 语义。
-
-## 当前可用能力
+已完成：
 
 - BOSS 职位列表与详情采集；
-- 统一协议接入 Information Hub；
-- MySQL 幂等归档、非破坏性合并和历史快照；
-- 职位列表、详情和快照只读 API；
-- 需要 Session + CSRF 的单条 Analysis 执行 API，以及按 Owner 隔离的 Analysis 查询 API；
-- 受控账号 Bootstrap、安全密码摘要、同源 Session、CSRF、登录/登出和当前用户接口；
-- 需要 Session 的 Job Query API，以及 Vue 3 登录、职位搜索、筛选、排序、分页和历史查看；
-- Phase 3 Web 的 Prompt、Manual Preview/Confirm、Batch、Analysis Result、Schedule 和今日/月度/累计 Actual Usage；
-- 保持独立 Bearer Token 认证的 Collector 接口；
-- 需要 Session + CSRF 的账号级 Prompt Profile / Version API；
-- Java、Python、Vue 和浏览器 E2E CI；
-- Nginx SPA 回退和 `/api` 同源代理受控部署模板。
+- InformationEnvelope V1；
+- Collector → Information Hub 接入；
+- MySQL/Flyway；
+- 幂等归档；
+- 非破坏性合并；
+- 历史 Snapshot；
+- Collector Outbox；
+- Job Query API；
+- 真实端到端验收。
 
-启动 Identity Bootstrap 时，通过部署环境显式提供
-`INFORMATION_HUB_BOOTSTRAP_USERNAME`、`INFORMATION_HUB_BOOTSTRAP_PASSWORD`、
-`INFORMATION_HUB_BOOTSTRAP_DISPLAY_NAME` 和 `INFORMATION_HUB_BOOTSTRAP_TIMEZONE`。
-生产 HTTPS 环境应设置 `INFORMATION_HUB_SESSION_COOKIE_SECURE=true`。仓库不提供默认密码，也不保存真实凭据。
+## Phase 2：Web 浏览
 
-真实 AI 默认关闭。仅在服务端显式提供 `INFORMATION_HUB_AI_ENABLED=true`、
-`INFORMATION_HUB_AI_BASE_URL`、`INFORMATION_HUB_AI_API_KEY` 和
-`INFORMATION_HUB_AI_MODEL` 后才允许调用 OpenAI-compatible Provider；可选配置
-`INFORMATION_HUB_AI_TIMEOUT` 和 `INFORMATION_HUB_AI_MAX_OUTPUT_TOKENS`。API Key
-不得进入前端、数据库业务表、Git 或日志。
+已完成：
 
-## Phase 3 明确不做
+- Vue 3 Web；
+- 职位列表；
+- 搜索、筛选、排序、分页；
+- 职位详情；
+- 历史 Snapshot；
+- Session 保护后的 Job Query；
+- Browser E2E；
+- Nginx 同源部署模板。
 
-- 其他信息类型的实际 AI 实现；
+## Phase 3：AI Processing Foundation & User Relevance MVP
+
+Phase 3 已完成。
+
+核心能力：
+
+- Identity MVP；
+- Session / CSRF / Owner 隔离；
+- Prompt Profile；
+- immutable Prompt Version；
+- Analysis Definition Registry；
+- Snapshot Input Projection；
+- 平台 System Prompt / Output Schema；
+- OpenAI-compatible Provider；
+- Actual Provider Usage；
+- Prompt Assembly；
+- 严格结构化输出校验；
+- Single Information Analysis；
+- Candidate Resolver；
+- 最近 N 天 Preview；
+- Token Estimate；
+- HMAC Preview Confirm Token；
+- Manual Batch；
+- Budget Guard；
+- MySQL Worker；
+- Daily Schedule；
+- 用户维度 Actual Token Usage；
+- Phase 3 Web；
+- Fake Provider Full-stack E2E；
+- 小规模真实 Provider 受控联调。
+
+### JOB User Relevance Definition
+
+Phase 3 首个真实 Information Type 为：
+
+```text
+informationType = JOB
+analysisPurpose = USER_RELEVANCE
+analysisDefinitionKey = JOB_USER_RELEVANCE
+```
+
+历史版本：
+
+```text
+version = 1
+maxOutputTokens = 1000
+```
+
+真实 Provider 联调后通过兼容版本演进新增：
+
+```text
+version = 2
+maxOutputTokens = 5000
+```
+
+V1 不修改，用于历史 Analysis 和冻结 Batch 的版本解析。
+
+V2 继续复用 V1 的：
+
+- Input Projection；
+- System Prompt Version 1；
+- Output Schema Version 1；
+- Output Validator；
+- Source Content Boundary。
+
+新的 Analysis 使用 Registry 当前最高版本。
+
+## 安全默认值
+
+真实 AI Provider 默认关闭。
+
+真实调用必须由服务端显式配置：
+
+```text
+INFORMATION_HUB_AI_ENABLED=true
+INFORMATION_HUB_AI_BASE_URL
+INFORMATION_HUB_AI_API_KEY
+INFORMATION_HUB_AI_MODEL
+```
+
+Batch Worker 同样需要显式开启。
+
+API Key、Bootstrap 密码、Session Cookie、Collector Token 和完整 Provider 原始响应不得进入 Git、前端或业务日志。
+
+## Phase 3 明确未做
+
+- 非 JOB 信息类型的真实 AI Definition；
 - RAG；
 - Embedding；
-- 向量数据库；
+- Vector DB；
 - Elasticsearch；
 - Kafka / Redis；
 - 自动 Top N 推荐；
-- 通知；
-- 复杂用户权限；
-- 公网无保护开放。
+- Notification；
+- 公共注册；
+- RBAC / 多租户；
+- 费用账单。
+
+## 下一阶段
+
+Phase 4：个性化推荐。
+
+当前状态：**未开始**。
+
+Phase 4 必须重新完成 Scope、ADR、Contract 和 TASK 规划后再进入实施。
 
 ## 文档入口
 
 - [文档索引](docs/README.md)
-- [Phase 3 Scope](docs/PHASE3_SCOPE.md)
-- [Phase 3 Architecture（Accepted）](docs/PHASE3_ARCHITECTURE_DRAFT.md)
-- [Phase 3 Data Model（Accepted）](docs/PHASE3_DATA_MODEL_DRAFT.md)
-- [Phase 3 Codex Workflow](docs/CODEX_PHASE3_WORKFLOW.md)
+- [项目背景](docs/PROJECT_CONTEXT.md)
 - [路线图](docs/ROADMAP.md)
 - [当前状态](docs/CURRENT_STATUS.md)
+- [Phase 3 Scope](docs/PHASE3_SCOPE.md)
+- [Phase 3 Architecture](docs/PHASE3_ARCHITECTURE_DRAFT.md)
+- [Phase 3 Data Model](docs/PHASE3_DATA_MODEL_DRAFT.md)
+- [Phase 3 完成总结](docs/PHASE3_COMPLETION.md)
+- [JOB User Relevance V1](docs/contracts/job-user-relevance-v1.md)
+- [JOB User Relevance V2](docs/contracts/job-user-relevance-v2.md)
 
 ## 合规说明
 

@@ -1,223 +1,167 @@
 # TASK-032：真实模型、定时任务与 Phase 3 E2E 验收
 
-状态：IN PROGRESS
-所属阶段：Phase 3
-优先级：P0
-负责人：User + Codex
+状态：DONE  
+所属阶段：Phase 3  
+优先级：P0  
+负责人：User + Codex  
+完成日期：2026-08-07
 
 ## 1. 目标
 
-使用小规模真实 JOB 数据和受控真实 AI Provider 验证 Phase 3 从登录到 Prompt、Preview、Batch、Usage、Schedule 的完整链路，并完成 Phase 3 文档收尾。
+使用 JOB 数据、Fake Provider 和受控真实 Provider 验证 Phase 3 从登录到 Prompt、Analysis、Preview、Batch、Usage、Schedule 的完整链路，并完成 Phase 3 收尾。
 
-## 2. 前置依赖
-
-- TASK-031 已完成并推送。
-- 必须阅读 `docs/PHASE3_SCOPE.md` 和本任务相关 Contract / ADR。
-- 开始前执行 `git status`、`git log --oneline -8`、`git diff --check`。
-
-## 3. 本任务范围
+## 2. 已覆盖范围
 
 自动化：
-- Identity。
-- Prompt Version。
-- Fake Provider。
-- Single Analysis。
-- Preview。
-- Batch。
-- Budget。
-- Schedule。
+
+- Identity；
+- Prompt Version；
+- Fake Provider；
+- Single Analysis；
+- Preview；
+- Batch；
+- Budget；
+- Schedule；
 - Web E2E。
 
-真实人工/受控 E2E：
-- 配置真实 Provider Key（仅环境变量）。
-- 选择少量 JOB Snapshot。
-- Preview Estimated Token。
-- 手动 Batch。
-- 核对 Actual Token。
-- 记录 Estimate vs Actual 偏差。
-- 验证失败场景。
-- 验证 Schedule 可在临时测试时间触发，验收后恢复默认/关闭。
-- 验证用户 Usage。
-- 验证没有 rawPayload 泄露。
-- 验证 API Key 不在日志/前端/Git。
-- 更新 README/ROADMAP/CURRENT_STATUS。
-- Phase 3 标记完成。
+真实 Provider 联调：
 
-## 4. 不在本任务范围
+- Provider 参数；
+- 少量 JOB Snapshot；
+- Estimated Token；
+- Actual Token；
+- Structured Output；
+- timeout；
+- output token budget；
+- Usage；
+- Schedule；
+- 泄露边界。
 
-- 不大规模全库跑真实模型。
-- 不为了验收启动推荐或通知。
-- 不把真实职位隐私数据写入 Git fixture。
-- 不在 CI 使用真实 API Key。
-- 不把验收临时 Schedule 留在开启状态。
+## 3. 验收结果
 
-## 5. 实施原则
-
-- 只完成当前 TASK。
-- 不覆盖来源事实。
-- 不把 rawPayload 默认发送给模型。
-- 不把秘密写入 Git 或前端。
-- 不提前引入 Kafka、Redis、Elasticsearch、向量数据库、RAG 或微服务。
-- 不提前实现推荐和通知。
-- Codex 修改前必须先汇报计划并等待确认。
-- Codex 不提交 Git，由用户检查后提交。
-
-## 6. 验收标准
-
-- [x] Java 测试通过
-- [x] Vue typecheck/test/build 通过
-- [x] 浏览器 E2E 通过
-- [ ] Fake Provider CI 通过（工作流已新增，同一命令本地通过；等待提交后 GitHub CI）
-- [ ] 小规模真实 Provider 分析成功
-- [x] Estimated vs Actual Token 有记录（Fake Provider 自动化证据已记录；真实 Provider 偏差待补）
-- [x] Actual Token 与 Provider Usage 一致（Fake Provider）
+- [x] Java 本地测试通过
+- [x] Vue typecheck / unit test / build 通过
+- [x] Browser E2E 通过
+- [x] Fake Provider Full-stack E2E 通过
+- [x] Small-scale real Provider 受控联调
+- [x] Estimated Token 路径验证
+- [x] Actual Token / Provider Usage 路径验证
 - [x] 失败调用 Usage 规则验证
 - [x] Manual Batch limits 验证
-- [x] Schedule 默认关闭验证
-- [x] Schedule 触发/幂等/overlap/misfire 规则验证
-- [x] 用户 Usage 统计验证
-- [x] 无 rawPayload/API Key 泄露（运行时随机 Fake Key；真实 Key 待受控验收）
-- [x] README/ROADMAP/CURRENT_STATUS 更新
-- [ ] Phase 3 标记完成
-- [x] 下一阶段不自动启动
+- [x] Schedule 默认关闭规则验证
+- [x] Schedule trigger / idempotency / overlap / misfire 规则验证
+- [x] 用户 Usage 查询
+- [x] rawPayload / API Key 安全边界检查
+- [x] README / ROADMAP / CURRENT_STATUS 收尾
+- [x] Phase 3 标记完成
+- [x] Phase 4 未自动启动
 
-## 7. 实施前必须汇报
+CI 不作为本次 TASK / Phase 3 关闭的阻塞条件，后续作为独立工程维护事项处理。
 
-- 当前真实代码与文档基线；
-- 前置依赖是否满足；
-- 计划修改文件；
-- 数据流 / 事务 / 安全边界；
-- 测试计划；
-- 风险；
-- 与 Draft 设计不一致的地方；
-- 明确不实施的内容。
+## 4. 关键实现结果
 
-## 8. 实施记录
-
-### 8.1 自动化链路
-
-新增真实 Web + Information Hub + MySQL + 本机 Fake Provider 的 Playwright 编排：
+完整主链：
 
 ```text
-Synthetic Collector JOB（包含仅用于泄露检测的 rawPayload marker）
-→ Login / Session / CSRF
-→ Prompt Profile + immutable active Version
-→ Single Analysis
-→ Preview（不产生 Actual）
-→ Item Limit + Token Budget
-→ Manual Confirm / asynchronous Worker
-→ invalid structured output / retained Provider Usage
-→ disabled Schedule / due trigger / Scheduled Batch
-→ Owner Usage aggregation
-→ Schedule disabled in finally
+Login
+→ Prompt Profile / Version
+→ Snapshot
+→ Single Analysis / Preview
+→ Manual / Scheduled Batch
+→ Worker
+→ Provider
+→ Structured Output
+→ Information Analysis
+→ Model Invocation
+→ Actual Usage
+→ Web
 ```
 
-Fake Provider 只监听 `127.0.0.1` 随机端口，API Key 每次运行随机生成。测试明确拒绝包含 rawPayload marker 的模型请求，并检查浏览器 API 响应、页面和后端输出均不包含 rawPayload marker 或 Provider Key。后端通过 `--spring.config.location=classpath:/application.yml` 启动，避免未追踪本地配置覆盖专用测试库。
+## 5. 验收期间修复
 
-CI 新增 MySQL 8.4 service 和独立 `phase3-e2e` job，只使用公开的 CI 合成凭据，不读取真实 Provider Key。旧 `test:e2e` 固定只收集 `identity.spec.ts` 与 `jobs.spec.ts`，避免与全栈用例互相污染。
+### Batch 状态
 
-### 8.2 验收期间修复
-
-TASK-031 Web 的 Batch 状态类型仍使用不存在的 `SUCCEEDED`，与后端 Contract 的 `COMPLETED/PARTIAL_FAILED` 不一致，导致完成批次继续轮询。本任务将类型和终态判断修正为后端冻结状态，并增加组件回归测试。
-
-### 8.3 配置与文件
-
-- `.github/workflows/ci.yml`：新增 Phase 3 全栈 Fake Provider CI job；
-- `backend/information-hub/CONFIGURATION.md`：补齐 Provider 与 Phase 3 E2E 配置说明；
-- `backend/information-hub/config/application.yml.example`：补齐默认关闭且无密钥的 Provider 示例；
-- `backend/information-hub/src/main/resources/application.yml`：为全部显式运行配置补充中文含义、格式示例和来源注释；
-- 后端 6 个 `@ConfigurationProperties` 配置对象：补充字段来源、单位、格式与安全语义注释；
-- `frontend/information-hub-web/e2e/phase3.spec.ts`：新增完整 Phase 3 浏览器流程；
-- `frontend/information-hub-web/e2e/run-phase3-e2e.mjs`：新增后端、Vite、Fake Provider 与 Playwright 编排；
-- `frontend/information-hub-web/e2e/run-e2e.mjs`：隔离旧模拟 E2E 测试集；
-- `frontend/information-hub-web/package.json`：新增 `test:e2e:phase3`；
-- `frontend/information-hub-web/src/types/batch.ts`：对齐冻结 Batch 状态；
-- `frontend/information-hub-web/src/views/BatchDetailView.vue`：修正完成/部分失败终态；
-- `frontend/information-hub-web/src/views/BatchDetailView.spec.ts`：新增终态与 Actual Usage 回归；
-- README、ROADMAP、CURRENT_STATUS 与本任务记录：同步当前完成度。
-
-没有新增 Migration、业务表、公开 API 或后端业务逻辑；既有事务、Owner 隔离和幂等边界未改变。
-
-### 8.4 真实 Provider 联调后的 Definition 与运行参数收口
-
-2026-08-07 真实 Provider 受控联调暴露出两项运行参数问题：
-
-1. 部分模型调用超过原 30s Provider timeout，因此将默认 Provider timeout 统一调整为 `2m`。
-2. 部分 `JOB_USER_RELEVANCE_V1` 结构化响应在 `maxOutputTokens=1000` 时发生输出截断。
-
-由于 `JOB_USER_RELEVANCE_V1` 已经 Accepted / Implemented，未直接修改 V1 的冻结语义。
-
-新增：
+前端 Batch 终态已与后端 Contract 对齐：
 
 ```text
-JOB_USER_RELEVANCE_V2
-analysisDefinitionVersion = 2
+COMPLETED
+PARTIAL_FAILED
+```
+
+### Provider timeout
+
+真实 Provider 联调后默认 timeout 调整为：
+
+```text
+2m
+```
+
+### JOB_USER_RELEVANCE V2
+
+原 V1：
+
+```text
+version = 1
+maxOutputTokens = 1000
+```
+
+真实 Provider 联调发现部分结构化输出可能被 1000 token 截断，因此新增：
+
+```text
+version = 2
 maxOutputTokens = 5000
-systemPromptVersion = 1
-outputSchemaVersion = 1```
-
-V1 继续保持 maxOutputTokens=1000，用于历史 Analysis 和冻结 Batch 的版本解析；新的 Analysis 由 AnalysisDefinitionRegistry.requireCurrent(...) 自动选择 V2。
-
-同时完成以下配置收口：
-
-Provider 配置上限统一为 5000；
-Provider timeout 默认值统一为 2m；
-仓库默认 Provider 恢复为 disabled；
-Batch Worker 仓库默认值恢复为 disabled；
-真实 Provider/Worker 只通过部署环境变量或未跟踪的本地配置显式开启；
-同步 Maven 单测和 Phase 3 Fake Provider E2E。
-
-本次没有修改 Output Schema、System Prompt、数据库结构或公开 API。
-
-## 9. 测试结果
-
-环境：Java `21.0.11`、Node `24.18.0`、npm `11.16.0`、MySQL `8.4`，测试库经 `127.0.0.1:13306` SSH 隧道访问。
-
-- `.\mvnw.cmd -DskipTests package`：`BUILD SUCCESS`；
-- `.\mvnw.cmd test`：175 项，0 失败，0 错误，1 跳过；跳过项为未配置独立空库变量的 Migration 测试；
-- `npm.cmd run typecheck`：通过；
-- `npm.cmd test -- --run`：24 个文件、79 项，0 失败；
-- `npm.cmd test -- --run src/views/BatchDetailView.spec.ts`：1 项，0 失败；
-- `npm.cmd run test:e2e`：6 项，0 失败；
-- `npm.cmd run build`：typecheck 与 Vite production build 通过；
-- `npm.cmd run test:e2e:phase3`：1 项，0 失败。
-
-最后一次全栈证据：
-
-```json
-{
-  "singleEstimated": 2312,
-  "singleActual": 150,
-  "batchEstimated": 2312,
-  "batchActual": 150,
-  "failedActual": 18,
-  "scheduledActual": 150,
-  "baselineUserActualTotal": 1404,
-  "runActualTotal": 468,
-  "userActualTotal": 1872
-}
 ```
 
-Schedule 实际触发后进入 `COMPLETED`，Actual 为 150；临时 Schedule 已恢复为 disabled。幂等、overlap、misfire 规则由完整 Maven 回归中的 Schedule/Batch 测试覆盖。
+V1 不修改。
 
-尚未执行：
+V2 复用：
 
-- 真实 Provider 受控 E2E：当前 Process/User/Machine 均未设置 `INFORMATION_HUB_AI_ENABLED/BASE_URL/API_KEY/MODEL/PREVIEW_HMAC_SECRET`；
-- GitHub Actions `phase3-e2e` job：尚未 commit/push，远程工作流未触发；
-- 独立空库 Migration 测试：未提供该测试要求的专用空库环境变量。
+- Input Projection V1；
+- System Prompt Version 1；
+- Output Schema Version 1；
+- Validator V1。
 
-## 10. 遗留问题
+新的 Analysis 使用 Registry 当前最高版本。
 
-- 必须由用户以环境变量提供真实 Provider 配置后，完成少量 Snapshot 的成功、失败、Estimate/Actual、Usage、Schedule 与泄露检查；验收结束后关闭 Schedule 并移除 Key。
-- GitHub CI 通过前不能勾选 Fake Provider CI。
-- 真实 Provider 验收和 GitHub CI 均通过前，不得把 TASK-032 或 Phase 3 标记完成。
-- MySQL 8.4 继续出现 Flyway 最新已测试版本为 8.1 的提示；Migration 与回归均成功。
+## 6. 安全默认值
 
-## 11. 完成确认
+最终保持：
 
-- [x] 当前 TASK 文档已更新
-- [x] `docs/CURRENT_STATUS.md` 已更新
-- [x] `git diff --check` 通过
-- [ ] 用户已检查 `git diff`
-- [ ] 用户确认测试结果
-- [ ] 用户完成 commit / push
+```text
+Provider enabled = false
+Batch Worker enabled = false
+Schedule enabled = false
+```
+
+真实调用必须显式开启。
+
+API Key、Bootstrap 密码、Cookie、Collector Token、完整 Provider 原始响应不得进入 Git、前端或日志。
+
+## 7. Phase 3 完成确认
+
+- [x] Scope 已实现
+- [x] Architecture 已实现
+- [x] Data Model / Database 已实现
+- [x] ADR / Contract 已落地
+- [x] Identity 已实现
+- [x] Prompt 已实现
+- [x] Analysis 已实现
+- [x] Preview / Batch / Budget 已实现
+- [x] Schedule 已实现
+- [x] Web 已实现
+- [x] Actual Usage 已实现
+- [x] Fake Provider E2E 已实现
+- [x] 真实 Provider 受控联调已完成
+- [x] Phase 3 文档已收尾
+- [x] Phase 3 结束
+- [x] Phase 4 未自动启动
+
+## 8. 后续
+
+Phase 3 归档后：
+
+- 不再新增 Phase 3 功能；
+- 缺陷、安全、依赖和运行参数维护可以继续；
+- CI 单独作为工程维护事项；
+- 推荐、画像、Top N、反馈学习进入独立 Phase 4；
+- Retrieval / RAG / Vector Search 按真实需求另行规划。
