@@ -75,7 +75,7 @@ public class AiProviderProperties {
     }
 
     public void setMaxOutputTokens(int maxOutputTokens) {
-        if (maxOutputTokens <= 0 || maxOutputTokens > 1000) {
+        if (maxOutputTokens <= 0 || maxOutputTokens > 5000) {
             throw new IllegalArgumentException(
                     "AI Provider maxOutputTokens must be between 1 and 1000");
         }
