@@ -52,7 +52,7 @@ information-hub:
   ai:
     batch:
       # 是否允许后台 Worker 领取并执行 Batch Item。格式：true/false；默认关闭，启用前必须完成 Provider 配置。
-      worker-enabled: ${INFORMATION_HUB_AI_BATCH_WORKER_ENABLED:true}
+      worker-enabled: ${INFORMATION_HUB_AI_BATCH_WORKER_ENABLED:false}
       # 应用启动后首次扫描 Batch 的等待时间。Spring Duration 格式；示例：200ms、3s、1m，默认 3s。
       worker-initial-delay: ${INFORMATION_HUB_AI_BATCH_WORKER_INITIAL_DELAY:3s}
       # 上一轮 Worker 完成到下一轮开始的固定间隔。Spring Duration 格式；示例：1s，默认 1s。
@@ -73,7 +73,7 @@ information-hub:
       hmac-secret: ${INFORMATION_HUB_PREVIEW_HMAC_SECRET:}
     provider:
       # 是否允许后端调用真实 AI Provider。格式：true/false；默认关闭，其他 Provider 配置完整后再开启。
-      enabled: ${INFORMATION_HUB_AI_ENABLED:true}
+      enabled: ${INFORMATION_HUB_AI_ENABLED:false}
       # OpenAI-compatible API 基础地址，从 Provider 官方 API 文档获取；通常包含版本前缀 /v1，后端会追加 /chat/completions。
       # 格式示例：https://provider.example.com/v1；不要填写前端控制台网址，也不要重复追加 /chat/completions。
       base-url: ${INFORMATION_HUB_AI_BASE_URL:}
@@ -81,9 +81,10 @@ information-hub:
       api-key: ${INFORMATION_HUB_AI_API_KEY:}
       # Provider 模型 ID，从 Provider 官方模型列表获取，必须支持 OpenAI-compatible Chat Completions；示例：provider-model-id。
       model: ${INFORMATION_HUB_AI_MODEL:}
-      # 单次 Provider HTTP 连接和读取超时。Spring Duration 格式；示例：30s、1m，必须大于 0，默认 30s。
+      # 单次 Provider HTTP 连接和读取超时。Spring Duration 格式；必须大于 0，默认 2m。
       timeout: ${INFORMATION_HUB_AI_TIMEOUT:2m}
-      # 单次请求允许的最大输出 Token。格式：1 至 1000 的整数；受 Phase 3 Definition 上限约束，默认 1000。
+      # Provider 允许的单次最大输出 Token。格式：1 至 5000，默认 5000。
+      # 实际请求值仍由具体 Analysis Definition 决定：V1=1000，V2=5000。
       max-output-tokens: ${INFORMATION_HUB_AI_MAX_OUTPUT_TOKENS:5000}
 
 mybatis-plus:

@@ -69,9 +69,10 @@ information-hub:
       api-key: ""
       # 填写 Provider 官方模型列表中的模型 ID，而不是页面展示名称；格式示例：provider-model-id。
       model: ""
-      timeout: 30s
-      # Phase 3 允许范围为 1 至 1000。
-      max-output-tokens: 1000
+      timeout: 2m
+
+      # Provider 配置允许范围为 1 至 5000；当前 JOB V2 使用 5000。
+      max-output-tokens: 5000
 
 mybatis-plus:
   configuration:

@@ -22,10 +22,10 @@ public class AiProviderProperties {
     private String model = "";
 
     /** Provider HTTP 连接和读取超时；Spring Duration，示例 30s，必须为正。 */
-    private Duration timeout = Duration.ofSeconds(30);
+    private Duration timeout = Duration.ofMinutes(2);
 
     /** Provider 配置允许的单次最大输出 Token，范围 1 至 1000。 */
-    private int maxOutputTokens = 1000;
+    private int maxOutputTokens = 5000;
 
     public boolean isEnabled() {
         return enabled;
@@ -77,7 +77,7 @@ public class AiProviderProperties {
     public void setMaxOutputTokens(int maxOutputTokens) {
         if (maxOutputTokens <= 0 || maxOutputTokens > 5000) {
             throw new IllegalArgumentException(
-                    "AI Provider maxOutputTokens must be between 1 and 1000");
+                    "AI Provider maxOutputTokens must be between 1 and 5000");
         }
         this.maxOutputTokens = maxOutputTokens;
     }

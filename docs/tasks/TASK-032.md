@@ -138,6 +138,37 @@ TASK-031 Web 的 Batch 状态类型仍使用不存在的 `SUCCEEDED`，与后端
 
 没有新增 Migration、业务表、公开 API 或后端业务逻辑；既有事务、Owner 隔离和幂等边界未改变。
 
+### 8.4 真实 Provider 联调后的 Definition 与运行参数收口
+
+2026-08-07 真实 Provider 受控联调暴露出两项运行参数问题：
+
+1. 部分模型调用超过原 30s Provider timeout，因此将默认 Provider timeout 统一调整为 `2m`。
+2. 部分 `JOB_USER_RELEVANCE_V1` 结构化响应在 `maxOutputTokens=1000` 时发生输出截断。
+
+由于 `JOB_USER_RELEVANCE_V1` 已经 Accepted / Implemented，未直接修改 V1 的冻结语义。
+
+新增：
+
+```text
+JOB_USER_RELEVANCE_V2
+analysisDefinitionVersion = 2
+maxOutputTokens = 5000
+systemPromptVersion = 1
+outputSchemaVersion = 1```
+
+V1 继续保持 maxOutputTokens=1000，用于历史 Analysis 和冻结 Batch 的版本解析；新的 Analysis 由 AnalysisDefinitionRegistry.requireCurrent(...) 自动选择 V2。
+
+同时完成以下配置收口：
+
+Provider 配置上限统一为 5000；
+Provider timeout 默认值统一为 2m；
+仓库默认 Provider 恢复为 disabled；
+Batch Worker 仓库默认值恢复为 disabled；
+真实 Provider/Worker 只通过部署环境变量或未跟踪的本地配置显式开启；
+同步 Maven 单测和 Phase 3 Fake Provider E2E。
+
+本次没有修改 Output Schema、System Prompt、数据库结构或公开 API。
+
 ## 9. 测试结果
 
 环境：Java `21.0.11`、Node `24.18.0`、npm `11.16.0`、MySQL `8.4`，测试库经 `127.0.0.1:13306` SSH 隧道访问。

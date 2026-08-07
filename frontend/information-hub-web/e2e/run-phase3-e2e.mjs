@@ -164,7 +164,7 @@ function startBackend({ backendPort, providerBaseUrl, providerApiKey }) {
         INFORMATION_HUB_AI_API_KEY: providerApiKey,
         INFORMATION_HUB_AI_MODEL: 'phase3-e2e-model',
         INFORMATION_HUB_AI_TIMEOUT: '5s',
-        INFORMATION_HUB_AI_MAX_OUTPUT_TOKENS: '1000',
+        INFORMATION_HUB_AI_MAX_OUTPUT_TOKENS: '5000',
         INFORMATION_HUB_AI_BATCH_WORKER_ENABLED: 'true',
         INFORMATION_HUB_AI_BATCH_WORKER_INITIAL_DELAY: '200ms',
         INFORMATION_HUB_AI_BATCH_WORKER_FIXED_DELAY: '200ms',
@@ -259,6 +259,12 @@ async function startFakeProvider(expectedApiKey) {
     let body
     try {
       body = JSON.parse(await readBody(request))
+	  if (body.max_tokens !== 5000) {
+	  respondJson(response, 422, {
+		error: `unexpected max_tokens: ${body.max_tokens}`,
+	  })
+	  return
+	  }
     } catch {
       respondJson(response, 400, { error: 'invalid json' })
       return

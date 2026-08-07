@@ -161,8 +161,8 @@ Spring Duration 可写成 `200ms`、`3s`、`5m`、`1h`。值必须为正数；�
 | `information-hub.ai.provider.base-url` | `INFORMATION_HUB_AI_BASE_URL` | OpenAI-compatible API 基础地址；通常包含 `/v1`，后端追加 `/chat/completions` | 所选 Provider 的官方 OpenAI-compatible API 文档；不要使用网页控制台地址 |
 | `information-hub.ai.provider.api-key` | `INFORMATION_HUB_AI_API_KEY` | Provider API Key；敏感，无默认值 | Provider 官方控制台的 API Key/凭据页面创建，只放服务端环境变量或 Secret Manager |
 | `information-hub.ai.provider.model` | `INFORMATION_HUB_AI_MODEL` | Chat Completions 使用的模型 ID | Provider 官方模型列表；填写 API 模型 ID，不是营销展示名称 |
-| `information-hub.ai.provider.timeout` | `INFORMATION_HUB_AI_TIMEOUT` | HTTP 连接和读取超时；Spring Duration，必须大于 0，默认 `30s` | 项目默认；按 Provider 延迟和部署网络调整 |
-| `information-hub.ai.provider.max-output-tokens` | `INFORMATION_HUB_AI_MAX_OUTPUT_TOKENS` | 单次最大输出 Token；整数 `1..1000`，默认 `1000` | Phase 3 Definition/Contract 冻结上限，不应按模型最大上下文随意扩大 |
+| `information-hub.ai.provider.timeout` | `INFORMATION_HUB_AI_TIMEOUT` | HTTP 连接和读取超时；Spring Duration，必须大于 0，默认 `2m` | 项目默认；按 Provider 延迟和部署网络调整 |
+| `information-hub.ai.provider.max-output-tokens` | `INFORMATION_HUB_AI_MAX_OUTPUT_TOKENS` | 单次最大输出 Token；整数 `1..5000`，默认 `5000` | Phase 3 Definition/Contract 冻结上限，不应按模型最大上下文随意扩大 |
 
 Base URL 示例形状：
 

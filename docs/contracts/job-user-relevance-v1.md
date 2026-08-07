@@ -140,7 +140,8 @@ V1 上限：
 ## 11. 实现映射
 
 - Registry：`AnalysisDefinitionRegistry`，按 `analysisDefinitionKey` / `analysisDefinitionVersion` 获取并拒绝重复注册；
-- 唯一实现：`JobUserRelevanceDefinition`，持久化标识为 `JOB_USER_RELEVANCE` / `1`；
+- V1 实现：`JobUserRelevanceDefinition`，持久化标识为 `JOB_USER_RELEVANCE` / `1`；
+- 后续 Definition 演进见 `job-user-relevance-v2.md`；V1 保持不可变，用于历史分析与冻结 Batch 的版本解析。
 - 输入投影：`JobUserRelevanceInputProjector`，标题和正文取 Snapshot 冻结列，其余字段只取 `standardizedPayload.job`；
 - System Prompt：`ai/definitions/job-user-relevance-v1-system-prompt-v1.txt`，版本 `1`；
 - Output Schema：`ai/definitions/job-user-relevance-v1-output-schema-v1.json`，版本 `1`；

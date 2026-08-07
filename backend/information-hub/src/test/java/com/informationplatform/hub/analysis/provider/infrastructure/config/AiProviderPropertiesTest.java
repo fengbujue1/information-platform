@@ -15,8 +15,8 @@ class AiProviderPropertiesTest {
         properties.setBaseUrl("https://user:password@provider.test/v1");
 
         assertThat(properties.isEnabled()).isFalse();
-        assertThat(properties.getTimeout()).isEqualTo(Duration.ofSeconds(30));
-        assertThat(properties.getMaxOutputTokens()).isEqualTo(1000);
+        assertThat(properties.getTimeout()).isEqualTo(Duration.ofMinutes(2));
+        assertThat(properties.getMaxOutputTokens()).isEqualTo(5000);
         assertThat(properties.toString())
                 .contains("baseUrlConfigured=true")
                 .contains("apiKey='<redacted>'")
@@ -31,7 +31,7 @@ class AiProviderPropertiesTest {
 
         assertThatThrownBy(() -> properties.setTimeout(Duration.ZERO))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> properties.setMaxOutputTokens(1001))
+        assertThatThrownBy(() -> properties.setMaxOutputTokens(501))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 }

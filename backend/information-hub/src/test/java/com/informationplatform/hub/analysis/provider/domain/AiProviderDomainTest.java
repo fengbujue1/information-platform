@@ -14,13 +14,13 @@ class AiProviderDomainTest {
         List<AiProviderMessage> messages =
                 new ArrayList<>(List.of(new AiProviderMessage(AiProviderMessageRole.USER, "hello")));
 
-        AiProviderRequest request = new AiProviderRequest(messages, 1000);
+        AiProviderRequest request = new AiProviderRequest(messages, 5000);
         messages.clear();
 
         assertThat(request.messages()).hasSize(1);
-        assertThatThrownBy(() -> new AiProviderRequest(request.messages(), 1001))
+        assertThatThrownBy(() -> new AiProviderRequest(request.messages(), 5001))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("between 1 and 1000");
+                .hasMessageContaining("between 1 and 5000");
     }
 
     @Test
