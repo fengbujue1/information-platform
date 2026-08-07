@@ -82,9 +82,9 @@ information-hub:
       # Provider 模型 ID，从 Provider 官方模型列表获取，必须支持 OpenAI-compatible Chat Completions；示例：provider-model-id。
       model: ${INFORMATION_HUB_AI_MODEL:}
       # 单次 Provider HTTP 连接和读取超时。Spring Duration 格式；示例：30s、1m，必须大于 0，默认 30s。
-      timeout: ${INFORMATION_HUB_AI_TIMEOUT:30s}
+      timeout: ${INFORMATION_HUB_AI_TIMEOUT:2m}
       # 单次请求允许的最大输出 Token。格式：1 至 1000 的整数；受 Phase 3 Definition 上限约束，默认 1000。
-      max-output-tokens: ${INFORMATION_HUB_AI_MAX_OUTPUT_TOKENS:1000}
+      max-output-tokens: ${INFORMATION_HUB_AI_MAX_OUTPUT_TOKENS:5000}
 
 mybatis-plus:
   configuration:
