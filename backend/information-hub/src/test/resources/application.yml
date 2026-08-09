@@ -8,6 +8,9 @@ server:
         path: /
 
 information-hub:
+  recommendation:
+    # 自动化测试仅显式调用 Worker，禁止后台线程消费测试库 Run。
+    worker-enabled: false
   ai:
     schedule:
       # 自动化测试只通过显式方法调用验证 Dispatcher，禁止后台线程触发测试库计划。

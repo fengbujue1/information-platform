@@ -57,7 +57,8 @@ public class IdentitySecurityConfiguration {
                                 "/api/v1/auth/**",
                                 "/api/v1/jobs/**",
                                 "/api/v1/ai/**",
-                                "/api/v1/recommendation/**")
+                                "/api/v1/recommendation/**",
+                                "/api/v1/recommendations/**")
                         .authenticated()
                         .anyRequest()
                         .permitAll())

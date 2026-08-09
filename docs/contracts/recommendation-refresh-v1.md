@@ -2,6 +2,8 @@
 
 状态：Accepted
 
+实施状态：Manual Refresh 与 Run list/detail 已由 TASK-040 落地；Auto Trigger 留待 TASK-041。
+
 ## Manual Refresh
 
 ```http
@@ -79,3 +81,12 @@ informationType = JOB
 ## Run Failure
 
 FAILED 不影响上一轮成功 Feed。
+
+## TASK-040 Implementation Note
+
+- Manual Refresh 使用 Profile 行锁串行化同一 Owner + Information Type 的并发请求；
+- Worker 通过 `FOR UPDATE SKIP LOCKED` claim PENDING Run，并恢复超过配置阈值的 stale RUNNING Run；
+- Run 冻结 Generic Profile Core、JOB Domain Extension、Prompt Active Version、算法身份与候选窗口；
+- Candidate、Scoring、Ranking 在事务外本地执行，不调用 AI Provider；
+- Recommendation Item 在最终短事务中一次性持久化，全部成功后 Run 才进入 `COMPLETED`，空结果进入 `NOOP`；
+- TASK-040 未实现本文 Auto Trigger 段落，该范围仍属于 TASK-041。

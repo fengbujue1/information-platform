@@ -86,6 +86,15 @@ information-hub:
       # Provider 允许的单次最大输出 Token。格式：1 至 5000，默认 5000。
       # 实际请求值仍由具体 Analysis Definition 决定：V1=1000，V2=5000。
       max-output-tokens: ${INFORMATION_HUB_AI_MAX_OUTPUT_TOKENS:5000}
+  recommendation:
+    # 是否允许后台 Worker 消费已存在的 PENDING Run；默认关闭，不创建任何业务刷新。
+    worker-enabled: ${INFORMATION_HUB_RECOMMENDATION_WORKER_ENABLED:false}
+    # 应用启动后首次扫描 PENDING Run 的等待时间；Spring Duration，默认 3s。
+    worker-initial-delay: ${INFORMATION_HUB_RECOMMENDATION_WORKER_INITIAL_DELAY:3s}
+    # 上一轮完成到下一轮开始的固定间隔；Spring Duration，默认 1s。
+    worker-fixed-delay: ${INFORMATION_HUB_RECOMMENDATION_WORKER_FIXED_DELAY:1s}
+    # RUNNING 超过此时间视为 stale 并恢复为 PENDING；确定性本地计算允许安全重试。
+    worker-stale-after: ${INFORMATION_HUB_RECOMMENDATION_WORKER_STALE_AFTER:5m}
 
 mybatis-plus:
   configuration:

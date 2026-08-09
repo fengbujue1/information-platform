@@ -1,0 +1,59 @@
+package com.informationplatform.hub.recommendation.api;
+
+import com.informationplatform.hub.common.api.ApiResponse;
+import com.informationplatform.hub.common.logging.OperationalLogExceptions;
+import com.informationplatform.hub.recommendation.run.application.RecommendationRunConflictException;
+import com.informationplatform.hub.recommendation.run.application.RecommendationRunNotFoundException;
+import com.informationplatform.hub.recommendation.run.application.RecommendationRunPersistenceException;
+import com.informationplatform.hub.recommendation.run.application.RecommendationRunRequestException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.dao.DataAccessException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+/** 将 Recommendation Run 请求、冲突和持久化异常转换为稳定脱敏响应。 */
+@Order(Ordered.HIGHEST_PRECEDENCE)
+@RestControllerAdvice(assignableTypes = RecommendationRunController.class)
+public class RecommendationRunApiExceptionHandler {
+
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(RecommendationRunApiExceptionHandler.class);
+
+    @ExceptionHandler(RecommendationRunRequestException.class)
+    ResponseEntity<ApiResponse<Void>> handleRequest(RecommendationRunRequestException exception) {
+        return error(HttpStatus.BAD_REQUEST, exception.getCode(), exception.getMessage());
+    }
+
+    @ExceptionHandler(RecommendationRunNotFoundException.class)
+    ResponseEntity<ApiResponse<Void>> handleNotFound(
+            RecommendationRunNotFoundException exception) {
+        return error(HttpStatus.NOT_FOUND, exception.getCode(), exception.getMessage());
+    }
+
+    @ExceptionHandler(RecommendationRunConflictException.class)
+    ResponseEntity<ApiResponse<Void>> handleConflict(
+            RecommendationRunConflictException exception) {
+        return error(HttpStatus.CONFLICT, exception.getCode(), exception.getMessage());
+    }
+
+    @ExceptionHandler({RecommendationRunPersistenceException.class, DataAccessException.class})
+    ResponseEntity<ApiResponse<Void>> handlePersistence(RuntimeException exception) {
+        LOGGER.error(
+                "Recommendation Run persistence operation failed",
+                OperationalLogExceptions.sanitized(exception));
+        return error(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "RECOMMENDATION_RUN_PERSISTENCE_FAILED",
+                "Recommendation Run data could not be persisted");
+    }
+
+    private ResponseEntity<ApiResponse<Void>> error(
+            HttpStatus status, String code, String message) {
+        return ResponseEntity.status(status).body(ApiResponse.error(code, message));
+    }
+}
