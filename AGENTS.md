@@ -29,7 +29,7 @@
 - `frontend/information-hub-web`
   - 已完成 Phase 2 职位浏览 MVP 的 Vue 3 前端
   - 已完成 Phase 3 Identity 与 AI 处理页面
-  - Phase 4 Web 必须等 TASK-043 再按范围实施
+  - Phase 4 Web 已由 TASK-043 完成，Phase 4 已由 TASK-044 验收收尾
 
 ## 第一阶段数据链路
 

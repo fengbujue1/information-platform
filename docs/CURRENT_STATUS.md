@@ -9,7 +9,7 @@
 - Phase 1：已完成。
 - Phase 2：已完成。
 - Phase 3：已完成。
-- Phase 4：进行中。
+- Phase 4：已完成。
 
 ## Phase 3 完成情况
 
@@ -66,6 +66,10 @@ User
 → Structured Analysis Result
 → Model Invocation Actual Usage
 → Web
+→ Analysis Batch terminal event
+→ Recommendation Run / Item
+→ Recommendation Feed / Interaction
+→ Phase 4 Web
 ```
 
 ## Analysis Definition 当前版本
@@ -127,15 +131,13 @@ ai_model_invocation
 
 ## 当前任务
 
-`TASK-044`：Phase 4 Full-stack E2E、验收与收尾（尚未实施）。
-
-`TASK-033`、`TASK-034`、数据模型通用化纠偏 `TASK-034A`、`TASK-035` Recommendation Profile Backend/API、`TASK-036` Recommendation Interaction / Feedback / Job Disposition、`TASK-037` Recommendation Candidate Resolver、`TASK-038` Recommendation Scoring / Explainability、`TASK-039` Ranking / Deduplication / Diversity / Top N、`TASK-040` Recommendation Run / Worker / Manual Refresh、`TASK-041` Analysis Batch Auto Trigger、`TASK-042` Recommendation Feed Query API 与 `TASK-043` Phase 4 Web 已完成；当前仅将实施顺序推进到 TASK-044，不代表 TASK-044 已开始实施。
+当前无进行中的 Phase 4 TASK。`TASK-033`～`TASK-044`（含数据模型通用化纠偏 `TASK-034A`）均已完成。
 
 Phase 3 已归档。后续仅接受缺陷修复、安全修复、依赖维护和运行参数维护，不再在 Phase 3 范围继续增加新功能。
 
-## Phase 4 启动状态
+## Phase 4 完成状态
 
-Phase 4：Personalized Recommendation MVP 已启动，规划基线已 Accepted。
+Phase 4：Personalized Recommendation MVP 已完成并归档。
 
 已完成：
 
@@ -157,15 +159,21 @@ Phase 4：Personalized Recommendation MVP 已启动，规划基线已 Accepted�
 - TASK-041 Analysis Batch Completion → Recommendation Auto Trigger。
 - TASK-042 Recommendation Feed Query API。
 - TASK-043 Phase 4 Web（Profile、Feed、Refresh、Feedback、JOB Contact Status 与本地 Fixture Browser E2E）。
+- TASK-044 真实后端 + 测试 MySQL + Fake Provider + Browser 全栈 E2E、最终验收与文档收尾。
 
-尚未实施：
+验收事实：
 
-- Phase 4 真实全栈 E2E、最终验收与文档收尾。
+- `COMPLETED` 与 `PARTIAL_FAILED` Analysis Batch 均可触发 Auto Recommendation；
+- Manual Refresh 不调用 AI Provider；
+- Feed、score/reasons、Viewed、Feedback、CONTACTED、hard exclusion、下一轮排除、reset NONE 与 Profile stale 已覆盖；
+- FAILED Recommendation Run 保留旧成功 Feed 由真实 MySQL 集成测试覆盖；
+- V1～V4 Migration 未修改，当前数据库版本仍为 V4；
+- Phase 4 只实际实现 JOB，Notification、Retrieval/Embedding 与其它 Information Type 推荐仍未实施。
 
 ## CI
 
-CI 后续作为独立工程维护事项处理，不作为本次 Phase 3 阶段关闭的阻塞条件。
+CI 后续作为独立工程维护事项处理，不作为 Phase 4 阶段关闭的阻塞条件。
 
 ## 下一步
 
-按 Accepted Phase 4 规划实施 `TASK-044`；只有 TASK-044 验收完成后才能宣布 Phase 4 完成。
+后续功能需先建立新的 Scope、ADR/Contract 与 TASK 基线；不在已归档的 Phase 4 中继续扩展范围。

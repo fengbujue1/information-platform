@@ -2,7 +2,7 @@
 
 状态：Accepted
 
-实施状态：Manual Refresh 与 Run list/detail 已由 TASK-040 落地；Auto Trigger 已由 TASK-041 落地。
+实施状态：Manual Refresh 与 Run list/detail 已由 TASK-040 落地；Auto Trigger 已由 TASK-041 落地；TASK-044 已完成全栈验收。
 
 ## Manual Refresh
 

@@ -2,7 +2,7 @@
 
 状态：Accepted
 
-实施状态：TASK-033 已完成基础能力落地
+实施状态：TASK-033 已完成基础能力落地；TASK-044 全栈验收确认秘密与 raw payload 未进入日志
 
 适用范围：`backend/information-hub`
 

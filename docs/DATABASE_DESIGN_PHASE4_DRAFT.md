@@ -2,7 +2,7 @@
 
 状态：Accepted
 
-实施状态：TASK-034 V3 + TASK-034A V4 已实施
+实施状态：Completed；TASK-034 V3 + TASK-034A V4 已实施，TASK-044 验收未产生新 Migration
 
 数据库：MySQL 8.x；Migration：Flyway。
 

@@ -2,6 +2,8 @@
 
 状态：Accepted
 
+实施状态：Completed（TASK-033～TASK-044，含 TASK-034A）
+
 适用阶段：Phase 4
 
 前置条件：Phase 3 已完成

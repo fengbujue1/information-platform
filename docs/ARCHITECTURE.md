@@ -14,7 +14,7 @@ Information Hub
     ├── job
     ├── identity（Identity MVP 已实施）
     ├── analysis（Phase 3 已实施）
-    ├── recommendation（Phase 4 Profile、Interaction、Candidate、Scoring 与 Ranking 已实施）
+    ├── recommendation（Phase 4 已实施）
     └── notification（后续）
     │
     ▼
@@ -196,11 +196,11 @@ Phase 3 已通过 TASK-020 ～ TASK-032 完成并归档，包括 Phase 3 Web、F
 
 详细设计以 Accepted / Implemented `PHASE3_ARCHITECTURE_DRAFT.md` 和 `DATABASE_DESIGN_PHASE3_DRAFT.md` 为准。文件名中的 `_DRAFT` 为保持既有链接而保留，不表示设计仍待讨论。
 
-## 12. Phase 4 Accepted 架构与当前实施边界
+## 12. Phase 4 已实施架构与边界
 
-Phase 4 已启动，当前任务为 TASK-044。V4 Generic Recommendation Core + JOB Extension 数据库结构、Recommendation Profile API、View / Feedback / JOB disposition API、JOB Candidate Resolver、`JOB_RECOMMENDATION / V1` 确定性评分、Ranking / Deduplication / Diversity / Top N、Recommendation Run / Worker / Manual Refresh、Analysis Batch AFTER_COMMIT Auto Trigger、只读取最近成功 Run 并应用 current Interaction visibility 的 Recommendation Feed Query API，以及支持 Profile、Feed、Refresh/Run polling、Feedback、JOB contact status、hard exclusion undo 与 stale/error state 的 Phase 4 Web 已实施；真实全栈 E2E 与 Phase 4 收尾尚未实施。
+Phase 4 已完成。V4 Generic Recommendation Core + JOB Extension、Profile 与 Interaction API、JOB Candidate Resolver、`JOB_RECOMMENDATION / V1` 确定性 Scoring/Ranking、Run/Worker/Manual Refresh、Analysis Batch AFTER_COMMIT Auto Trigger、读取最近成功 Run 并应用当前交互可见性的 Feed，以及 Phase 4 Web 均已实施，并通过真实后端、真实测试 MySQL 与 Fake Provider 的全栈 E2E。
 
-Accepted 目标链路：
+已实施链路：
 
 ```text
 analysis
@@ -211,7 +211,7 @@ analysis
 → interaction
 ```
 
-计划边界：
+实施边界：
 
 - Recommendation 只消费 Phase 3 已有成功 Analysis，不调用 AI Provider；
 - Feed 读取预计算的最新成功 Run / Item，不实时重算；
@@ -221,4 +221,4 @@ analysis
 - `CONTACTED` 不排除；
 - 不自动读取 BOSS 聊天记录。
 
-以上目标链路仅有上述明确列出的能力已实现，其余仍是 Accepted 设计。实际实施进度以 `CURRENT_STATUS.md` 和 TASK-033 ～ TASK-044 为准；详细设计见 `PHASE4_ARCHITECTURE_DRAFT.md`。
+以上链路已按 TASK-033～TASK-044 实施。Phase 4 仍只支持 JOB，不包含 Notification、Retrieval、Embedding 或其它 Information Type 的领域扩展；详细设计见 `PHASE4_ARCHITECTURE_DRAFT.md`。

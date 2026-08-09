@@ -2,7 +2,7 @@
 
 状态：Accepted
 
-实施状态：TASK-034A 已通过 V4 完成通用化纠偏；TASK-038～039 已实现 JOB 确定性评分与 Ranking，尚未创建 Run / Item 业务链路
+实施状态：Completed；V4 Generic Core + JOB Extension、Run / Item、Interaction 与 Feed 业务链路已由 TASK-034A～TASK-044 实施并验收
 
 文件名保留 `_DRAFT` 仅用于兼容既有文档命名方式。
 

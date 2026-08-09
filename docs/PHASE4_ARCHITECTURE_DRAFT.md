@@ -2,6 +2,8 @@
 
 状态：Accepted
 
+实施状态：Completed；TASK-044 已通过真实后端、真实测试 MySQL、Fake Provider 与 Browser E2E 验收
+
 文件名保留 `_DRAFT` 仅为延续项目既有命名习惯，不表示仍待讨论。
 
 ## 1. 总体结构

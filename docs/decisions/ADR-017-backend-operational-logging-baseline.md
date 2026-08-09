@@ -2,6 +2,8 @@
 
 状态：Accepted
 
+实施状态：Implemented and verified by TASK-044
+
 ## 背景
 
 当前开发中，部分失败只能在浏览器 F12 看到，后端缺少可定位的流程和失败日志。

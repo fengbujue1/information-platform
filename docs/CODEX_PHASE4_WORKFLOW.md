@@ -2,6 +2,8 @@
 
 状态：Accepted
 
+实施状态：Completed；TASK-044 已完成 Phase 4 收尾
+
 ## 1. 基本原则
 
 一个明确 TASK 对应一个 Codex 实施上下文。

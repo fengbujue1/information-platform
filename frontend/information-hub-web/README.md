@@ -1,6 +1,6 @@
 # Information Hub Web
 
-Information Platform 的标准化信息浏览前端。Phase 2 已完成职位浏览，Phase 3 已完成 Identity 与 AI 页面，Phase 4 已完成 Recommendation Profile、Feed、Refresh、Feedback 与 JOB contact status 页面；真实全栈 E2E 与 Phase 4 收尾由 TASK-044 实施。
+Information Platform 的标准化信息浏览前端。Phase 2 职位浏览、Phase 3 Identity/AI 页面和 Phase 4 Recommendation Profile、Feed、Refresh、Feedback、JOB contact status 与真实全栈 E2E 均已完成。
 
 ## 环境要求
 
@@ -83,6 +83,14 @@ npm run build
 ```
 
 `test:e2e` 使用本地稳定 Fixture 拦截 Job Query 与 Recommendation API，不访问远程 MySQL，不读取或提交真实职位数据。除既有职位场景外，还覆盖 Profile save、Feed/score/reasons、Viewed、Refresh polling、Feedback、CONTACTED 保留、hard exclusion 即时隐藏、undo、stale 与错误态。
+
+Phase 4 真实全栈验收使用：
+
+```powershell
+npm.cmd run test:e2e:phase4
+```
+
+该命令需要先构建后端 JAR，并设置 `INFORMATION_HUB_E2E_DB_URL/USERNAME/PASSWORD`，也可复用 `INFORMATION_HUB_TEST_DB_URL/USERNAME/PASSWORD`。数据库名必须包含 `test` 或 `e2e` 且不得包含 `dev`。运行器生成一次性账号和所有测试秘密，只在测试源集中写入密码摘要；随后启动真实 Information Hub、Fake Provider、Vite 与 Chromium，验证 Analysis Batch → Recommendation 全链路。
 
 职位浏览覆盖：
 

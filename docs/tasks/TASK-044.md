@@ -1,6 +1,6 @@
 # TASK-044：Phase 4 Full-stack E2E、验收与收尾
 
-状态：TODO
+状态：DONE
 
 所属阶段：Phase 4
 
@@ -71,3 +71,27 @@ E2E：
 - 更新 `docs/CURRENT_STATUS.md`；
 - 如数据库/架构事实改变，同步事实文档；
 - 汇报实际命令与结果。
+
+## 8. 实施记录
+
+完成日期：2026-08-09。
+
+已完成：
+
+- 新增 Phase 4 真实全栈 E2E：一次性测试账号、真实 Session/CSRF、真实 Information Hub、真实 V4 测试 MySQL、Fake Provider、Vite 与 Chromium；
+- 覆盖 `COMPLETED`、`PARTIAL_FAILED`、Auto Recommendation、Manual Refresh、Feed、score/reasons、Viewed、Feedback、`CONTACTED`、`CONTACTED_NOT_SUITABLE` 即时隐藏与下一轮排除、reset `NONE`、Profile stale；
+- 验证 Recommendation Manual Refresh 不增加 Provider 调用，raw payload marker 与 Provider Key 不进入响应、页面或后端日志；
+- FAILED Recommendation Run 保留旧 Feed 由 `RecommendationFeedServiceIntegrationTest` 的真实 MySQL 场景覆盖，Worker FAILED 路径由 `RecommendationRunWorkerTest` 覆盖；
+- 完成仓库事实文档对账与 `PHASE4_COMPLETION.md`。
+
+测试结果：
+
+- `mvnw test`：263 tests，0 failures，0 errors，3 skipped；
+- Recommendation/Flyway 定向测试：9 tests，0 failures，0 errors，1 skipped（V3-only migration 场景因当前库已为 V4 按条件跳过）；
+- `npm run typecheck`：通过；
+- `npm run test`：28 files / 87 tests 通过；
+- `npm run test:e2e`：8 tests 通过；
+- `npm run test:e2e:phase4`：1 个全链路场景通过，Fake Provider request count = 4；
+- `npm run build`：通过。
+
+本 TASK 未修改业务代码、数据库结构或既有 Flyway Migration。

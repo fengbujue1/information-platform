@@ -62,21 +62,20 @@
 
 ## 当前阶段
 
-Phase 3 已归档。
+Phase 3、Phase 4 已归档。
 
 ## Phase 4
 
-状态：**进行中。**
+状态：**已完成。**
 
-当前任务：`TASK-044`（尚未实施）。
-
-Phase 4 规划基线已 Accepted，TASK-033～TASK-043（含 TASK-034A）已完成；当前持久化结构为 V4 Generic Core + JOB Extension，Recommendation Profile、Interaction Backend/API、JOB Candidate Resolver、`JOB_RECOMMENDATION / V1` 确定性评分、Ranking / Deduplication / Diversity / Top N、Recommendation Run / Worker / Manual Refresh、Analysis Batch Auto Trigger、Recommendation Feed Query API 与 Phase 4 Web 已落地，后续实施 TASK-044 真实全栈 E2E、验收与收尾。
+TASK-033～TASK-044（含 TASK-034A）均已完成。Phase 4 的 Generic Core + JOB Extension、Profile、Interaction、Candidate、Scoring/Ranking、Run/Worker、Auto Trigger、Feed、Web 和真实全栈 E2E 已验收。
 
 - [Phase 4 正式规划包](../PHASE4_PACKAGE_MANIFEST.md)
 - [Phase 4 Scope](PHASE4_SCOPE.md)
 - [Phase 4 Architecture（Accepted）](PHASE4_ARCHITECTURE_DRAFT.md)
 - [Phase 4 Data Model（Accepted）](PHASE4_DATA_MODEL_DRAFT.md)
 - [Phase 4 Database Design（Accepted，V4 已实施）](DATABASE_DESIGN_PHASE4_DRAFT.md)
+- [Phase 4 完成总结](PHASE4_COMPLETION.md)
 - [Backend Operational Logging Conventions](LOGGING_CONVENTIONS.md)
 - [Codex Phase 4 Workflow](CODEX_PHASE4_WORKFLOW.md)
 - [Phase 4 Existing Document Change Plan](PHASE4_EXISTING_DOC_CHANGES.md)

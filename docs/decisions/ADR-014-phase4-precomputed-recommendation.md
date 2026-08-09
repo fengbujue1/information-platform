@@ -2,6 +2,8 @@
 
 状态：Accepted
 
+实施状态：Implemented and verified by TASK-044
+
 ## 决策
 
 Recommendation 使用：

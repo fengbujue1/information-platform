@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-Phase 1、Phase 2、Phase 3 已完成。
+Phase 1、Phase 2、Phase 3、Phase 4 已完成。
 
 当前已打通：
 
@@ -22,13 +22,13 @@ BOSS Collector
 → OpenAI-compatible Provider
 → Actual Token Usage
 → Phase 3 Web
+→ Analysis Batch terminal event
+→ Recommendation Run / Item
+→ Recommendation Feed / Interaction
+→ Phase 4 Web
 ```
 
-Phase 4 已启动，当前处于进行中。
-
-当前任务：`TASK-044`（Phase 4 Full-stack E2E、验收与收尾，尚未实施）。
-
-`TASK-033`～`TASK-043`（含 `TASK-034A` Recommendation Model Generalization）已完成；当前数据库为 V4 Generic Core + JOB Extension。
+Phase 4 已完成，`TASK-033`～`TASK-044`（含 `TASK-034A` Recommendation Model Generalization）均已验收；当前数据库为 V4 Generic Core + JOB Extension。
 
 ## Phase 1：采集与归档
 
@@ -158,11 +158,11 @@ API Key、Bootstrap 密码、Session Cookie、Collector Token 和完整 Provider
 
 ## Phase 4：Personalized Recommendation MVP
 
-状态：**进行中。**
+状态：**已完成。**
 
 Phase 4 的 Scope、Architecture、Data Model、Database Design、ADR、Contract 和 TASK 已完成评审并进入 Accepted 实施基线。
 
-`TASK-033`～`TASK-043`（含 `TASK-034A`）已完成；后续实施 `TASK-044`。当前已落地 Generic Recommendation Core + JOB Extension、Recommendation Profile API、View / Feedback / JOB disposition API、JOB Candidate Resolver、`JOB_RECOMMENDATION / V1` 确定性评分、Ranking / Deduplication / Diversity / Top N、Recommendation Run / Worker / Manual Refresh、Analysis Batch AFTER_COMMIT Auto Trigger、Recommendation Feed Query API，以及支持 Profile、Feed、Refresh、Feedback、JOB contact status 与本地 Fixture Browser E2E 的 Phase 4 Web；真实全栈 E2E 与 Phase 4 收尾尚未实施。
+`TASK-033`～`TASK-044`（含 `TASK-034A`）已完成。当前已落地 Generic Recommendation Core + JOB Extension、Recommendation Profile 与 Interaction API、JOB Candidate Resolver、`JOB_RECOMMENDATION / V1` 确定性评分与排序、Recommendation Run / Worker / Manual Refresh、Analysis Batch AFTER_COMMIT Auto Trigger、Recommendation Feed、Phase 4 Web，以及使用真实后端、真实测试 MySQL 和 Fake Provider 的全栈 E2E。Phase 4 仍只实现 JOB；Notification、Retrieval 和其它 Information Type 推荐不在本阶段范围。
 
 ## 文档入口
 
@@ -181,6 +181,7 @@ Phase 4 的 Scope、Architecture、Data Model、Database Design、ADR、Contract
 - [Phase 4 Architecture](docs/PHASE4_ARCHITECTURE_DRAFT.md)
 - [Phase 4 Data Model](docs/PHASE4_DATA_MODEL_DRAFT.md)
 - [Phase 4 Database Design](docs/DATABASE_DESIGN_PHASE4_DRAFT.md)
+- [Phase 4 完成总结](docs/PHASE4_COMPLETION.md)
 - [Backend Operational Logging Conventions](docs/LOGGING_CONVENTIONS.md)
 - [Codex Phase 4 Workflow](docs/CODEX_PHASE4_WORKFLOW.md)
 

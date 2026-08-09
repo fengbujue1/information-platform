@@ -4,7 +4,7 @@
 
 本模块负责标准化信息的浏览前端。
 
-Phase 2 职位浏览 MVP 已完成。Phase 3 按当前 TASK 增加 Identity、Prompt、Analysis、Batch 和 Schedule 页面。
+Phase 2 职位浏览 MVP、Phase 3 Identity/AI 页面和 Phase 4 Recommendation 页面均已完成。
 
 前端不得直接访问：
 
@@ -45,14 +45,14 @@ Node 版本必须使用受维护的 LTS，并通过仓库版本文件固定。�
 - 前端测试；
 - 受控构建部署。
 
-Phase 3 仍禁止：
+跨阶段仍禁止：
 
 - rawPayload；
 - 复杂权限；
 - 收藏和备注；
 - 职位写操作；
 - Collector 管理；
-- 推荐和通知；
+- Phase 4 Scope 之外的推荐能力和通知；
 - 公网无认证部署。
 
 ## 四、目录边界
@@ -146,7 +146,7 @@ npm run build
 
 组件和工具函数应有稳定测试。
 
-Phase 3 E2E 必须先登录并携带 Session/CSRF；不能用单元测试替代真实前后端联调。
+Phase 3/4 全栈 E2E 必须使用真实登录 Session/CSRF；不能用单元测试替代真实前后端联调。
 
 ## 十、任务纪律
 
