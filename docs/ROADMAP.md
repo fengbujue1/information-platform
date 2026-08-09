@@ -110,7 +110,7 @@ V1 保持历史兼容，V2 为当前版本。
 
 设计状态：Accepted。
 
-当前任务：`TASK-038`（尚未实施）；TASK-033～TASK-037（含 TASK-034A 数据模型通用化纠偏）已完成。
+当前任务：`TASK-039`（尚未实施）；TASK-033～TASK-038（含 TASK-034A 数据模型通用化纠偏）已完成。
 
 ### 计划交付
 
@@ -130,7 +130,7 @@ Phase 4 与 Phase 3 的区别：
 - Phase 3：用户通过 Prompt 主动或定时发起 USER_RELEVANCE 分析；
 - Phase 4：系统消费 Phase 3 已有成功 Analysis，基于 Recommendation Profile 生成预计算推荐。
 
-Scope、Architecture、Data Model、Database Design、ADR、Contract 与 TASK-033 ～ TASK-044 已 Accepted。TASK-033～TASK-037（含 TASK-034A）已完成，当前采用 Generic Core + JOB Extension 并已提供 Recommendation Profile、View、Feedback、JOB disposition API 与 JOB Candidate Resolver；后续从 TASK-038 起推进。
+Scope、Architecture、Data Model、Database Design、ADR、Contract 与 TASK-033 ～ TASK-044 已 Accepted。TASK-033～TASK-038（含 TASK-034A）已完成，当前采用 Generic Core + JOB Extension 并已提供 Recommendation Profile、View、Feedback、JOB disposition API、JOB Candidate Resolver 与 `JOB_RECOMMENDATION / V1` 确定性评分；后续从 TASK-039 起推进。
 
 ### 明确不做
 

@@ -282,6 +282,14 @@ informationId DESC
 
 该算法只属于 `JOB_RECOMMENDATION / V1`；未来 Information Type 使用独立 Algorithm Key/Version。
 
+TASK-038 已按上述边界实施确定性 JOB Scoring：
+
+- `relevanceScore`、JOB Profile match 与 frozen window freshness 分别按 70% / 20% / 10% 合成，并统一输出 0..100、三位小数；
+- Profile match 仅对已配置的 target role、preferred skill、city、remote type 与 salary minimum 五个维度等权归一化；未配置任何维度时使用中性 100 分；
+- freshness 基于 `information_item.first_seen_time` 在 frozen window 内线性归一化，并在窗口外钳制到 0 或 100；
+- 输出固定 Algorithm Key/Version、score breakdown 和稳定 reasons；
+- Scorer 保留 Candidate 输入顺序，不调用 Provider，不访问数据库，不执行 Ranking、Deduplication、Diversity、Top N 或持久化。
+
 ## 10. Deduplication
 
 不使用 Embedding。

@@ -68,9 +68,9 @@ Phase 3 已归档。
 
 状态：**进行中。**
 
-当前任务：`TASK-038`（尚未实施）。
+当前任务：`TASK-039`（尚未实施）。
 
-Phase 4 规划基线已 Accepted，TASK-033～TASK-037（含 TASK-034A）已完成；当前持久化结构为 V4 Generic Core + JOB Extension，Recommendation Profile、Interaction Backend/API 与 JOB Candidate Resolver 已落地，后续从 TASK-038 起按顺序实施。
+Phase 4 规划基线已 Accepted，TASK-033～TASK-038（含 TASK-034A）已完成；当前持久化结构为 V4 Generic Core + JOB Extension，Recommendation Profile、Interaction Backend/API、JOB Candidate Resolver 与 `JOB_RECOMMENDATION / V1` 确定性评分已落地，后续从 TASK-039 起按顺序实施。
 
 - [Phase 4 正式规划包](../PHASE4_PACKAGE_MANIFEST.md)
 - [Phase 4 Scope](PHASE4_SCOPE.md)
