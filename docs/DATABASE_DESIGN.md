@@ -17,7 +17,7 @@ Phase 1 创建：
 - `job_information`
 - `information_snapshot`
 
-Phase 3 已通过 V2 增加账号与 AI 处理持久化表；Phase 4 先通过 V3 增加 Recommendation 四表，再由 V4 无损纠偏为通用 Core + JOB Extension。Recommendation 业务和 Notification 尚未实现。
+Phase 3 已通过 V2 增加账号与 AI 处理持久化表；Phase 4 先通过 V3 增加 Recommendation 四表，再由 V4 无损纠偏为通用 Core + JOB Extension。Recommendation Profile、Interaction 与 JOB Candidate Resolver 已实现；Scoring、Run/Feed 和 Notification 尚未实现。
 
 ## 2. 实际输入数据事实
 
@@ -787,7 +787,7 @@ Run by user_id + status
 Item by run_id + rank_no
 ```
 
-V3 未新增 Candidate Resolver 专用大范围扫描索引；TASK-037 必须结合真实 Candidate SQL 再执行 EXPLAIN 后决定。
+V3 未新增 Candidate Resolver 专用大范围扫描索引；TASK-037 已结合实际 Candidate SQL 完成真实 MySQL EXPLAIN，现有索引满足当前 JOB frozen window 与关联过滤，无需新增 Migration。
 
 ## 18. Phase 4 V4 当前数据库事实
 
@@ -824,4 +824,13 @@ JOB Extension:
 - Run 明确冻结 `information_type`，历史 V3 Run 和 snapshot 已回填 JOB；
 - Owner 查询索引为 `(user_id, information_type, status, created_at)`；
 - 最新成功 Feed 索引为 `(user_id, information_type, completed_at, id)`；
-- Profile、Interaction、Run、Item 的关键查询已在合法 MySQL 数据图上执行 EXPLAIN；Candidate 专用索引仍留待 TASK-037。
+- Profile、Interaction、Run、Item 及 TASK-037 Candidate Resolver 的关键查询已在合法 MySQL 数据图上执行 EXPLAIN；Candidate 当前复用 `idx_information_item_type_first_seen_id`、Analysis 既有索引和 Interaction 唯一键，无需新增专用索引。
+
+### 18.4 TASK-037 Candidate 查询事实
+
+- 当前可用 JOB 限定为 `information_item.status = ACTIVE` 且 `job_information.job_status IN (ACTIVE, UNKNOWN)`；
+- frozen window 为 `first_seen_time >= window_start AND first_seen_time < window_end`；
+- 只读取当前 Snapshot、同 Owner / Prompt Version 且兼容 Definition 的成功 `JOB_USER_RELEVANCE` Analysis；
+- hard exclusion 通过 `(user_id, information_id)` 的 Interaction Core 与 JOB disposition extension 判断，Snapshot 更新不重置；
+- 排除词只匹配当前 Snapshot title、content 与标准化 `job.companyName`，不读取 raw payload；
+- 真实 MySQL `EXPLAIN FORMAT=JSON` 已覆盖实际参数化 MyBatis SQL，未增加 V5 Migration。

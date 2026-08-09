@@ -174,7 +174,7 @@ Run: user_id + information_type + status
 Item: run_id + rank_no
 ```
 
-Candidate Resolver 最终 SQL 和额外索引仍由 TASK-037 通过真实 EXPLAIN 决定。
+TASK-037 已对实际 Candidate Resolver MyBatis SQL 执行真实 MySQL `EXPLAIN FORMAT=JSON`。查询以 `idx_information_item_type_first_seen_id` 缩小 JOB frozen window，并通过当前 Snapshot、`uk_information_analysis_identity` / Analysis 外键索引及 Interaction 唯一键完成关联与 hard exclusion；当前数据模型无需新增 Candidate 专用索引或 Migration。
 
 ## 11. 当前不创建
 

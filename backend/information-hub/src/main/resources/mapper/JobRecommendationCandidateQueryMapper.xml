@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.informationplatform.hub.recommendation.job.candidate.infrastructure.persistence.JobRecommendationCandidateQueryMapper">
+
+    <sql id="compatibleSucceededAnalysis">
+        analysis.user_id = #{request.userId}
+        AND analysis.information_id = item.id
+        AND analysis.snapshot_id = snapshot.id
+        AND analysis.information_type = 'JOB'
+        AND analysis.prompt_version_id = #{request.promptVersionId}
+        AND analysis.analysis_definition_key = 'JOB_USER_RELEVANCE'
+        AND analysis.analysis_purpose = 'USER_RELEVANCE'
+        AND analysis.status = 'SUCCEEDED'
+        AND analysis.result_json IS NOT NULL
+        AND analysis.relevance_score IS NOT NULL
+        AND analysis.analysis_definition_version IN
+        <foreach collection="compatibleVersions" item="version" open="(" separator="," close=")">
+            #{version}
+        </foreach>
+    </sql>
+
+    <sql id="baseCandidateFilters">
+        WHERE item.information_type = 'JOB'
+          AND item.status = 'ACTIVE'
+          AND job.job_status IN ('ACTIVE', 'UNKNOWN')
+          AND item.first_seen_time &gt;= #{request.windowStart}
+          AND item.first_seen_time &lt; #{request.windowEnd}
+    </sql>
+
+    <select id="countCandidates" resultType="long">
+        SELECT COUNT(DISTINCT item.id)
+        FROM information_item item
+        INNER JOIN job_information job
+                ON job.information_id = item.id
+        INNER JOIN information_snapshot snapshot
+                ON snapshot.information_id = item.id
+               AND snapshot.version_no = item.current_version_no
+        INNER JOIN information_analysis analysis
+                ON <include refid="compatibleSucceededAnalysis"/>
+        <include refid="baseCandidateFilters"/>
+    </select>
+
+    <select id="selectEligibleCandidates"
+            resultType="com.informationplatform.hub.recommendation.job.candidate.infrastructure.persistence.JobRecommendationCandidateRow">
+        SELECT item.id AS information_id,
+               snapshot.id AS snapshot_id,
+               analysis.id AS analysis_id,
+               analysis.analysis_definition_version,
+               item.first_seen_time,
+               snapshot.title,
+               snapshot.content,
+               snapshot.standardized_payload,
+               analysis.result_json AS analysis_result,
+               analysis.relevance_score AS ai_relevance_score
+        FROM information_item item
+        INNER JOIN job_information job
+                ON job.information_id = item.id
+        INNER JOIN information_snapshot snapshot
+                ON snapshot.information_id = item.id
+               AND snapshot.version_no = item.current_version_no
+        INNER JOIN information_analysis analysis
+                ON <include refid="compatibleSucceededAnalysis"/>
+        <include refid="baseCandidateFilters"/>
+          AND NOT EXISTS (
+              SELECT 1
+              FROM user_information_interaction interaction_core
+              WHERE interaction_core.user_id = #{request.userId}
+                AND interaction_core.information_id = item.id
+                AND interaction_core.feedback_state = 'NOT_INTERESTED'
+          )
+          AND NOT EXISTS (
+              SELECT 1
+              FROM user_information_interaction interaction_core
+              INNER JOIN user_job_disposition disposition
+                      ON disposition.interaction_id = interaction_core.id
+              WHERE interaction_core.user_id = #{request.userId}
+                AND interaction_core.information_id = item.id
+                AND disposition.job_disposition = 'CONTACTED_NOT_SUITABLE'
+          )
+        <foreach collection="request.profilePreferences.excludedKeywords"
+                 item="keyword">
+          AND NOT (
+              LOCATE(#{keyword}, snapshot.title) &gt; 0
+              OR LOCATE(#{keyword}, COALESCE(snapshot.content, '')) &gt; 0
+              OR LOCATE(
+                  #{keyword},
+                  COALESCE(
+                      JSON_UNQUOTE(JSON_EXTRACT(
+                          snapshot.standardized_payload,
+                          '$.job.companyName')),
+                      '')) &gt; 0
+          )
+        </foreach>
+        ORDER BY item.first_seen_time DESC,
+                 item.id DESC,
+                 analysis.analysis_definition_version DESC,
+                 analysis.id DESC
+    </select>
+</mapper>

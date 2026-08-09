@@ -165,6 +165,16 @@ Hard exclusion 基于：
 
 因此不因 Snapshot 更新而丢失。
 
+TASK-037 已按上述边界实施 JOB Candidate Resolver：
+
+- 初始候选只接受 `information_item.status = ACTIVE` 且 `job_status IN (ACTIVE, UNKNOWN)` 的当前可用 JOB；
+- frozen window 使用 `first_seen_time >= windowStart AND first_seen_time < windowEnd`；
+- Analysis 必须绑定当前 Snapshot、同一用户、frozen Prompt Version、`SUCCEEDED` 状态，并具有非空合法结果；
+- 兼容性由已注册 Definition 的 key、Information Type、Purpose、System Prompt Version 与 Output Schema Version 决定，同一 Information 选择最高兼容成功 Definition；
+- `excludedKeywords` 对当前 Snapshot 的 title、content 与 `standardizedPayload.job.companyName` 执行字面 hard exclusion；
+- SQL 稳定顺序为 `first_seen_time DESC, information_id DESC, definition_version DESC, analysis_id DESC`；
+- Resolver 只读且不调用 Provider，不创建 Analysis、Run 或 Item。
+
 ## 7. Interaction Core 与 JOB Disposition Extension
 
 `user_information_interaction` 是用户 × Information 的通用 current aggregate state，只保存 view、feedback 和最近归因。
