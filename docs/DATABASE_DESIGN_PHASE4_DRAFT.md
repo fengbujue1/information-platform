@@ -2,6 +2,8 @@
 
 状态：Accepted
 
+实施状态：TASK-034 已通过 V3 实施
+
 数据库：MySQL 8.x
 
 Migration：Flyway
@@ -82,6 +84,8 @@ FK information_id -> information_item.id RESTRICT
 - 或只保留应用校验。
 
 TASK-034 必须选择并记录，避免循环建表顺序问题。
+
+实施选择：采用 nullable FK。V3 先创建 `user_information_interaction`，在 `recommendation_item` 创建后通过 `ALTER TABLE` 补充 `ON DELETE/UPDATE RESTRICT` FK。
 
 数据库不使用 ENUM，合法值由 Java 校验，遵守现有数据库原则。
 
@@ -215,6 +219,8 @@ CONTACTED_NOT_SUITABLE
 
 TASK-034/037 必须基于真实 SQL 执行 EXPLAIN，再决定是否新增组合索引。
 
+TASK-034 已基于合法测试数据图验证 Profile Owner、Interaction identity、Run Owner/Status 与 Item Run/Rank 查询索引；Candidate Resolver 的最终 SQL 与补充索引仍由 TASK-037 决定。
+
 ## 9. 时间
 
 所有数据库时间：
@@ -237,3 +243,9 @@ check real latest migration
 ```
 
 Flyway SQL 是最终数据库事实来源。
+
+实际 Migration：
+
+```text
+V3__create_phase4_recommendation_tables.sql
+```

@@ -68,15 +68,15 @@ Phase 3 已归档。
 
 状态：**进行中。**
 
-当前任务：`TASK-034`（尚未实施）。
+当前任务：`TASK-035`（尚未实施）。
 
-Phase 4 规划基线已 Accepted，`TASK-033` Backend Operational Logging Baseline 已完成；Recommendation 功能将从 TASK-034 起按顺序实施，当前不得将规划内容写成已完成能力。
+Phase 4 规划基线已 Accepted，TASK-033 日志基线与 TASK-034 V3 Recommendation 四表持久化骨架已完成；Recommendation 业务功能将从 TASK-035 起按顺序实施，当前不得将规划内容写成已完成能力。
 
 - [Phase 4 正式规划包](../PHASE4_PACKAGE_MANIFEST.md)
 - [Phase 4 Scope](PHASE4_SCOPE.md)
 - [Phase 4 Architecture（Accepted）](PHASE4_ARCHITECTURE_DRAFT.md)
 - [Phase 4 Data Model（Accepted）](PHASE4_DATA_MODEL_DRAFT.md)
-- [Phase 4 Database Design（Accepted，尚未实施）](DATABASE_DESIGN_PHASE4_DRAFT.md)
+- [Phase 4 Database Design（Accepted，V3 已实施）](DATABASE_DESIGN_PHASE4_DRAFT.md)
 - [Backend Operational Logging Conventions](LOGGING_CONVENTIONS.md)
 - [Codex Phase 4 Workflow](CODEX_PHASE4_WORKFLOW.md)
 - [Phase 4 Existing Document Change Plan](PHASE4_EXISTING_DOC_CHANGES.md)

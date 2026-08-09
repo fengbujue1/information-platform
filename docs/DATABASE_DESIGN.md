@@ -1,15 +1,15 @@
 # Information Platform 数据库设计
 
-设计版本：2.0
+设计版本：3.0
 状态：Accepted
-当前阶段：Phase 3 数据模型已实施
+当前阶段：Phase 4 V3 Recommendation 数据模型已实施
 数据库：MySQL 8.x  
 字符集：utf8mb4  
 时间存储：UTC
 
 ## 1. 设计目标
 
-当前数据库同时支持 Phase 1/2 的职位采集与浏览，以及 Phase 3 Identity、Prompt、Analysis、Schedule、Batch 和 Model Invocation 的持久化基础；公共数据库模型不能绑定 BOSS。
+当前数据库同时支持 Phase 1/2 的职位采集与浏览、Phase 3 Identity/AI Processing，以及 Phase 4 Recommendation Profile、Interaction、Run、Item 的持久化基础；公共数据库模型不能绑定 BOSS。
 
 Phase 1 创建：
 
@@ -17,7 +17,7 @@ Phase 1 创建：
 - `job_information`
 - `information_snapshot`
 
-Phase 3 已通过 V2 增加账号与 AI 处理持久化表，但尚未实现推荐和通知。
+Phase 3 已通过 V2 增加账号与 AI 处理持久化表；Phase 4 已通过 V3 增加 Recommendation 四表持久化骨架，但 Recommendation 业务和 Notification 尚未实现。
 
 ## 2. 实际输入数据事实
 
@@ -597,6 +597,16 @@ V2 实施：
 - 创建 `ai_analysis_batch_item`；
 - 创建 `ai_model_invocation`。
 
+V3 实施：
+
+- 创建 `user_recommendation_profile`；
+- 创建 `user_information_interaction`；
+- 创建 `recommendation_run`；
+- 创建 `recommendation_item`；
+- 为 Owner、来源事实、冻结 Snapshot/Analysis 与归因 Item 建立 RESTRICT FK；
+- 实施 Profile Owner、Interaction identity、Auto source Batch、Item Information/Rank 唯一约束；
+- `last_recommendation_item_id` 采用可空 FK，并在 `recommendation_item` 建表后通过 ALTER 补充约束。
+
 V1 未被修改。后续 migration 必须读取真实最新版本后命名。
 
 ## 15. 已冻结设计决策
@@ -723,6 +733,47 @@ WHERE information_type = 'JOB'
 ORDER BY first_seen_time DESC, id DESC
 ```
 
-### 16.6 明确未建表
+### 16.6 V2 阶段明确未建表
 
-V2 未创建 Spring Session JDBC、Preview、Definition、System Prompt、Usage Summary、Cost、推荐或通知表。字段类型、NULL/default、全部索引、UNIQUE、CHECK 和 FK 的逐项物理定义以 V2 migration 为 SQL 事实，并与 Accepted `docs/DATABASE_DESIGN_PHASE3_DRAFT.md` 一致。
+V2 未创建 Spring Session JDBC、Preview、Definition、System Prompt、Usage Summary、Cost、推荐或通知表。V3 仅新增四张 Recommendation 核心表，仍未创建 Recommendation Schedule、Recommendation Batch、Recommendation Profile Version 或 Notification 表。Phase 3 的字段类型、NULL/default、索引、UNIQUE、CHECK 和 FK 继续以 V2 migration 为 SQL 事实。
+
+## 17. Phase 4 V3 已实施数据库事实
+
+TASK-034 已按 Accepted `docs/DATABASE_DESIGN_PHASE4_DRAFT.md` 实施 V3：
+
+```text
+user_recommendation_profile
+user_information_interaction
+recommendation_run
+recommendation_item
+```
+
+### 17.1 Profile 与 Interaction
+
+- 每个 `user_id` 最多一个 `user_recommendation_profile`；
+- Profile 必须绑定 `ai_prompt_profile`，同 Owner 校验由后续 Service 实施；
+- `(user_id, information_id)` 唯一标识 current Interaction；
+- 数据库不使用 ENUM，`FeedbackState` 与 `JobDisposition` 合法值由 Java 校验；
+- `CONTACTED` 不排除，`NOT_INTERESTED` 或 `CONTACTED_NOT_SUITABLE` 才是 hard exclusion；
+- `last_recommendation_item_id` 是 nullable RESTRICT FK，Item 创建后才能写入归因。
+
+### 17.2 Run 与 Item
+
+- `source_analysis_batch_id` 唯一且允许多个 NULL，保证 Auto Run 幂等且不影响 Manual Run；
+- Run 冻结 Profile hash/snapshot、Prompt Profile/Version、Algorithm 与 UTC 时间窗口；
+- Item 对 `(run_id, information_id)` 与 `(run_id, rank_no)` 分别唯一；
+- Item 绑定不可变 Snapshot 与已存在 Analysis，Interaction 变化不修改或删除历史 Item；
+- 所有 Phase 4 FK 均为 `ON DELETE/UPDATE RESTRICT`。
+
+### 17.3 索引验证
+
+基于专用 MySQL 测试库中的合法数据图执行 EXPLAIN，已确认以下查询具备候选索引：
+
+```text
+Profile by user_id
+Interaction by user_id + information_id
+Run by user_id + status
+Item by run_id + rank_no
+```
+
+V3 未新增 Candidate Resolver 专用大范围扫描索引；TASK-037 必须结合真实 Candidate SQL 再执行 EXPLAIN 后决定。

@@ -48,7 +48,7 @@ class Phase3SchemaMigrationIntegrationTest {
         MigrateResult result = flyway.migrate();
 
         assertTrue(result.success, "既有测试库升级必须成功");
-        assertEquals("2", flyway.info().current().getVersion().getVersion());
+        assertEquals("3", flyway.info().current().getVersion().getVersion());
     }
 
     @Test

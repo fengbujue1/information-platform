@@ -110,7 +110,7 @@ V1 保持历史兼容，V2 为当前版本。
 
 设计状态：Accepted。
 
-当前任务：`TASK-034`（尚未实施）；`TASK-033` Backend Operational Logging Baseline 已完成。
+当前任务：`TASK-035`（尚未实施）；TASK-033 日志基线与 TASK-034 Recommendation Data Model / Flyway 已完成。
 
 ### 计划交付
 
@@ -130,7 +130,7 @@ Phase 4 与 Phase 3 的区别：
 - Phase 3：用户通过 Prompt 主动或定时发起 USER_RELEVANCE 分析；
 - Phase 4：系统消费 Phase 3 已有成功 Analysis，基于 Recommendation Profile 生成预计算推荐。
 
-Scope、Architecture、Data Model、Database Design、ADR、Contract 与 TASK-033 ～ TASK-044 已 Accepted。TASK-033 已完成；Recommendation 功能尚未实施，将从 TASK-034 起按顺序推进。
+Scope、Architecture、Data Model、Database Design、ADR、Contract 与 TASK-033 ～ TASK-044 已 Accepted。TASK-033 与 TASK-034 已完成；Recommendation 业务功能尚未实施，将从 TASK-035 起按顺序推进。
 
 ### 明确不做
 

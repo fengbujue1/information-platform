@@ -127,9 +127,9 @@ ai_model_invocation
 
 ## 当前任务
 
-`TASK-034`：Phase 4 Flyway And Recommendation Tables（尚未实施）。
+`TASK-035`：Recommendation Profile Domain And API（尚未实施）。
 
-`TASK-033` Backend Operational Logging Baseline 已完成；当前仅将实施顺序推进到 TASK-034，不代表 TASK-034 已开始编码。
+`TASK-033` Backend Operational Logging Baseline 与 `TASK-034` Phase 4 Recommendation Data Model / Flyway 已完成；当前仅将实施顺序推进到 TASK-035，不代表 TASK-035 已开始编码。
 
 Phase 3 已归档。后续仅接受缺陷修复、安全修复、依赖维护和运行参数维护，不再在 Phase 3 范围继续增加新功能。
 
@@ -145,11 +145,11 @@ Phase 4：Personalized Recommendation MVP 已启动，规划基线已 Accepted�
 - TASK-033 ～ TASK-044 拆分；
 - Backend Operational Logging Conventions；
 - Codex Phase 4 Workflow；
-- TASK-033 Backend Operational Logging Baseline。
+- TASK-033 Backend Operational Logging Baseline；
+- TASK-034 Recommendation Data Model / Flyway（V3）。
 
 尚未实施：
 
-- Phase 4 Flyway 与四张 Recommendation 表；
 - Recommendation Profile、Interaction、Candidate、Scoring、Ranking、Run、Trigger、Feed；
 - Phase 4 Web 与 E2E。
 
@@ -159,4 +159,4 @@ CI 后续作为独立工程维护事项处理，不作为本次 Phase 3 阶段�
 
 ## 下一步
 
-按 Accepted Phase 4 规划实施 `TASK-034`；不得提前实施后续 Recommendation 业务任务。
+按 Accepted Phase 4 规划实施 `TASK-035`；不得提前实施后续 Recommendation 业务任务。
