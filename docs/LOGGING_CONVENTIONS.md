@@ -2,6 +2,8 @@
 
 状态：Accepted
 
+实施状态：TASK-033 已完成基础能力落地
+
 适用范围：`backend/information-hub`
 
 Phase 4 起强制执行。

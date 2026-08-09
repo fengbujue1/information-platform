@@ -31,7 +31,7 @@ class AiProviderPropertiesTest {
 
         assertThatThrownBy(() -> properties.setTimeout(Duration.ZERO))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> properties.setMaxOutputTokens(501))
+        assertThatThrownBy(() -> properties.setMaxOutputTokens(5001))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 }

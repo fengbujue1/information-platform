@@ -2,6 +2,7 @@ package com.informationplatform.hub.identity.api;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -14,9 +15,12 @@ import com.informationplatform.hub.ingestion.api.dto.IngestionResult;
 import com.informationplatform.hub.ingestion.application.InformationIngestionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -29,6 +33,7 @@ import org.springframework.test.web.servlet.MvcResult;
 /** 验证 Identity Session/CSRF 与 Collector Bearer 区域保持隔离。 */
 @SpringBootTest
 @AutoConfigureMockMvc
+@ExtendWith(OutputCaptureExtension.class)
 @TestPropertySource(properties = {
     "information-hub.collector-api.token=test-collector-token",
     "information-hub.identity.bootstrap.username=",
@@ -160,6 +165,24 @@ class IdentitySecurityIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validCollectorBody()))
                 .andExpect(status().isCreated());
+    }
+
+    @Test
+    void httpLifecycleReturnsRequestIdAndLogsAuthenticatedUsername(CapturedOutput output)
+            throws Exception {
+        AuthenticatedSession authenticated = login();
+
+        MvcResult result = mockMvc.perform(get("/api/v1/auth/me")
+                        .session(authenticated.session()))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String requestId = result.getResponse().getHeader("X-Request-ID");
+        assertThat(requestId).isNotBlank();
+        assertThat(output).contains(
+                "requestId=" + requestId,
+                "username=admin",
+                "HTTP request completed, method=GET, path=/api/v1/auth/me, status=200, durationMs=");
     }
 
     @Test

@@ -8,6 +8,7 @@ import com.informationplatform.hub.analysis.schedule.application.AnalysisSchedul
 import com.informationplatform.hub.analysis.schedule.application.AnalysisSchedulePersistenceException;
 import com.informationplatform.hub.analysis.schedule.application.AnalysisScheduleRequestException;
 import com.informationplatform.hub.common.api.ApiResponse;
+import com.informationplatform.hub.common.logging.OperationalLogExceptions;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,8 +73,9 @@ public class AnalysisScheduleApiExceptionHandler {
 
     @ExceptionHandler({AnalysisSchedulePersistenceException.class, DataAccessException.class})
     ResponseEntity<ApiResponse<Void>> handlePersistence(RuntimeException exception) {
-        LOGGER.error("Analysis Schedule persistence operation failed: {}",
-                exception.getClass().getName());
+        LOGGER.error(
+                "Analysis Schedule persistence operation failed",
+                OperationalLogExceptions.sanitized(exception));
         return error(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "ANALYSIS_SCHEDULE_PERSISTENCE_FAILED",

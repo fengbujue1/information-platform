@@ -14,7 +14,7 @@ public record AiProviderRequest(
         }
         messages = List.copyOf(messages);
         if (maxOutputTokens <= 0 || maxOutputTokens > 5000) {
-            throw new IllegalArgumentException("maxOutputTokens must be between 1 and 1000");
+            throw new IllegalArgumentException("maxOutputTokens must be between 1 and 5000");
         }
     }
 }

@@ -3,8 +3,11 @@ package com.informationplatform.hub.identity.infrastructure.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.informationplatform.hub.common.api.ApiErrorWriter;
 import com.informationplatform.hub.common.api.ApiResponse;
+import com.informationplatform.hub.common.logging.AuthenticatedUserMdcFilter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
@@ -19,6 +22,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.session.ChangeSessionIdAuthenticationStrategy;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 
@@ -26,6 +30,9 @@ import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 @Configuration
 @EnableWebSecurity
 public class IdentitySecurityConfiguration {
+
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(IdentitySecurityConfiguration.class);
 
     /** 配置 API 授权、CSRF、Logout、Session 和统一 JSON 安全错误。 */
     @Bean
@@ -61,6 +68,8 @@ public class IdentitySecurityConfiguration {
                 .requestCache(cache -> cache.disable())
                 .httpBasic(basic -> basic.disable())
                 .formLogin(form -> form.disable())
+                // SecurityContext 加载后只把可信认证用户名写入本次请求的 MDC。
+                .addFilterAfter(new AuthenticatedUserMdcFilter(), SecurityContextHolderFilter.class)
                 .logout(logout -> logout
                         .logoutUrl("/api/v1/auth/logout")
                         .invalidateHttpSession(true)
@@ -72,18 +81,30 @@ public class IdentitySecurityConfiguration {
                                         "LOGOUT_SUCCEEDED",
                                         java.util.Map.of("loggedOut", true))))
                 .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint((request, response, exception) ->
-                                errorWriter.write(
-                                        response,
-                                        401,
-                                        "AUTHENTICATION_REQUIRED",
-                                        "An authenticated user session is required"))
-                        .accessDeniedHandler((request, response, exception) ->
-                                errorWriter.write(
-                                        response,
-                                        403,
-                                        "ACCESS_DENIED",
-                                        "The request is not allowed")));
+                        .authenticationEntryPoint((request, response, exception) -> {
+                            LOGGER.warn(
+                                    "Security request rejected, path={}, errorCode={}, reason={}",
+                                    request.getRequestURI(),
+                                    "AUTHENTICATION_REQUIRED",
+                                    "authenticated_session_required");
+                            errorWriter.write(
+                                    response,
+                                    401,
+                                    "AUTHENTICATION_REQUIRED",
+                                    "An authenticated user session is required");
+                        })
+                        .accessDeniedHandler((request, response, exception) -> {
+                            LOGGER.warn(
+                                    "Security request rejected, path={}, errorCode={}, reason={}",
+                                    request.getRequestURI(),
+                                    "ACCESS_DENIED",
+                                    "authorization_or_csrf_rejected");
+                            errorWriter.write(
+                                    response,
+                                    403,
+                                    "ACCESS_DENIED",
+                                    "The request is not allowed");
+                        }));
         return http.build();
     }
 

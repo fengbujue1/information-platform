@@ -13,6 +13,8 @@ import com.informationplatform.hub.analysis.prompt.domain.PromptVersionChange;
 import com.informationplatform.hub.identity.application.CurrentUserProvider;
 import java.util.List;
 import java.util.Objects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 /** 实现账号级 Prompt Profile 与不可变 Prompt Version 业务规则。 */
 @Service
 public class PromptProfileService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(PromptProfileService.class);
 
     /** TASK-022 唯一允许的 Analysis Definition Key。 */
     public static final String JOB_USER_RELEVANCE = "JOB_USER_RELEVANCE";
@@ -89,7 +93,9 @@ public class PromptProfileService {
                     "A Prompt Profile with the same name already exists",
                     exception);
         }
-        return toDomain(requireInsertedProfile(profile.getId(), userId));
+        PromptProfile created = toDomain(requireInsertedProfile(profile.getId(), userId));
+        LOGGER.info("Prompt profile created, promptProfileId={}", created.id());
+        return created;
     }
 
     /** 返回当前 Owner 的单个 Profile；越权访问与不存在统一返回 404。 */
@@ -105,6 +111,7 @@ public class PromptProfileService {
      */
     @Transactional
     public PromptVersionChange createVersion(long profileId, String content) {
+        LOGGER.info("Prompt profile update requested, promptProfileId={}", profileId);
         long userId = currentUserId();
         validatePromptContent(content);
         AiPromptProfilePo profile = requireOwnedProfileForUpdate(profileId, userId);
@@ -117,7 +124,12 @@ public class PromptProfileService {
         if (existing != null) {
             // 相同内容复用历史 Version，但仍在本事务内将其切换为 Active。
             updateActiveVersion(profile, existing.getId());
-            return new PromptVersionChange(toDomain(existing), false);
+            PromptVersionChange change = new PromptVersionChange(toDomain(existing), false);
+            LOGGER.info(
+                    "Prompt profile updated, promptProfileId={}, promptVersionId={}, versionCreated=false",
+                    profileId,
+                    existing.getId());
+            return change;
         }
 
         AiPromptVersionPo version = new AiPromptVersionPo();
@@ -130,8 +142,13 @@ public class PromptProfileService {
         }
         // 新 Version 与 Active 指针必须一起提交或一起回滚。
         updateActiveVersion(profile, version.getId());
-        return new PromptVersionChange(
+        PromptVersionChange change = new PromptVersionChange(
                 toDomain(requireInsertedVersion(version.getId(), profileId)), true);
+        LOGGER.info(
+                "Prompt profile updated, promptProfileId={}, promptVersionId={}, versionCreated=true",
+                profileId,
+                version.getId());
+        return change;
     }
 
     /** 返回当前 Owner 指定 Profile 的全部不可变 Version。 */
@@ -150,27 +167,44 @@ public class PromptProfileService {
     /** 在事务内验证 Owner 与 Profile/Version 归属后切换 Active Version。 */
     @Transactional
     public PromptProfile activateVersion(long profileId, long versionId) {
+        LOGGER.info("Prompt profile update requested, promptProfileId={}", profileId);
         long userId = currentUserId();
         AiPromptProfilePo profile = requireOwnedProfileForUpdate(profileId, userId);
         requireVersionInProfile(versionId, profileId);
         updateActiveVersion(profile, versionId);
-        return toDomain(requireOwnedProfile(profileId, userId));
+        PromptProfile updated = toDomain(requireOwnedProfile(profileId, userId));
+        LOGGER.info(
+                "Prompt profile updated, promptProfileId={}, promptVersionId={}",
+                profileId,
+                versionId);
+        return updated;
     }
 
     /** 仅以 ACTIVE/DISABLED 停用或重新启用 Profile，不物理删除历史。 */
     @Transactional
     public PromptProfile updateStatus(long profileId, String status) {
+        LOGGER.info("Prompt profile update requested, promptProfileId={}", profileId);
         long userId = currentUserId();
         PromptProfileStatus targetStatus = parseStatus(status);
         AiPromptProfilePo profile = requireOwnedProfileForUpdate(profileId, userId);
         if (targetStatus.name().equals(profile.getStatus())) {
-            return toDomain(profile);
+            PromptProfile unchanged = toDomain(profile);
+            LOGGER.info(
+                    "Prompt profile updated, promptProfileId={}, status={}, changed=false",
+                    profileId,
+                    targetStatus);
+            return unchanged;
         }
         // 只更新状态列，避免把查询得到的旧 updated_at 回写并覆盖数据库自动更新时间。
         if (profileMapper.updateStatus(profileId, userId, targetStatus.name()) != 1) {
             throw new PromptPersistenceException("Prompt Profile status update affected no row");
         }
-        return toDomain(requireOwnedProfile(profileId, userId));
+        PromptProfile updated = toDomain(requireOwnedProfile(profileId, userId));
+        LOGGER.info(
+                "Prompt profile updated, promptProfileId={}, status={}, changed=true",
+                profileId,
+                targetStatus);
+        return updated;
     }
 
     private long currentUserId() {

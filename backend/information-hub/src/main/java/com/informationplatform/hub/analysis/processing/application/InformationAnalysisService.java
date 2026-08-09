@@ -12,11 +12,16 @@ import com.informationplatform.hub.analysis.provider.application.AiProviderClien
 import com.informationplatform.hub.analysis.provider.domain.AiProviderException;
 import com.informationplatform.hub.analysis.provider.domain.AiProviderResult;
 import com.informationplatform.hub.identity.application.CurrentUserProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /** 在数据库事务之外编排一次同步单条 Information Analysis。 */
 @Service
 public class InformationAnalysisService {
+
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(InformationAnalysisService.class);
 
     /** 从 Session 获取不可伪造的 Owner。 */
     private final CurrentUserProvider currentUserProvider;
@@ -48,6 +53,12 @@ public class InformationAnalysisService {
             Long snapshotId,
             long promptProfileId,
             boolean retryFailed) {
+        LOGGER.info(
+                "Single analysis requested, informationId={}, snapshotId={}, promptProfileId={}, retryFailed={}",
+                informationId,
+                snapshotId,
+                promptProfileId,
+                retryFailed);
         long userId = currentUserProvider.requireCurrentUser().id();
         AnalysisPreparation preparation = transactionService.prepare(
                 userId, informationId, snapshotId, promptProfileId, retryFailed);
@@ -61,35 +72,80 @@ public class InformationAnalysisService {
      */
     public InformationAnalysisView executePrepared(AnalysisPreparation preparation) {
         if (preparation.reused() != null) {
+            LOGGER.info(
+                    "AI analysis reused, analysisId={}, status={}",
+                    preparation.reused().id(),
+                    preparation.reused().status());
             return preparation.reused();
         }
 
         AnalysisExecutionPlan plan = preparation.executionPlan();
+        long startedNanos = System.nanoTime();
+        LOGGER.info(
+                "AI analysis started, analysisId={}, provider={}, model={}",
+                plan.analysisId(),
+                providerClient.providerId(),
+                providerClient.modelName());
         AiProviderResult providerResult;
         try {
             // 外部 HTTP 调用不得位于数据库事务内，也不得在 Client 内自动重试。
             providerResult = providerClient.execute(plan.providerRequest());
         } catch (AiProviderException exception) {
+            LOGGER.error(
+                    "AI analysis failed, analysisId={}, provider={}, model={}, errorType={}, durationMs={}",
+                    plan.analysisId(),
+                    providerClient.providerId(),
+                    providerClient.modelName(),
+                    exception.errorType(),
+                    elapsedMillis(startedNanos),
+                    exception);
             return transactionService.completeProviderFailure(plan, exception);
         } catch (RuntimeException exception) {
             // 未分类异常的外部执行结果可能不确定，记录 UNKNOWN 后交由人工判断。
+            LOGGER.error(
+                    "AI analysis failed, analysisId={}, provider={}, model={}, errorType={}, durationMs={}",
+                    plan.analysisId(),
+                    providerClient.providerId(),
+                    providerClient.modelName(),
+                    "UNEXPECTED",
+                    elapsedMillis(startedNanos),
+                    exception);
             transactionService.completeUnexpectedFailure(plan);
-            throw new AnalysisPersistenceException("Unexpected AI execution failure");
+            throw new AnalysisPersistenceException("Unexpected AI execution failure", exception);
         }
 
         try {
             ValidatedAnalysisOutput<?> validated = process(plan.definition(), providerResult);
             JsonNode resultJson = validated.resultJson();
-            return transactionService.completeSuccess(
+            InformationAnalysisView completed = transactionService.completeSuccess(
                     plan,
                     providerResult,
                     resultJson,
                     resultJson.path("relevanceScore").intValue(),
                     resultJson.path("summary").textValue());
+            LOGGER.info(
+                    "AI analysis completed, analysisId={}, provider={}, model={}, durationMs={}, inputTokens={}, outputTokens={}",
+                    plan.analysisId(),
+                    providerResult.provider(),
+                    providerResult.modelName(),
+                    elapsedMillis(startedNanos),
+                    providerResult.usage().inputTokens(),
+                    providerResult.usage().outputTokens());
+            return completed;
         } catch (AnalysisOutputProcessingException exception) {
+            LOGGER.warn(
+                    "AI analysis output rejected, analysisId={}, errorCode={}, durationMs={}",
+                    plan.analysisId(),
+                    exception.code(),
+                    elapsedMillis(startedNanos));
             return transactionService.completeOutputFailure(
                     plan, providerResult, exception.code(), exception.getMessage());
         } catch (AnalysisDefinitionValidationException exception) {
+            LOGGER.warn(
+                    "AI analysis output rejected, analysisId={}, errorCode={}, durationMs={}",
+                    plan.analysisId(),
+                    exception.code(),
+                    elapsedMillis(startedNanos));
             return transactionService.completeOutputFailure(
                     plan, providerResult, exception.code(), exception.getMessage());
         }
@@ -110,5 +166,9 @@ public class InformationAnalysisService {
     private <O> ValidatedAnalysisOutput<O> processCaptured(
             AnalysisDefinition<?, O> definition, AiProviderResult providerResult) {
         return outputProcessor.process(definition, providerResult);
+    }
+
+    private long elapsedMillis(long startedNanos) {
+        return Math.max(0, (System.nanoTime() - startedNanos) / 1_000_000);
     }
 }

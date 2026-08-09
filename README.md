@@ -26,7 +26,9 @@ BOSS Collector
 
 Phase 4 已启动，当前处于进行中。
 
-当前任务：`TASK-033`（Backend Operational Logging Baseline，尚未实施）。
+当前任务：`TASK-034`（Phase 4 Flyway And Recommendation Tables，尚未实施）。
+
+`TASK-033` Backend Operational Logging Baseline 已完成。
 
 ## Phase 1：采集与归档
 
@@ -160,7 +162,7 @@ API Key、Bootstrap 密码、Session Cookie、Collector Token 和完整 Provider
 
 Phase 4 的 Scope、Architecture、Data Model、Database Design、ADR、Contract 和 TASK 已完成评审并进入 Accepted 实施基线。
 
-计划按 `TASK-033` ～ `TASK-044` 顺序实施。当前尚未实现 Recommendation Profile、Recommendation Run / Item、评分排序、Feed、Interaction 或 Phase 4 Web，不将规划能力视为已完成能力。
+`TASK-033` Backend Operational Logging Baseline 已完成；后续从 `TASK-034` 继续按顺序实施。当前尚未实现 Recommendation Profile、Recommendation Run / Item、评分排序、Feed、Interaction 或 Phase 4 Web，不将规划能力视为已完成能力。
 
 ## 文档入口
 

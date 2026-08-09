@@ -3,6 +3,7 @@ package com.informationplatform.hub.analysis.worker.application;
 import com.informationplatform.hub.analysis.processing.application.InformationAnalysisService;
 import com.informationplatform.hub.analysis.processing.domain.InformationAnalysisView;
 import com.informationplatform.hub.analysis.worker.domain.AnalysisBatchWork;
+import com.informationplatform.hub.common.logging.OperationalLogExceptions;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +19,7 @@ import org.springframework.stereotype.Component;
         havingValue = "true")
 public class AnalysisBatchWorker {
 
-    /** 日志只记录 ID、数量和异常类型，不记录 Prompt、正文或秘密。 */
+    /** 日志只记录 ID、数量和脱敏异常栈，不记录 Prompt、正文或秘密。 */
     private static final Logger LOGGER = LoggerFactory.getLogger(AnalysisBatchWorker.class);
 
     /** Worker 领取、完成和恢复短事务。 */
@@ -57,12 +58,25 @@ public class AnalysisBatchWorker {
             if (work == null) {
                 return;
             }
+            long startedNanos = System.nanoTime();
+            LOGGER.info(
+                    "Analysis batch item started, batchId={}, batchItemId={}, analysisId={}",
+                    work.batchId(),
+                    work.batchItemId(),
+                    work.preparation().executionPlan().analysisId());
             InformationAnalysisView result =
                     analysisService.executePrepared(work.preparation());
             transactions.complete(
                     work.batchItemId(),
                     work.preparation().executionPlan().analysisId(),
                     result.status());
+            LOGGER.info(
+                    "Analysis batch item completed, batchId={}, batchItemId={}, analysisId={}, status={}, durationMs={}",
+                    work.batchId(),
+                    work.batchItemId(),
+                    work.preparation().executionPlan().analysisId(),
+                    result.status(),
+                    Math.max(0, (System.nanoTime() - startedNanos) / 1_000_000));
         } catch (RuntimeException exception) {
             if (work != null) {
                 try {
@@ -72,13 +86,19 @@ public class AnalysisBatchWorker {
                             work.preparation().executionPlan().analysisId(),
                             "FAILED");
                 } catch (RuntimeException completionException) {
-                    LOGGER.error("Analysis Batch failure completion failed: {}",
-                            completionException.getClass().getName());
+                    LOGGER.error(
+                            "Analysis batch failure completion failed, batchId={}, batchItemId={}",
+                            work.batchId(),
+                            work.batchItemId(),
+                            OperationalLogExceptions.sanitized(completionException));
                 }
             }
             // Provider/持久化错误已在业务记录中脱敏；日志禁止输出请求或响应正文。
-            LOGGER.error("Analysis Batch worker iteration failed: {}",
-                    exception.getClass().getName());
+            LOGGER.error(
+                    "Analysis batch worker iteration failed, batchId={}, batchItemId={}",
+                    work == null ? null : work.batchId(),
+                    work == null ? null : work.batchItemId(),
+                    OperationalLogExceptions.sanitized(exception));
         }
     }
 }

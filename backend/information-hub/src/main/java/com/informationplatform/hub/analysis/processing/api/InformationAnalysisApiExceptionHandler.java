@@ -7,6 +7,7 @@ import com.informationplatform.hub.analysis.processing.application.AnalysisReque
 import com.informationplatform.hub.analysis.provider.domain.AiProviderErrorType;
 import com.informationplatform.hub.analysis.provider.domain.AiProviderException;
 import com.informationplatform.hub.common.api.ApiResponse;
+import com.informationplatform.hub.common.logging.OperationalLogExceptions;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,8 +69,10 @@ public class InformationAnalysisApiExceptionHandler {
 
     @ExceptionHandler({AnalysisPersistenceException.class, DataAccessException.class})
     ResponseEntity<ApiResponse<Void>> handlePersistence(RuntimeException exception) {
-        // 只记录异常类型，避免数据库参数或 Provider 内容进入日志。
-        LOGGER.error("Analysis persistence operation failed: {}", exception.getClass().getName());
+        // ERROR 保留堆栈；上游异常必须使用稳定脱敏消息。
+        LOGGER.error(
+                "Analysis persistence operation failed",
+                OperationalLogExceptions.sanitized(exception));
         return error(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "ANALYSIS_PERSISTENCE_FAILED",

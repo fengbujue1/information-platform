@@ -6,12 +6,16 @@ import com.informationplatform.hub.analysis.preview.application.PreviewTokenServ
 import com.informationplatform.hub.analysis.preview.domain.PreviewTokenPayload;
 import com.informationplatform.hub.identity.application.CurrentUserProvider;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 /** 编排 Manual Confirm 和 Owner 安全 Batch 查询。 */
 @Service
 public class AnalysisBatchService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AnalysisBatchService.class);
 
     /** Session Owner。 */
     private final CurrentUserProvider currentUserProvider;
@@ -31,15 +35,22 @@ public class AnalysisBatchService {
 
     /** 验证 Preview Token 并快速创建或复用异步 Batch。 */
     public AnalysisBatchView confirm(String previewToken) {
+        long startedNanos = System.nanoTime();
         long userId = currentUserProvider.requireCurrentUser().id();
         PreviewTokenPayload payload = tokenService.verifyForOwner(previewToken, userId);
+        LOGGER.info(
+                "Analysis batch confirmation requested, promptProfileId={}, triggerType=MANUAL",
+                payload.promptProfileId());
         AnalysisBatchView existing =
                 transactionService.findManual(userId, payload.manualRequestId());
         if (existing != null) {
+            logResolved(existing, true, startedNanos);
             return existing;
         }
         try {
-            return transactionService.createConfirmed(payload);
+            AnalysisBatchView created = transactionService.createConfirmed(payload);
+            logResolved(created, false, startedNanos);
+            return created;
         } catch (DuplicateKeyException exception) {
             // 并发 Confirm 由数据库唯一键收敛；失败事务回滚后返回胜出 Batch。
             AnalysisBatchView concurrent =
@@ -47,8 +58,21 @@ public class AnalysisBatchService {
             if (concurrent == null) {
                 throw exception;
             }
+            logResolved(concurrent, true, startedNanos);
             return concurrent;
         }
+    }
+
+    private void logResolved(
+            AnalysisBatchView batch, boolean reused, long startedNanos) {
+        LOGGER.info(
+                "Analysis batch created, batchId={}, triggerType={}, status={}, candidateCount={}, reused={}, durationMs={}",
+                batch.id(),
+                batch.triggerType(),
+                batch.status(),
+                batch.selectedCount(),
+                reused,
+                Math.max(0, (System.nanoTime() - startedNanos) / 1_000_000));
     }
 
     /** 返回当前 Owner 最近的 Batch。 */

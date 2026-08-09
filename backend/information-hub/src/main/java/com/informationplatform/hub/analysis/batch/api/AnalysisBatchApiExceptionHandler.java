@@ -9,6 +9,7 @@ import com.informationplatform.hub.analysis.preview.application.AnalysisPreviewN
 import com.informationplatform.hub.analysis.preview.application.AnalysisPreviewRequestException;
 import com.informationplatform.hub.analysis.provider.domain.AiProviderException;
 import com.informationplatform.hub.common.api.ApiResponse;
+import com.informationplatform.hub.common.logging.OperationalLogExceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
@@ -24,7 +25,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice(assignableTypes = AnalysisBatchController.class)
 public class AnalysisBatchApiExceptionHandler {
 
-    /** 只记录异常类型，不记录 Token、Prompt、候选或 Provider 秘密。 */
+    /** 记录脱敏堆栈，不记录 Token、Prompt、候选或 Provider 秘密。 */
     private static final Logger LOGGER =
             LoggerFactory.getLogger(AnalysisBatchApiExceptionHandler.class);
 
@@ -62,8 +63,9 @@ public class AnalysisBatchApiExceptionHandler {
 
     @ExceptionHandler({AnalysisBatchPersistenceException.class, DataAccessException.class})
     ResponseEntity<ApiResponse<Void>> handlePersistence(RuntimeException exception) {
-        LOGGER.error("Analysis Batch persistence operation failed: {}",
-                exception.getClass().getName());
+        LOGGER.error(
+                "Analysis Batch persistence operation failed",
+                OperationalLogExceptions.sanitized(exception));
         return error(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "ANALYSIS_BATCH_PERSISTENCE_FAILED",

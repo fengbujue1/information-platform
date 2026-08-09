@@ -23,6 +23,8 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +32,9 @@ import org.springframework.transaction.annotation.Transactional;
 /** 实现 Owner 隔离的每日 Schedule 配置、启停、查询和配置 Preview。 */
 @Service
 public class AnalysisScheduleService {
+
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(AnalysisScheduleService.class);
 
     private static final LocalTime DEFAULT_LOCAL_TIME = LocalTime.of(2, 0);
     private static final int MAX_NAME_CODE_POINTS = 255;
@@ -90,7 +95,15 @@ public class AnalysisScheduleService {
             throw new AnalysisScheduleConflictException(
                     "An Analysis Schedule with the same name already exists", exception);
         }
-        return toView(scheduleMapper.selectOwnedById(schedule.getId(), user.id()));
+        AnalysisScheduleView created =
+                toView(scheduleMapper.selectOwnedById(schedule.getId(), user.id()));
+        LOGGER.info(
+                "Analysis schedule created, scheduleId={}, promptProfileId={}, enabled={}, nextRunAt={}",
+                created.id(),
+                created.promptProfileId(),
+                created.enabled(),
+                created.nextRunAt());
+        return created;
     }
 
     /** 完整替换 Schedule 配置；保持当前 enabled 状态并重新计算未来计划点。 */
@@ -113,7 +126,15 @@ public class AnalysisScheduleService {
             throw new AnalysisScheduleConflictException(
                     "An Analysis Schedule with the same name already exists", exception);
         }
-        return toView(scheduleMapper.selectOwnedById(scheduleId, user.id()));
+        AnalysisScheduleView updated =
+                toView(scheduleMapper.selectOwnedById(scheduleId, user.id()));
+        LOGGER.info(
+                "Analysis schedule updated, scheduleId={}, promptProfileId={}, enabled={}, nextRunAt={}",
+                updated.id(),
+                updated.promptProfileId(),
+                updated.enabled(),
+                updated.nextRunAt());
+        return updated;
     }
 
     /** 启用时计算下一未来计划点；停用时原子清空 nextRunAt。 */
@@ -138,7 +159,14 @@ public class AnalysisScheduleService {
             throw new AnalysisSchedulePersistenceException(
                     "Analysis Schedule status update affected no row");
         }
-        return toView(scheduleMapper.selectOwnedById(scheduleId, user.id()));
+        AnalysisScheduleView updated =
+                toView(scheduleMapper.selectOwnedById(scheduleId, user.id()));
+        LOGGER.info(
+                "Analysis schedule status updated, scheduleId={}, enabled={}, nextRunAt={}",
+                updated.id(),
+                updated.enabled(),
+                updated.nextRunAt());
+        return updated;
     }
 
     /** 返回当前 Owner 的全部 Schedule 和各自最近运行摘要。 */

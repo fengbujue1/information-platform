@@ -2,6 +2,7 @@ package com.informationplatform.hub.analysis.schedule.application;
 
 import com.informationplatform.hub.analysis.schedule.domain.AnalysisScheduleDispatchResult;
 import com.informationplatform.hub.analysis.schedule.infrastructure.config.AnalysisScheduleProperties;
+import com.informationplatform.hub.common.logging.OperationalLogExceptions;
 import java.time.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,24 +48,25 @@ public class AnalysisScheduleDispatcher {
     public void poll() {
         int limit = Math.max(1, properties.getMaxSchedulesPerPoll());
         for (int index = 0; index < limit; index++) {
+            long startedNanos = System.nanoTime();
             try {
                 AnalysisScheduleDispatchResult result =
                         transactions.dispatchNext(clock.instant());
                 if (!result.processed()) {
                     return;
                 }
-                if (!"CREATED".equals(result.outcome())) {
-                    LOGGER.info(
-                            "Analysis Schedule dispatch outcome={} scheduleId={} batchId={}",
-                            result.outcome(),
-                            result.scheduleId(),
-                            result.batchId());
-                }
+                LOGGER.info(
+                        "Analysis schedule dispatched, outcome={}, scheduleId={}, batchId={}, durationMs={}",
+                        result.outcome(),
+                        result.scheduleId(),
+                        result.batchId(),
+                        Math.max(0, (System.nanoTime() - startedNanos) / 1_000_000));
             } catch (RuntimeException exception) {
                 // 单次失败留待下一轮重试；日志禁止输出 SQL 参数、Prompt 或 Provider 配置。
                 LOGGER.error(
-                        "Analysis Schedule dispatch failed: {}",
-                        exception.getClass().getName());
+                        "Analysis schedule dispatch failed, durationMs={}",
+                        Math.max(0, (System.nanoTime() - startedNanos) / 1_000_000),
+                        OperationalLogExceptions.sanitized(exception));
                 return;
             }
         }

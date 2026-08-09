@@ -6,6 +6,7 @@ import com.informationplatform.hub.analysis.preview.application.AnalysisPreviewN
 import com.informationplatform.hub.analysis.preview.application.AnalysisPreviewRequestException;
 import com.informationplatform.hub.analysis.processing.application.AnalysisPersistenceException;
 import com.informationplatform.hub.common.api.ApiResponse;
+import com.informationplatform.hub.common.logging.OperationalLogExceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
@@ -51,9 +52,10 @@ public class AnalysisPreviewApiExceptionHandler {
 
     @ExceptionHandler({AnalysisPersistenceException.class, DataAccessException.class})
     ResponseEntity<ApiResponse<Void>> handlePersistence(RuntimeException exception) {
-        // 只记录异常类型，避免数据库参数、Prompt、候选或 Token 进入日志。
-        LOGGER.error("Analysis Preview persistence operation failed: {}",
-                exception.getClass().getName());
+        // ERROR 保留堆栈；业务异常消息不得携带 Prompt、候选正文或 Token。
+        LOGGER.error(
+                "Analysis Preview persistence operation failed",
+                OperationalLogExceptions.sanitized(exception));
         return error(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "ANALYSIS_PREVIEW_PERSISTENCE_FAILED",

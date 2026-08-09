@@ -12,6 +12,8 @@ import com.informationplatform.hub.ingestion.domain.RawPayloadSecurityValidator;
 import com.informationplatform.hub.ingestion.infrastructure.persistence.InformationArchiveRepository;
 import java.time.Instant;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -19,6 +21,9 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 @Service
 public class InformationIngestionService {
+
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(InformationIngestionService.class);
 
     /** 并发首次写入发生唯一键竞争时允许的最大尝试次数。 */
     private static final int MAX_IDENTITY_RACE_ATTEMPTS = 2;
@@ -62,10 +67,19 @@ public class InformationIngestionService {
      * <p>先在事务外完成纯计算和安全校验，再在事务中执行行锁、合并和三表原子写入。
      */
     public IngestionResult ingest(InformationEnvelopeRequest request) {
+        long startedNanos = System.nanoTime();
+        LOGGER.info(
+                "Collector submission received, source={}, informationType={}, itemCount=1",
+                request.source(),
+                request.informationType());
         // 先统一文本、时间和数组表达，避免等价数据产生不同版本。
         ArchiveContent incoming = normalizer.normalize(request);
         // 在任何数据库写入前递归检查原始数据，防止敏感凭据落库。
         rawPayloadSecurityValidator.validate(incoming.information().rawPayload());
+        LOGGER.info(
+                "Collector submission validation passed, source={}, informationType={}, itemCount=1",
+                incoming.information().source(),
+                incoming.information().informationType());
 
         DuplicateKeyException identityRace = null;
         for (int attempt = 0; attempt < MAX_IDENTITY_RACE_ATTEMPTS; attempt++) {
@@ -76,6 +90,7 @@ public class InformationIngestionService {
                 if (result == null) {
                     throw new IllegalStateException("Ingestion transaction returned no result");
                 }
+                logArchiveCompleted(result, startedNanos);
                 return result;
             } catch (DuplicateKeyException exception) {
                 // 两个首次请求可能同时未查到记录；唯一键失败后重试即可进入更新路径。
@@ -83,6 +98,24 @@ public class InformationIngestionService {
             }
         }
         throw identityRace;
+    }
+
+    private void logArchiveCompleted(IngestionResult result, long startedNanos) {
+        int inserted = result.created() ? 1 : 0;
+        int updated = !result.created() && result.contentChanged() ? 1 : 0;
+        int unchanged = !result.created() && !result.contentChanged() ? 1 : 0;
+        LOGGER.info(
+                "Information archive completed, informationId={}, received=1, inserted={}, updated={}, unchanged={}, snapshotsCreated={}, durationMs={}",
+                result.informationId(),
+                inserted,
+                updated,
+                unchanged,
+                result.snapshotCreated() ? 1 : 0,
+                elapsedMillis(startedNanos));
+    }
+
+    private long elapsedMillis(long startedNanos) {
+        return Math.max(0, (System.nanoTime() - startedNanos) / 1_000_000);
     }
 
     /** 在单一事务内完成幂等判断、非破坏性合并和版本归档。 */

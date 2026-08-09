@@ -8,6 +8,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
@@ -18,6 +20,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 10)
 public class CollectorTokenAuthenticationFilter extends OncePerRequestFilter {
+
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(CollectorTokenAuthenticationFilter.class);
 
     /** 第一阶段采集器写入接口路径。 */
     private static final String COLLECTOR_ITEMS_PATH = "/api/v1/collector/items";
@@ -53,6 +58,11 @@ public class CollectorTokenAuthenticationFilter extends OncePerRequestFilter {
         String configuredToken = properties.getToken();
         // 未配置 Token 时关闭写入入口，避免误以为接口处于受保护状态。
         if (configuredToken.isBlank()) {
+            LOGGER.warn(
+                    "Collector submission rejected, path={}, errorCode={}, reason={}",
+                    request.getRequestURI(),
+                    "COLLECTOR_AUTH_NOT_CONFIGURED",
+                    "collector_authentication_not_configured");
             errorWriter.write(
                     response,
                     HttpStatus.SERVICE_UNAVAILABLE.value(),
@@ -64,6 +74,11 @@ public class CollectorTokenAuthenticationFilter extends OncePerRequestFilter {
         String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
         // 认证失败时不记录请求 Token，防止敏感凭据进入日志。
         if (!isValidBearerToken(authorization, configuredToken)) {
+            LOGGER.warn(
+                    "Collector submission rejected, path={}, errorCode={}, reason={}",
+                    request.getRequestURI(),
+                    "COLLECTOR_AUTHENTICATION_FAILED",
+                    "invalid_bearer_token");
             errorWriter.write(
                     response,
                     HttpStatus.UNAUTHORIZED.value(),

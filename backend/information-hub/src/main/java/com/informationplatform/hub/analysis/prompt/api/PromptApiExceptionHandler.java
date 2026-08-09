@@ -5,6 +5,7 @@ import com.informationplatform.hub.analysis.prompt.application.PromptNotFoundExc
 import com.informationplatform.hub.analysis.prompt.application.PromptPersistenceException;
 import com.informationplatform.hub.analysis.prompt.application.PromptRequestException;
 import com.informationplatform.hub.common.api.ApiResponse;
+import com.informationplatform.hub.common.logging.OperationalLogExceptions;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,8 +52,10 @@ public class PromptApiExceptionHandler {
 
     @ExceptionHandler({PromptPersistenceException.class, DataAccessException.class})
     ResponseEntity<ApiResponse<Void>> handlePersistence(RuntimeException exception) {
-        // 只记录异常类型，避免 SQL 参数中的 User Prompt 正文进入日志。
-        LOGGER.error("Prompt persistence operation failed: {}", exception.getClass().getName());
+        // ERROR 保留堆栈；业务代码和 Mapper 不得把 User Prompt 正文拼入异常消息。
+        LOGGER.error(
+                "Prompt persistence operation failed",
+                OperationalLogExceptions.sanitized(exception));
         return error(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "PROMPT_PERSISTENCE_FAILED",

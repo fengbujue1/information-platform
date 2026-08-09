@@ -18,12 +18,17 @@ import java.time.ZoneOffset;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /** Worker 领取、完成和重启恢复的短事务边界。 */
 @Service
 public class AnalysisBatchWorkerTransactionService {
+
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(AnalysisBatchWorkerTransactionService.class);
 
     /** Batch 行锁与状态持久化。 */
     private final AiAnalysisBatchMapper batchMapper;
@@ -66,6 +71,10 @@ public class AnalysisBatchWorkerTransactionService {
             batch.setStatus("RUNNING");
             batch.setStartedAt(now);
             updateBatch(batch);
+            LOGGER.info(
+                    "Analysis batch started, batchId={}, candidateCount={}",
+                    batch.getId(),
+                    batch.getSelectedCount());
         }
 
         AnalysisPreparation preparation = analysisTransactions.prepareFrozen(
@@ -198,6 +207,14 @@ public class AnalysisBatchWorkerTransactionService {
         }
         batch.setCompletedAt(utcNow());
         updateBatch(batch);
+        LOGGER.info(
+                "Analysis batch completed, batchId={}, status={}, executableCount={}, successfulCount={}, failedCount={}, durationMs={}",
+                batch.getId(),
+                batch.getStatus(),
+                executable,
+                successful,
+                failed,
+                durationMillis(batch));
     }
 
     private AiAnalysisBatchPo requireBatchForUpdate(long batchId) {
@@ -223,5 +240,15 @@ public class AnalysisBatchWorkerTransactionService {
 
     private LocalDateTime utcNow() {
         return LocalDateTime.now(ZoneOffset.UTC);
+    }
+
+    private long durationMillis(AiAnalysisBatchPo batch) {
+        if (batch.getStartedAt() == null || batch.getCompletedAt() == null) {
+            return 0;
+        }
+        return Math.max(
+                0,
+                java.time.Duration.between(batch.getStartedAt(), batch.getCompletedAt())
+                        .toMillis());
     }
 }

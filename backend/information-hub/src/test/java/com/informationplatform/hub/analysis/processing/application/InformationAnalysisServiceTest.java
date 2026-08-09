@@ -29,7 +29,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 
+@ExtendWith(OutputCaptureExtension.class)
 class InformationAnalysisServiceTest {
 
     private final CurrentUserProvider currentUserProvider = mock(CurrentUserProvider.class);
@@ -63,7 +67,7 @@ class InformationAnalysisServiceTest {
 
     @Test
     @SuppressWarnings({"rawtypes", "unchecked"})
-    void completesValidatedProviderResult() {
+    void completesValidatedProviderResult(CapturedOutput output) {
         AnalysisDefinition definition = mock(AnalysisDefinition.class);
         AiProviderRequest request = request();
         AnalysisExecutionPlan plan = new AnalysisExecutionPlan(31, 41, 7, definition, request);
@@ -84,10 +88,16 @@ class InformationAnalysisServiceTest {
 
         assertThat(service.execute(11, 12L, 21, false)).isSameAs(succeeded);
         verify(transactions).completeSuccess(plan, providerResult, json, 82, "相关");
+        assertThat(output).contains(
+                "Single analysis requested, informationId=11, snapshotId=12, promptProfileId=21",
+                "AI analysis started, analysisId=31",
+                "AI analysis completed, analysisId=31, provider=FAKE, model=fake-model",
+                "inputTokens=10, outputTokens=2");
+        assertThat(output).doesNotContain("相关", "test");
     }
 
     @Test
-    void persistsAmbiguousProviderFailureWithoutAutomaticRetry() {
+    void persistsAmbiguousProviderFailureWithoutAutomaticRetry(CapturedOutput output) {
         AnalysisExecutionPlan plan = new AnalysisExecutionPlan(
                 31, 41, 7, mock(AnalysisDefinition.class), request());
         AiProviderException timeout = new AiProviderException(
@@ -108,6 +118,10 @@ class InformationAnalysisServiceTest {
         assertThat(service.execute(11, null, 21, false)).isSameAs(failed);
         verify(provider).execute(plan.providerRequest());
         verify(transactions).completeProviderFailure(plan, timeout);
+        assertThat(output).contains(
+                "AI analysis failed, analysisId=31",
+                "errorType=TIMEOUT",
+                "com.informationplatform.hub.analysis.provider.domain.AiProviderException: AI Provider request timed out");
     }
 
     private AiProviderRequest request() {

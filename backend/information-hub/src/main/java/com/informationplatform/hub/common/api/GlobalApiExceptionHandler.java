@@ -5,6 +5,7 @@ import com.informationplatform.hub.ingestion.application.IngestionRequestExcepti
 import com.informationplatform.hub.job.application.JobNotFoundException;
 import com.informationplatform.hub.job.application.JobQueryPersistenceException;
 import com.informationplatform.hub.job.application.JobQueryRequestException;
+import com.informationplatform.hub.common.logging.OperationalLogExceptions;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,7 +86,9 @@ public class GlobalApiExceptionHandler {
     @ExceptionHandler(JobQueryPersistenceException.class)
     ResponseEntity<ApiResponse<Void>> handleJobQueryPersistence(
             JobQueryPersistenceException exception) {
-        LOGGER.error("Job query persistence operation failed", exception);
+        LOGGER.error(
+                "Job query persistence operation failed",
+                OperationalLogExceptions.sanitized(exception));
         return error(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "JOB_QUERY_FAILED",
@@ -95,7 +98,7 @@ public class GlobalApiExceptionHandler {
     /** 隐藏数据库异常细节并返回稳定错误码。 */
     @ExceptionHandler(DataAccessException.class)
     ResponseEntity<ApiResponse<Void>> handleDataAccess(DataAccessException exception) {
-        LOGGER.error("Information ingestion database operation failed", exception);
+        LOGGER.error("Database operation failed", OperationalLogExceptions.sanitized(exception));
         return error(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "INGESTION_PERSISTENCE_FAILED",
