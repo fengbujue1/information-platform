@@ -2,6 +2,8 @@
 
 状态：Accepted
 
+实施状态：TASK-035 已完成 Backend 与 API
+
 ## API
 
 ```http
@@ -54,11 +56,23 @@ topN: 1..100
 
 数组必须规范化、去空、去重并有长度/数量限制。
 
+TASK-035 实际规范化规则：
+
+- `null` 数组按空数组处理；
+- 元素执行 `trim`，删除 `null`、空白和完全重复值；
+- 规范化结果按 Unicode 字典序稳定排序；
+- 每个数组最多 50 个有效元素；
+- 每个元素最多 100 个 Unicode 字符；
+- `preferredRemoteTypes` 规范为大写，只接受 `ONSITE`、`HYBRID`、`REMOTE`；
+- `salaryMinMonthlyYuan` 允许为空，非空时不得为负数。
+
 `analysisPromptProfileId`：
 
 - 存在；
 - 同 Owner；
-- 可用于 JOB USER_RELEVANCE。
+- `analysisDefinitionKey = JOB_USER_RELEVANCE`；
+- 状态为 `ACTIVE`；
+- 已存在 Active Prompt Version。
 
 ## Core / JOB Extension
 
@@ -85,3 +99,19 @@ PUT 完整替换当前 Owner + Information Type 的组合 Profile。
 ## Delete
 
 V1 无 DELETE。
+
+## Implementation Note
+
+TASK-035 已实现：
+
+```text
+GET /api/v1/recommendation/profiles/JOB
+PUT /api/v1/recommendation/profiles/JOB
+```
+
+- GET/PUT 都要求同源 Session；PUT 需要 CSRF；
+- GET 不存在的 Owner Profile 返回 404；
+- PUT 首次调用创建 Core + JOB Extension，后续调用完整替换；
+- 响应为 Core + JOB Extension 的扁平组合 DTO，不返回 `userId`；
+- `contentHash` 覆盖规范化后的完整组合 Profile，数组顺序或重复项变化不会改变 hash；
+- PUT 不创建 Analysis、Recommendation Run 或刷新事件。

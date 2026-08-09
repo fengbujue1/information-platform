@@ -26,7 +26,7 @@ BOSS Collector
 
 Phase 4 已启动，当前处于进行中。
 
-当前任务：`TASK-035`（Recommendation Profile Domain And API，尚未实施）。
+当前任务：`TASK-036`（Recommendation Interaction / Feedback / Job Disposition，尚未实施）。
 
 `TASK-033`、`TASK-034` 与 `TASK-034A` Recommendation Model Generalization 已完成；当前数据库为 V4 Generic Core + JOB Extension。
 
@@ -162,7 +162,7 @@ API Key、Bootstrap 密码、Session Cookie、Collector Token 和完整 Provider
 
 Phase 4 的 Scope、Architecture、Data Model、Database Design、ADR、Contract 和 TASK 已完成评审并进入 Accepted 实施基线。
 
-`TASK-033`、`TASK-034` 与 `TASK-034A` 已完成；后续从 `TASK-035` 继续按顺序实施。当前仅落地 Generic Recommendation Core + JOB Extension 持久化骨架，尚未实现 Recommendation Profile API、Recommendation Run 业务、评分排序、Feed、Interaction API 或 Phase 4 Web。
+`TASK-033`、`TASK-034`、`TASK-034A` 与 `TASK-035` 已完成；后续从 `TASK-036` 继续按顺序实施。当前已落地 Generic Recommendation Core + JOB Extension 及 Recommendation Profile API，尚未实现 Interaction API、Recommendation Run、评分排序、Feed 或 Phase 4 Web。
 
 ## 文档入口
 

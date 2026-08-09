@@ -56,7 +56,8 @@ public class IdentitySecurityConfiguration {
                         .requestMatchers(
                                 "/api/v1/auth/**",
                                 "/api/v1/jobs/**",
-                                "/api/v1/ai/**")
+                                "/api/v1/ai/**",
+                                "/api/v1/recommendation/**")
                         .authenticated()
                         .anyRequest()
                         .permitAll())
