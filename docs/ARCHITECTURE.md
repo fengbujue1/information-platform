@@ -14,7 +14,7 @@ Information Hub
     ├── job
     ├── identity（Identity MVP 已实施）
     ├── analysis（Phase 3 已实施）
-    ├── recommendation（Phase 4 Profile、Interaction、Candidate 与 Scoring 已实施）
+    ├── recommendation（Phase 4 Profile、Interaction、Candidate、Scoring 与 Ranking 已实施）
     └── notification（后续）
     │
     ▼
@@ -198,7 +198,7 @@ Phase 3 已通过 TASK-020 ～ TASK-032 完成并归档，包括 Phase 3 Web、F
 
 ## 12. Phase 4 Accepted 架构与当前实施边界
 
-Phase 4 已启动，当前任务为 TASK-039。V4 Generic Recommendation Core + JOB Extension 数据库结构、Recommendation Profile API、View / Feedback / JOB disposition API、JOB Candidate Resolver，以及 `JOB_RECOMMENDATION / V1` 确定性评分已实施；Ranking、Run/Feed 与 Web 尚未实施。
+Phase 4 已启动，当前任务为 TASK-040。V4 Generic Recommendation Core + JOB Extension 数据库结构、Recommendation Profile API、View / Feedback / JOB disposition API、JOB Candidate Resolver，以及 `JOB_RECOMMENDATION / V1` 确定性评分、Ranking / Deduplication / Diversity / Top N 已实施；Run/Feed 与 Web 尚未实施。
 
 Accepted 目标链路：
 

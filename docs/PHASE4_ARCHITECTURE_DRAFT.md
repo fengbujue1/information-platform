@@ -324,6 +324,15 @@ normalizedCityName
 - 如不足 topN，按原始排序补充；
 - 仍遵守 duplicate 去重。
 
+TASK-039 已按上述边界实施 JOB Ranking：
+
+- stable comparator 固定为 `finalScore DESC, freshnessScore DESC, informationId DESC`；
+- duplicate group 使用 NFKC、大小写与空白规范化后的 companyName、title、cityName，并计算适配 `CHAR(64)` 的 SHA-256；同组保留 stable comparator 中最高优先级 Candidate；
+- 前 20 个结果应用同 company 最多 3、同 normalized title 最多 5 的基础多样性限制；
+- 第一阶段不足 topN 时，按去重后的原始稳定排序执行 fill pass；
+- 最终结果限制为 Profile topN，并生成从 1 开始的连续 rankNo；
+- Ranker 为纯计算组件，不访问数据库，不创建 Run / Item，不实施 TASK-040。
+
 ## 12. Run Lifecycle
 
 Run 显式冻结 `informationType`，所有 Owner Run/Feed 查询同时按 Information Type 隔离。
