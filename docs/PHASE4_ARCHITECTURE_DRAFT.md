@@ -455,6 +455,13 @@ JOB CONTACTED                        -> visible + badge
 
 因此 current feed total 是当前可见 Item 数，不必等下一 Recommendation Run。
 
+TASK-042 已按上述边界实施：
+
+- Feed Query 在同一只读事务快照内选择同 Owner/Type 最近 `COMPLETED` Run、比较当前 Profile hash、统计并分页；
+- current Interaction hard exclusion 在 SQL 中先于 count/pagination 应用，`CONTACTED` 继续可见，状态恢复 NONE 后当前 Run Item 可重新出现；
+- 较新的 PENDING/RUNNING/FAILED 不改变 Feed，只有新的 COMPLETED Run 才切换；
+- GET 只返回持久化 score/reasons 与 JOB 展示投影，不触发实时计算、Worker 或 Provider。
+
 ## 17. Profile Stale
 
 Run：

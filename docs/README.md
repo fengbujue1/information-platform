@@ -68,9 +68,9 @@ Phase 3 已归档。
 
 状态：**进行中。**
 
-当前任务：`TASK-042`（尚未实施）。
+当前任务：`TASK-043`（尚未实施）。
 
-Phase 4 规划基线已 Accepted，TASK-033～TASK-041（含 TASK-034A）已完成；当前持久化结构为 V4 Generic Core + JOB Extension，Recommendation Profile、Interaction Backend/API、JOB Candidate Resolver、`JOB_RECOMMENDATION / V1` 确定性评分、Ranking / Deduplication / Diversity / Top N、Recommendation Run / Worker / Manual Refresh 与 Analysis Batch Auto Trigger 已落地，后续从 TASK-042 起按顺序实施。
+Phase 4 规划基线已 Accepted，TASK-033～TASK-042（含 TASK-034A）已完成；当前持久化结构为 V4 Generic Core + JOB Extension，Recommendation Profile、Interaction Backend/API、JOB Candidate Resolver、`JOB_RECOMMENDATION / V1` 确定性评分、Ranking / Deduplication / Diversity / Top N、Recommendation Run / Worker / Manual Refresh、Analysis Batch Auto Trigger 与 Recommendation Feed Query API 已落地，后续从 TASK-043 起按顺序实施。
 
 - [Phase 4 正式规划包](../PHASE4_PACKAGE_MANIFEST.md)
 - [Phase 4 Scope](PHASE4_SCOPE.md)

@@ -17,7 +17,7 @@ Phase 1 创建：
 - `job_information`
 - `information_snapshot`
 
-Phase 3 已通过 V2 增加账号与 AI 处理持久化表；Phase 4 先通过 V3 增加 Recommendation 四表，再由 V4 无损纠偏为通用 Core + JOB Extension。Recommendation Profile、Interaction、JOB Candidate Resolver、确定性 Scoring / Ranking、Recommendation Run / Worker / Manual Refresh，以及 Analysis Batch Auto Trigger 已实现；Feed 和 Notification 尚未实现。TASK-038～041 未改变数据库结构或 Migration。
+Phase 3 已通过 V2 增加账号与 AI 处理持久化表；Phase 4 先通过 V3 增加 Recommendation 四表，再由 V4 无损纠偏为通用 Core + JOB Extension。Recommendation Profile、Interaction、JOB Candidate Resolver、确定性 Scoring / Ranking、Recommendation Run / Worker / Manual Refresh、Analysis Batch Auto Trigger，以及 Recommendation Feed Query API 已实现；Notification 尚未实现。TASK-038～042 未改变数据库结构或 Migration。
 
 ## 2. 实际输入数据事实
 

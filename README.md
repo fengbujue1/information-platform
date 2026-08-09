@@ -26,9 +26,9 @@ BOSS Collector
 
 Phase 4 已启动，当前处于进行中。
 
-当前任务：`TASK-042`（Recommendation Feed Query API，尚未实施）。
+当前任务：`TASK-043`（Phase 4 Web，尚未实施）。
 
-`TASK-033`～`TASK-041`（含 `TASK-034A` Recommendation Model Generalization）已完成；当前数据库为 V4 Generic Core + JOB Extension。
+`TASK-033`～`TASK-042`（含 `TASK-034A` Recommendation Model Generalization）已完成；当前数据库为 V4 Generic Core + JOB Extension。
 
 ## Phase 1：采集与归档
 
@@ -162,7 +162,7 @@ API Key、Bootstrap 密码、Session Cookie、Collector Token 和完整 Provider
 
 Phase 4 的 Scope、Architecture、Data Model、Database Design、ADR、Contract 和 TASK 已完成评审并进入 Accepted 实施基线。
 
-`TASK-033`～`TASK-041`（含 `TASK-034A`）已完成；后续从 `TASK-042` 继续按顺序实施。当前已落地 Generic Recommendation Core + JOB Extension、Recommendation Profile API、View / Feedback / JOB disposition API、JOB Candidate Resolver、`JOB_RECOMMENDATION / V1` 确定性评分、Ranking / Deduplication / Diversity / Top N、Recommendation Run / Worker / Manual Refresh，以及 Analysis Batch AFTER_COMMIT Auto Trigger；尚未实现 Feed 或 Phase 4 Web。
+`TASK-033`～`TASK-042`（含 `TASK-034A`）已完成；后续从 `TASK-043` 继续按顺序实施。当前已落地 Generic Recommendation Core + JOB Extension、Recommendation Profile API、View / Feedback / JOB disposition API、JOB Candidate Resolver、`JOB_RECOMMENDATION / V1` 确定性评分、Ranking / Deduplication / Diversity / Top N、Recommendation Run / Worker / Manual Refresh、Analysis Batch AFTER_COMMIT Auto Trigger，以及 Recommendation Feed Query API；尚未实现 Phase 4 Web 或 E2E。
 
 ## 文档入口
 

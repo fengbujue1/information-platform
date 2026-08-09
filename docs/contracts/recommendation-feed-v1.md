@@ -2,6 +2,8 @@
 
 状态：Accepted
 
+实施状态：TASK-042 已实现 Backend Feed Query API；Phase 4 Web 由 TASK-043 实施。
+
 ## API
 
 ```http
@@ -117,3 +119,11 @@ profileChangedSinceRun=true
 ```
 
 只提示，不自动 Refresh。
+
+## TASK-042 Implementation Note
+
+- Endpoint 已按本 Contract 提供 Session Owner 隔离、默认/上限分页和仅 JOB 校验；
+- Feed 通过最近 `COMPLETED` Run 读取持久化 Item，PENDING/RUNNING/FAILED 不覆盖旧成功 Run，没有成功 Run 时返回空 Feed；
+- 当前 Interaction visibility 在数据库查询中先于 count/pagination 应用，恢复 NONE 后可重新显示当前 Run Item；
+- Response 返回 score breakdown、reasons、current feedback/disposition/viewed、JOB 轻量展示字段与 Profile stale 标志；
+- GET 不触发 Recommendation Run、Worker、Candidate、Scoring、AI Provider 或 Profile 更新。

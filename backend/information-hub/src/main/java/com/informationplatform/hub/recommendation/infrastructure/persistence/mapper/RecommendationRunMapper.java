@@ -37,6 +37,20 @@ public interface RecommendationRunMapper extends BaseMapper<RecommendationRunPo>
     RecommendationRunPo selectBySourceAnalysisBatchId(
             @Param("sourceAnalysisBatchId") long sourceAnalysisBatchId);
 
+    /** Feed 只选择同 Owner/Type 最近完成的成功 Run，忽略更新但未成功的 Run。 */
+    @Select("""
+            SELECT *
+            FROM recommendation_run
+            WHERE user_id = #{userId}
+              AND information_type = #{informationType}
+              AND status = 'COMPLETED'
+            ORDER BY completed_at DESC, id DESC
+            LIMIT 1
+            """)
+    RecommendationRunPo selectLatestCompleted(
+            @Param("userId") long userId,
+            @Param("informationType") String informationType);
+
     /** 使用 SKIP LOCKED 并发安全领取一个最早 PENDING Run。 */
     @Select("""
             SELECT *
