@@ -2,7 +2,7 @@
 
 状态：Accepted
 
-实施状态：TASK-042 已实现 Backend Feed Query API；Phase 4 Web 由 TASK-043 实施。
+实施状态：TASK-042 已实现 Backend Feed Query API；TASK-043 已实现 Phase 4 Web。
 
 ## API
 

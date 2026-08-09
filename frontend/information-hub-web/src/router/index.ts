@@ -52,6 +52,11 @@ export function createAppRouter(
         component: JobSnapshotsView,
       },
       {
+        path: '/recommendations',
+        name: 'recommendations',
+        component: () => import('@/views/RecommendationsView.vue'),
+      },
+      {
         path: '/ai/prompts',
         name: 'ai-prompts',
         component: () => import('@/views/PromptProfilesView.vue'),

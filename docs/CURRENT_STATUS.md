@@ -127,9 +127,9 @@ ai_model_invocation
 
 ## 当前任务
 
-`TASK-043`：Phase 4 Web（尚未实施）。
+`TASK-044`：Phase 4 Full-stack E2E、验收与收尾（尚未实施）。
 
-`TASK-033`、`TASK-034`、数据模型通用化纠偏 `TASK-034A`、`TASK-035` Recommendation Profile Backend/API、`TASK-036` Recommendation Interaction / Feedback / Job Disposition、`TASK-037` Recommendation Candidate Resolver、`TASK-038` Recommendation Scoring / Explainability、`TASK-039` Ranking / Deduplication / Diversity / Top N、`TASK-040` Recommendation Run / Worker / Manual Refresh、`TASK-041` Analysis Batch Auto Trigger 与 `TASK-042` Recommendation Feed Query API 已完成；当前仅将实施顺序推进到 TASK-043，不代表 TASK-043 已开始编码。
+`TASK-033`、`TASK-034`、数据模型通用化纠偏 `TASK-034A`、`TASK-035` Recommendation Profile Backend/API、`TASK-036` Recommendation Interaction / Feedback / Job Disposition、`TASK-037` Recommendation Candidate Resolver、`TASK-038` Recommendation Scoring / Explainability、`TASK-039` Ranking / Deduplication / Diversity / Top N、`TASK-040` Recommendation Run / Worker / Manual Refresh、`TASK-041` Analysis Batch Auto Trigger、`TASK-042` Recommendation Feed Query API 与 `TASK-043` Phase 4 Web 已完成；当前仅将实施顺序推进到 TASK-044，不代表 TASK-044 已开始实施。
 
 Phase 3 已归档。后续仅接受缺陷修复、安全修复、依赖维护和运行参数维护，不再在 Phase 3 范围继续增加新功能。
 
@@ -156,10 +156,11 @@ Phase 4：Personalized Recommendation MVP 已启动，规划基线已 Accepted�
 - TASK-040 Recommendation Run、Worker、Manual Refresh 与 Run 状态 API。
 - TASK-041 Analysis Batch Completion → Recommendation Auto Trigger。
 - TASK-042 Recommendation Feed Query API。
+- TASK-043 Phase 4 Web（Profile、Feed、Refresh、Feedback、JOB Contact Status 与本地 Fixture Browser E2E）。
 
 尚未实施：
 
-- Phase 4 Web 与 E2E。
+- Phase 4 真实全栈 E2E、最终验收与文档收尾。
 
 ## CI
 
@@ -167,4 +168,4 @@ CI 后续作为独立工程维护事项处理，不作为本次 Phase 3 阶段�
 
 ## 下一步
 
-按 Accepted Phase 4 规划实施 `TASK-043`；不得提前实施后续 Recommendation 业务任务。
+按 Accepted Phase 4 规划实施 `TASK-044`；只有 TASK-044 验收完成后才能宣布 Phase 4 完成。

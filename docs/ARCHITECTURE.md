@@ -198,7 +198,7 @@ Phase 3 已通过 TASK-020 ～ TASK-032 完成并归档，包括 Phase 3 Web、F
 
 ## 12. Phase 4 Accepted 架构与当前实施边界
 
-Phase 4 已启动，当前任务为 TASK-043。V4 Generic Recommendation Core + JOB Extension 数据库结构、Recommendation Profile API、View / Feedback / JOB disposition API、JOB Candidate Resolver、`JOB_RECOMMENDATION / V1` 确定性评分、Ranking / Deduplication / Diversity / Top N、Recommendation Run / Worker / Manual Refresh、Analysis Batch AFTER_COMMIT Auto Trigger，以及只读取最近成功 Run 并应用 current Interaction visibility 的 Recommendation Feed Query API 已实施；Phase 4 Web 与 E2E 尚未实施。
+Phase 4 已启动，当前任务为 TASK-044。V4 Generic Recommendation Core + JOB Extension 数据库结构、Recommendation Profile API、View / Feedback / JOB disposition API、JOB Candidate Resolver、`JOB_RECOMMENDATION / V1` 确定性评分、Ranking / Deduplication / Diversity / Top N、Recommendation Run / Worker / Manual Refresh、Analysis Batch AFTER_COMMIT Auto Trigger、只读取最近成功 Run 并应用 current Interaction visibility 的 Recommendation Feed Query API，以及支持 Profile、Feed、Refresh/Run polling、Feedback、JOB contact status、hard exclusion undo 与 stale/error state 的 Phase 4 Web 已实施；真实全栈 E2E 与 Phase 4 收尾尚未实施。
 
 Accepted 目标链路：
 

@@ -58,6 +58,9 @@ describe('application shell', () => {
     expect(wrapper.get('nav[aria-label="主要导航"]').text()).toContain(
       '职位浏览',
     )
+    expect(wrapper.get('nav[aria-label="主要导航"]').text()).toContain(
+      '职位推荐',
+    )
     expect(
       wrapper.get('.app-navigation-link').classes(),
     ).toContain('router-link-active')

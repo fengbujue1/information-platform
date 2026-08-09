@@ -1,6 +1,6 @@
 # Information Hub Web
 
-Information Platform 的标准化信息浏览前端。Phase 2 已完成职位列表、筛选、排序、分页、职位详情、历史快照、页面状态、受控构建部署和端到端验收。
+Information Platform 的标准化信息浏览前端。Phase 2 已完成职位浏览，Phase 3 已完成 Identity 与 AI 页面，Phase 4 已完成 Recommendation Profile、Feed、Refresh、Feedback 与 JOB contact status 页面；真实全栈 E2E 与 Phase 4 收尾由 TASK-044 实施。
 
 ## 环境要求
 
@@ -33,6 +33,7 @@ npm.cmd run dev
 - `http://localhost:5173/jobs`：职位列表
 - `http://localhost:5173/jobs/{id}`：职位详情
 - `http://localhost:5173/jobs/{id}/snapshots`：历史快照列表和版本内容
+- `http://localhost:5173/recommendations`：职位推荐画像、Feed、刷新与交互
 - 任意不存在的前端路径：404 页面
 
 ## API 开发配置
@@ -52,7 +53,9 @@ INFORMATION_HUB_PROXY_TARGET=http://127.0.0.1:8080
 
 ## API Client
 
-`src/api` 统一导出以下只读函数：
+`src/api` 统一导出 Job Query 与 Recommendation 类型化函数。Recommendation 写请求通过同源 Session 和 CSRF 调用 Profile、Refresh、View、Feedback 与 JOB disposition Contract。
+
+Job Query 只读函数：
 
 - `getJobs`
 - `getJobById`
@@ -79,7 +82,9 @@ npm run test:e2e
 npm run build
 ```
 
-`test:e2e` 使用本地稳定 Fixture 拦截 Job Query API，不访问远程 MySQL，不读取或提交真实职位数据。覆盖：
+`test:e2e` 使用本地稳定 Fixture 拦截 Job Query 与 Recommendation API，不访问远程 MySQL，不读取或提交真实职位数据。除既有职位场景外，还覆盖 Profile save、Feed/score/reasons、Viewed、Refresh polling、Feedback、CONTACTED 保留、hard exclusion 即时隐藏、undo、stale 与错误态。
+
+职位浏览覆盖：
 
 - 列表加载；
 - 筛选和排序 URL；

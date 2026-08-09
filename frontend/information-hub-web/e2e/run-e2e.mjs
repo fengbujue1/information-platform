@@ -29,6 +29,7 @@ try {
       'test',
       'identity.spec.ts',
       'jobs.spec.ts',
+      'recommendations.spec.ts',
       ...process.argv.slice(2),
     ],
     {

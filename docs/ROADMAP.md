@@ -110,7 +110,7 @@ V1 保持历史兼容，V2 为当前版本。
 
 设计状态：Accepted。
 
-当前任务：`TASK-043`（尚未实施）；TASK-033～TASK-042（含 TASK-034A 数据模型通用化纠偏）已完成。
+当前任务：`TASK-044`（尚未实施）；TASK-033～TASK-043（含 TASK-034A 数据模型通用化纠偏）已完成。
 
 ### 计划交付
 
@@ -130,7 +130,7 @@ Phase 4 与 Phase 3 的区别：
 - Phase 3：用户通过 Prompt 主动或定时发起 USER_RELEVANCE 分析；
 - Phase 4：系统消费 Phase 3 已有成功 Analysis，基于 Recommendation Profile 生成预计算推荐。
 
-Scope、Architecture、Data Model、Database Design、ADR、Contract 与 TASK-033 ～ TASK-044 已 Accepted。TASK-033～TASK-042（含 TASK-034A）已完成，当前采用 Generic Core + JOB Extension 并已提供 Recommendation Profile、View、Feedback、JOB disposition API、JOB Candidate Resolver、`JOB_RECOMMENDATION / V1` 确定性评分、Ranking / Deduplication / Diversity / Top N、Recommendation Run / Worker / Manual Refresh、Analysis Batch Auto Trigger，以及 Recommendation Feed Query API；后续从 TASK-043 起推进。
+Scope、Architecture、Data Model、Database Design、ADR、Contract 与 TASK-033 ～ TASK-044 已 Accepted。TASK-033～TASK-043（含 TASK-034A）已完成，当前采用 Generic Core + JOB Extension 并已提供 Recommendation Profile、View、Feedback、JOB disposition API、JOB Candidate Resolver、`JOB_RECOMMENDATION / V1` 确定性评分、Ranking / Deduplication / Diversity / Top N、Recommendation Run / Worker / Manual Refresh、Analysis Batch Auto Trigger、Recommendation Feed Query API，以及 Phase 4 Web；TASK-044 的真实全栈 E2E、最终验收与收尾尚未实施。
 
 ### 明确不做
 

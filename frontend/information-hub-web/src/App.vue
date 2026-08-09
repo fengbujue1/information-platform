@@ -5,6 +5,7 @@ import { ElButton } from 'element-plus'
 
 import 'element-plus/dist/index.css'
 import '@/styles/ai.css'
+import '@/styles/recommendation.css'
 
 import '@/styles/task017.css'
 import '@/styles/task017-overflow.css'
@@ -41,6 +42,13 @@ async function signOut(): Promise<void> {
             class="app-navigation-link"
           >
             职位浏览
+          </RouterLink>
+          <RouterLink
+            v-if="authState.currentUser.value"
+            to="/recommendations"
+            class="app-navigation-link"
+          >
+            职位推荐
           </RouterLink>
           <RouterLink
             v-if="authState.currentUser.value"

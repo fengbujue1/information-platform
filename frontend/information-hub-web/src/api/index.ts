@@ -31,3 +31,14 @@ export {
   getJobs,
   getJobSnapshots,
 } from './jobApi'
+export {
+  getRecommendationFeed,
+  getRecommendationProfile,
+  getRecommendationRun,
+  listRecommendationRuns,
+  recordRecommendationView,
+  refreshRecommendations,
+  saveRecommendationProfile,
+  updateJobDisposition,
+  updateRecommendationFeedback,
+} from './recommendationApi'
