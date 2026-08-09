@@ -70,13 +70,13 @@ Phase 3 已归档。
 
 当前任务：`TASK-035`（尚未实施）。
 
-Phase 4 规划基线已 Accepted，TASK-033 日志基线与 TASK-034 V3 Recommendation 四表持久化骨架已完成；Recommendation 业务功能将从 TASK-035 起按顺序实施，当前不得将规划内容写成已完成能力。
+Phase 4 规划基线已 Accepted，TASK-033、TASK-034 与 TASK-034A 已完成；当前持久化结构为 V4 Generic Core + JOB Extension，Recommendation 业务功能将从 TASK-035 起按顺序实施。
 
 - [Phase 4 正式规划包](../PHASE4_PACKAGE_MANIFEST.md)
 - [Phase 4 Scope](PHASE4_SCOPE.md)
 - [Phase 4 Architecture（Accepted）](PHASE4_ARCHITECTURE_DRAFT.md)
 - [Phase 4 Data Model（Accepted）](PHASE4_DATA_MODEL_DRAFT.md)
-- [Phase 4 Database Design（Accepted，V3 已实施）](DATABASE_DESIGN_PHASE4_DRAFT.md)
+- [Phase 4 Database Design（Accepted，V4 已实施）](DATABASE_DESIGN_PHASE4_DRAFT.md)
 - [Backend Operational Logging Conventions](LOGGING_CONVENTIONS.md)
 - [Codex Phase 4 Workflow](CODEX_PHASE4_WORKFLOW.md)
 - [Phase 4 Existing Document Change Plan](PHASE4_EXISTING_DOC_CHANGES.md)
@@ -87,6 +87,7 @@ Phase 4 规划基线已 Accepted，TASK-033 日志基线与 TASK-034 V3 Recommen
 - [ADR-015：Recommendation Trigger Lifecycle](decisions/ADR-015-phase4-recommendation-trigger-lifecycle.md)
 - [ADR-016：Profile、Feedback 与 Job Disposition Boundary](decisions/ADR-016-phase4-profile-feedback-job-disposition-boundary.md)
 - [ADR-017：Backend Operational Logging Baseline](decisions/ADR-017-backend-operational-logging-baseline.md)
+- [ADR-018：Recommendation Generic Core + Domain Extension](decisions/ADR-018-phase4-recommendation-domain-generalization.md)
 
 ### Contracts
 
@@ -99,6 +100,7 @@ Phase 4 规划基线已 Accepted，TASK-033 日志基线与 TASK-034 V3 Recommen
 
 - [TASK-033：Backend Operational Logging Baseline](tasks/TASK-033.md)
 - [TASK-034：Recommendation Data Model 与 Flyway](tasks/TASK-034.md)
+- [TASK-034A：Recommendation Model Generalization](tasks/TASK-034A.md)
 - [TASK-035：Recommendation Profile Backend 与 API](tasks/TASK-035.md)
 - [TASK-036：User Interaction、Feedback 与 Job Disposition](tasks/TASK-036.md)
 - [TASK-037：Recommendation Candidate Resolver](tasks/TASK-037.md)

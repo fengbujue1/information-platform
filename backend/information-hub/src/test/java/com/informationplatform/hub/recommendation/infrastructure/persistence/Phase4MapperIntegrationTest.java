@@ -3,6 +3,7 @@ package com.informationplatform.hub.recommendation.infrastructure.persistence;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -28,6 +29,10 @@ import com.informationplatform.hub.recommendation.infrastructure.persistence.po.
 import com.informationplatform.hub.recommendation.infrastructure.persistence.po.RecommendationRunPo;
 import com.informationplatform.hub.recommendation.infrastructure.persistence.po.UserInformationInteractionPo;
 import com.informationplatform.hub.recommendation.infrastructure.persistence.po.UserRecommendationProfilePo;
+import com.informationplatform.hub.recommendation.job.infrastructure.persistence.mapper.JobRecommendationProfileMapper;
+import com.informationplatform.hub.recommendation.job.infrastructure.persistence.mapper.UserJobDispositionMapper;
+import com.informationplatform.hub.recommendation.job.infrastructure.persistence.po.JobRecommendationProfilePo;
+import com.informationplatform.hub.recommendation.job.infrastructure.persistence.po.UserJobDispositionPo;
 import com.informationplatform.hub.testing.DatabaseIntegrationTestSafety;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -37,11 +42,12 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 
-/** 验证 Phase 4 四张表的 MyBatis-Plus CRUD、默认值和循环归因 FK。 */
+/** 验证 Phase 4 通用 Core、JOB 扩展、Run/Item 的 MyBatis-Plus 持久化。 */
 @SpringBootTest
 @EnabledIfEnvironmentVariable(
         named = "INFORMATION_HUB_TEST_DB_URL",
@@ -69,7 +75,9 @@ class Phase4MapperIntegrationTest {
     @Autowired private InformationAnalysisMapper informationAnalysisMapper;
     @Autowired private AiAnalysisBatchMapper analysisBatchMapper;
     @Autowired private UserRecommendationProfileMapper recommendationProfileMapper;
+    @Autowired private JobRecommendationProfileMapper jobRecommendationProfileMapper;
     @Autowired private UserInformationInteractionMapper interactionMapper;
+    @Autowired private UserJobDispositionMapper userJobDispositionMapper;
     @Autowired private RecommendationRunMapper recommendationRunMapper;
     @Autowired private RecommendationItemMapper recommendationItemMapper;
     @Autowired private JdbcTemplate jdbcTemplate;
@@ -90,17 +98,45 @@ class Phase4MapperIntegrationTest {
 
         UserRecommendationProfilePo recommendationProfile = new UserRecommendationProfilePo();
         recommendationProfile.setUserId(user.getId());
+        recommendationProfile.setInformationType("JOB");
         recommendationProfile.setAnalysisPromptProfileId(promptProfile.getId());
-        recommendationProfile.setTargetRoles("[\"Java 后端\"]");
-        recommendationProfile.setPreferredSkills("[\"Java\",\"Spring Boot\"]");
         recommendationProfile.setContentHash(HASH_B);
         assertEquals(1, recommendationProfileMapper.insert(recommendationProfile));
         assertNotNull(recommendationProfile.getId());
+
+        JobRecommendationProfilePo jobProfile = new JobRecommendationProfilePo();
+        jobProfile.setProfileId(recommendationProfile.getId());
+        jobProfile.setTargetRoles("[\"Java 后端\"]");
+        jobProfile.setPreferredSkills("[\"Java\",\"Spring Boot\"]");
+        assertEquals(1, jobRecommendationProfileMapper.insert(jobProfile));
+        assertEquals(
+                "[\"Java 后端\"]",
+                jobRecommendationProfileMapper
+                        .selectById(recommendationProfile.getId())
+                        .getTargetRoles());
+
+        UserRecommendationProfilePo educationProfile = new UserRecommendationProfilePo();
+        educationProfile.setUserId(user.getId());
+        educationProfile.setInformationType("EDUCATION");
+        educationProfile.setAnalysisPromptProfileId(promptProfile.getId());
+        educationProfile.setContentHash(HASH_A);
+        assertEquals(1, recommendationProfileMapper.insert(educationProfile));
+        assertNotNull(educationProfile.getId());
+
+        UserRecommendationProfilePo duplicateJobProfile = new UserRecommendationProfilePo();
+        duplicateJobProfile.setUserId(user.getId());
+        duplicateJobProfile.setInformationType("JOB");
+        duplicateJobProfile.setAnalysisPromptProfileId(promptProfile.getId());
+        duplicateJobProfile.setContentHash(HASH_A);
+        assertThrows(
+                DuplicateKeyException.class,
+                () -> recommendationProfileMapper.insert(duplicateJobProfile));
 
         UserRecommendationProfilePo persistedProfile =
                 recommendationProfileMapper.selectById(recommendationProfile.getId());
         assertEquals(7, persistedProfile.getWindowDays());
         assertEquals(50, persistedProfile.getTopN());
+        assertEquals("JOB", persistedProfile.getInformationType());
         persistedProfile.setTopN(25);
         assertEquals(1, recommendationProfileMapper.updateById(persistedProfile));
         assertEquals(25, recommendationProfileMapper
@@ -116,16 +152,29 @@ class Phase4MapperIntegrationTest {
                 interactionMapper.selectById(interaction.getId());
         assertEquals(0, persistedInteraction.getViewCount());
         assertEquals("NONE", persistedInteraction.getFeedbackState());
-        assertEquals("NONE", persistedInteraction.getJobDisposition());
+
+        UserJobDispositionPo disposition = new UserJobDispositionPo();
+        disposition.setInteractionId(interaction.getId());
+        assertEquals(1, userJobDispositionMapper.insert(disposition));
+        assertEquals(
+                "NONE",
+                userJobDispositionMapper.selectById(interaction.getId()).getJobDisposition());
+        disposition.setJobDisposition("CONTACTED");
+        assertEquals(1, userJobDispositionMapper.updateById(disposition));
+        assertEquals(
+                "CONTACTED",
+                userJobDispositionMapper.selectById(interaction.getId()).getJobDisposition());
 
         LocalDateTime windowEnd = LocalDateTime.now();
         RecommendationRunPo run = new RecommendationRunPo();
         run.setUserId(user.getId());
+        run.setInformationType("JOB");
         run.setTriggerType("ANALYSIS_BATCH_COMPLETED");
         run.setSourceAnalysisBatchId(batch.getId());
         run.setProfileId(recommendationProfile.getId());
         run.setProfileContentHash(HASH_B);
-        run.setProfileSnapshotJson("{\"windowDays\":7,\"topN\":25}");
+        run.setProfileSnapshotJson(
+                "{\"informationType\":\"JOB\",\"windowDays\":7,\"topN\":25}");
         run.setPromptProfileId(promptProfile.getId());
         run.setPromptVersionId(promptVersion.getId());
         run.setAlgorithmKey("JOB_RECOMMENDATION");
@@ -135,6 +184,7 @@ class Phase4MapperIntegrationTest {
         assertEquals(1, recommendationRunMapper.insert(run));
         assertNotNull(run.getId());
         assertEquals("PENDING", recommendationRunMapper.selectById(run.getId()).getStatus());
+        assertEquals("JOB", recommendationRunMapper.selectById(run.getId()).getInformationType());
 
         RecommendationItemPo item = new RecommendationItemPo();
         item.setRunId(run.getId());
@@ -156,7 +206,6 @@ class Phase4MapperIntegrationTest {
                 recommendationItemMapper.selectById(item.getId()).getFinalScore());
 
         persistedInteraction.setLastRecommendationItemId(item.getId());
-        persistedInteraction.setJobDisposition("CONTACTED");
         assertEquals(1, interactionMapper.updateById(persistedInteraction));
         assertEquals(item.getId(), interactionMapper
                 .selectById(interaction.getId())
@@ -164,8 +213,9 @@ class Phase4MapperIntegrationTest {
 
         // 基于真实合法数据图执行 EXPLAIN，确认 V1 Profile、Interaction、Feed 与 Item 查询可命中组合索引。
         assertPossibleKey(
-                "EXPLAIN SELECT * FROM user_recommendation_profile WHERE user_id = ?",
-                "uk_user_recommendation_profile_user",
+                "EXPLAIN SELECT * FROM user_recommendation_profile "
+                        + "WHERE user_id = ? AND information_type = 'JOB'",
+                "uk_user_recommendation_profile_identity",
                 user.getId());
         assertPossibleKey(
                 "EXPLAIN SELECT * FROM user_information_interaction WHERE user_id = ? AND information_id = ?",
@@ -173,9 +223,10 @@ class Phase4MapperIntegrationTest {
                 user.getId(),
                 information.getId());
         assertPossibleKey(
-                "EXPLAIN SELECT * FROM recommendation_run WHERE user_id = ? AND status = 'PENDING' "
+                "EXPLAIN SELECT * FROM recommendation_run WHERE user_id = ? "
+                        + "AND information_type = 'JOB' AND status = 'PENDING' "
                         + "ORDER BY completed_at DESC, id DESC LIMIT 1",
-                "idx_recommendation_run_user_status_created",
+                "idx_recommendation_run_user_type_status_created",
                 user.getId());
         assertPossibleKey(
                 "EXPLAIN SELECT * FROM recommendation_item WHERE run_id = ? ORDER BY rank_no LIMIT 20",
@@ -188,10 +239,13 @@ class Phase4MapperIntegrationTest {
                 Wrappers.<UserInformationInteractionPo>lambdaUpdate()
                         .set(UserInformationInteractionPo::getLastRecommendationItemId, null)
                         .eq(UserInformationInteractionPo::getId, interaction.getId())));
+        assertEquals(1, userJobDispositionMapper.deleteById(interaction.getId()));
         assertEquals(1, interactionMapper.deleteById(interaction.getId()));
         assertEquals(1, recommendationItemMapper.deleteById(item.getId()));
         assertEquals(1, recommendationRunMapper.deleteById(run.getId()));
+        assertEquals(1, jobRecommendationProfileMapper.deleteById(recommendationProfile.getId()));
         assertEquals(1, recommendationProfileMapper.deleteById(recommendationProfile.getId()));
+        assertEquals(1, recommendationProfileMapper.deleteById(educationProfile.getId()));
         assertNull(recommendationProfileMapper.selectById(recommendationProfile.getId()));
     }
 

@@ -31,12 +31,6 @@ public class UserInformationInteractionPo {
     /** 最近一次反馈修改时间，按 UTC 保存。 */
     private LocalDateTime feedbackUpdatedAt;
 
-    /** 求职处理状态：NONE、CONTACTED 或 CONTACTED_NOT_SUITABLE。 */
-    private String jobDisposition;
-
-    /** 最近一次求职处理状态修改时间，按 UTC 保存。 */
-    private LocalDateTime dispositionUpdatedAt;
-
     /** 最近一次产生交互归因的 Recommendation Item 主键，可为空。 */
     private Long lastRecommendationItemId;
 
@@ -61,12 +55,6 @@ public class UserInformationInteractionPo {
     public LocalDateTime getFeedbackUpdatedAt() { return feedbackUpdatedAt; }
     public void setFeedbackUpdatedAt(LocalDateTime feedbackUpdatedAt) {
         this.feedbackUpdatedAt = feedbackUpdatedAt;
-    }
-    public String getJobDisposition() { return jobDisposition; }
-    public void setJobDisposition(String jobDisposition) { this.jobDisposition = jobDisposition; }
-    public LocalDateTime getDispositionUpdatedAt() { return dispositionUpdatedAt; }
-    public void setDispositionUpdatedAt(LocalDateTime dispositionUpdatedAt) {
-        this.dispositionUpdatedAt = dispositionUpdatedAt;
     }
     public Long getLastRecommendationItemId() { return lastRecommendationItemId; }
     public void setLastRecommendationItemId(Long lastRecommendationItemId) {

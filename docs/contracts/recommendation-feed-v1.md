@@ -5,10 +5,12 @@
 ## API
 
 ```http
-GET /api/v1/recommendations/feed?page=1&pageSize=20
+GET /api/v1/recommendations/{informationType}/feed?page=1&pageSize=20
 ```
 
 Session Owner。
+
+Phase 4 当前只接受 `informationType = JOB`。
 
 默认：
 
@@ -23,7 +25,8 @@ max=100
 选择用户最新：
 
 ```text
-RecommendationRun.status = COMPLETED
+RecommendationRun.informationType = requested informationType
+AND RecommendationRun.status = COMPLETED
 ```
 
 没有成功 Run 返回空 Feed，不实时计算。
@@ -33,13 +36,13 @@ RecommendationRun.status = COMPLETED
 在 current COMPLETED Run Item 上应用当前 Interaction：
 
 ```text
-feedbackState == NOT_INTERESTED
+generic feedbackState == NOT_INTERESTED
 → hide
 
-jobDisposition == CONTACTED_NOT_SUITABLE
+JOB extension jobDisposition == CONTACTED_NOT_SUITABLE
 → hide
 
-jobDisposition == CONTACTED
+JOB extension jobDisposition == CONTACTED
 → keep visible
 ```
 
@@ -55,6 +58,7 @@ RecommendationItem 历史不删除。
 {
   "run": {
     "id": 301,
+    "informationType": "JOB",
     "triggerType": "ANALYSIS_BATCH_COMPLETED",
     "completedAt": "2026-08-07T08:20:00Z",
     "algorithmKey": "JOB_RECOMMENDATION",
@@ -102,7 +106,7 @@ Job display fields 优先复用现有 Job Query DTO 语义。
 
 ## Running / Failed
 
-最新 Run PENDING/RUNNING/FAILED 时，Feed 仍基于最近 COMPLETED Run。
+同 Owner、同 Information Type 的最新 Run 为 PENDING/RUNNING/FAILED 时，Feed 仍基于该 Information Type 最近的 COMPLETED Run。
 
 ## Profile stale
 

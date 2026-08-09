@@ -5,13 +5,19 @@
 ## API
 
 ```http
-GET /api/v1/recommendation/profile
-PUT /api/v1/recommendation/profile
+GET /api/v1/recommendation/profiles/{informationType}
+PUT /api/v1/recommendation/profiles/{informationType}
 ```
 
 Session；PUT 需要 CSRF。
 
 不接受可信 userId。
+
+Phase 4 当前只接受：
+
+```text
+informationType = JOB
+```
 
 ## Body
 
@@ -33,6 +39,7 @@ Session；PUT 需要 CSRF。
 
 ```text
 id
+informationType
 contentHash
 createdAt
 updatedAt
@@ -53,9 +60,21 @@ topN: 1..100
 - 同 Owner；
 - 可用于 JOB USER_RELEVANCE。
 
+## Core / JOB Extension
+
+对外 Contract 返回组合后的 JOB Profile，不暴露内部拆表：
+
+```text
+user_recommendation_profile Core
++
+job_recommendation_profile Extension
+```
+
+Core 按 `(userId, informationType)` 唯一。`contentHash` 覆盖 Core 与 JOB Extension 的完整 canonical representation。
+
 ## Update
 
-PUT 完整替换 current Profile。
+PUT 完整替换当前 Owner + Information Type 的组合 Profile。
 
 修改 Profile：
 

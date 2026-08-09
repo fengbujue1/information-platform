@@ -17,7 +17,7 @@ import org.flywaydb.core.api.output.MigrateResult;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 
-/** 验证专用空测试库可以一次性执行 V1 到当前 V3 的全部 migration。 */
+/** 验证专用空测试库可以一次性执行 V1 到当前 V4 的全部 migration。 */
 @EnabledIfEnvironmentVariable(
         named = "INFORMATION_HUB_EMPTY_TEST_DB_URL",
         matches = "jdbc:mysql://.+")
@@ -44,8 +44,8 @@ class Phase3EmptySchemaMigrationIntegrationTest {
         MigrateResult result = flyway.migrate();
 
         assertTrue(result.success, "空测试库全量 migration 必须成功");
-        assertEquals(3, result.migrationsExecuted);
-        assertEquals("3", flyway.info().current().getVersion().getVersion());
+        assertEquals(4, result.migrationsExecuted);
+        assertEquals("4", flyway.info().current().getVersion().getVersion());
 
         try (Connection connection =
                         DriverManager.getConnection(databaseUrl, databaseUsername, databasePassword);
@@ -68,7 +68,9 @@ class Phase3EmptySchemaMigrationIntegrationTest {
                               'ai_analysis_batch_item',
                               'ai_model_invocation',
                               'user_recommendation_profile',
+                              'job_recommendation_profile',
                               'user_information_interaction',
+                              'user_job_disposition',
                               'recommendation_run',
                               'recommendation_item'
                           )
@@ -77,7 +79,7 @@ class Phase3EmptySchemaMigrationIntegrationTest {
             while (resultSet.next()) {
                 tables.add(resultSet.getString(1));
             }
-            assertEquals(15, tables.size());
+            assertEquals(17, tables.size());
         }
     }
 

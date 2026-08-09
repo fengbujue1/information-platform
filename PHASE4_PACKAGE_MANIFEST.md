@@ -90,6 +90,7 @@ ADR：
 - ADR-015：Recommendation Trigger Lifecycle
 - ADR-016：Profile / Feedback / Job Disposition Boundary
 - ADR-017：Backend Operational Logging
+- ADR-018：Recommendation Generic Core + Domain Extension
 
 Contracts：
 
@@ -108,7 +109,9 @@ TASK：
 TASK-033 Logging Baseline
         ↓
 TASK-034 DB / Flyway
-        ↓
+↓
+TASK-034A Recommendation Model Generalization
+↓
 TASK-035 Recommendation Profile
         ↓
 TASK-036 Interaction / Job Disposition

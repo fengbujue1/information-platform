@@ -67,14 +67,20 @@ Recommendation 开发前先建立统一业务流程日志：
 
 ### 2.2 Recommendation Profile
 
-一个用户最多一个当前 Recommendation Profile。
+一个用户在每个 Information Type 下最多一个当前 Recommendation Profile Core。
 
 V1：
 
 ```text
+informationType
 analysisPromptProfileId
 windowDays
 topN
+```
+
+JOB Extension V1：
+
+```text
 targetRoles
 preferredSkills
 preferredCities
@@ -83,7 +89,7 @@ salaryMinMonthlyYuan
 excludedKeywords
 ```
 
-Recommendation Profile 与 AI Prompt Profile 分离。
+Recommendation Profile Core 与 AI Prompt Profile 分离；JOB 偏好使用独立 `job_recommendation_profile` 扩展。Phase 4 当前只创建和使用 JOB Profile。
 
 Recommendation Profile 显式绑定一个属于同一 Owner 的 AI Prompt Profile，用来确定 Recommendation 应消费哪一套 USER_RELEVANCE 语义。
 
@@ -226,7 +232,7 @@ Manual Refresh：
 
 V1 保存两个互相独立的维度。
 
-#### Feedback
+#### Generic Feedback
 
 ```text
 NONE
@@ -234,7 +240,7 @@ INTERESTED
 NOT_INTERESTED
 ```
 
-#### Job Disposition
+#### JOB Disposition Extension
 
 ```text
 NONE
@@ -278,7 +284,7 @@ jobDisposition = NONE
 
 以取消排除。
 
-Phase 4 不自动读取 BOSS 聊天记录。状态由用户在 Information Platform 手工标记。
+通用 Feedback 保存于 Interaction Core；Job disposition 保存于 JOB Extension。Phase 4 不自动读取 BOSS 聊天记录，状态由用户在 Information Platform 手工标记。
 
 ### 2.9 Recommendation Feed Web
 

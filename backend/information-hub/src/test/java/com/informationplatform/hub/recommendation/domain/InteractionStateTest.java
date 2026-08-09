@@ -3,6 +3,7 @@ package com.informationplatform.hub.recommendation.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.informationplatform.hub.recommendation.job.domain.JobDisposition;
 import org.junit.jupiter.api.Test;
 
 class InteractionStateTest {

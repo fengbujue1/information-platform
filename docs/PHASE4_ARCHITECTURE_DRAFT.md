@@ -24,16 +24,13 @@
 ┌────────────────────────────────────────────────────┐
 │ recommendation                                     │
 │                                                    │
-│ RecommendationProfile                              │
-│      │                                             │
-│      ├── CandidateResolver ───────┐                │
-│      │                            │                │
-│      └── Scoring / Ranking ───────┼→ Run / Items   │
-│                                   │                │
-│ UserInformationInteraction ───────┘                │
-│      │                                             │
-│      ├── feedbackState                             │
-│      └── jobDisposition                            │
+│ RecommendationProfileCore                          │
+│      └── JobRecommendationProfile                  │
+│              ├── CandidateResolver ───────┐        │
+│              └── Scoring / Ranking ───────┼→ Run   │
+│                                           │  Items │
+│ UserInformationInteractionCore ───────────┘        │
+│      └── UserJobDisposition                        │
 │                                                    │
 │ RecommendationWorker → FeedQuery                   │
 └────────────────────────────────────────────────────┘
@@ -62,6 +59,16 @@ Recommendation 不允许：
 
 Phase 3 产出理解结果，Phase 4 消费。
 
+Recommendation 内部采用 ADR-018：
+
+```text
+Generic Recommendation Core
+        ↓
+Information-Type-specific Profile / Interaction / Candidate / Algorithm
+```
+
+Phase 4 当前只实现 JOB，不实现其它领域。
+
 ## 3. Precomputed Recommendation
 
 Feed 请求：
@@ -84,19 +91,21 @@ GET Feed
 → return
 ```
 
-## 4. Recommendation Profile / AI Prompt Profile
+## 4. Recommendation Profile Core / Domain Extension / AI Prompt Profile
 
 ```text
 User
 ├── AI Prompt Profile
 │   └── USER_RELEVANCE semantics
 │
-└── Recommendation Profile
+└── Recommendation Profile Core (per informationType)
     ├── binds analysisPromptProfileId
-    └── structured preferences
+    ├── generic windowDays / topN / contentHash
+    └── Job Recommendation Profile Extension
+            └── roles / skills / cities / remote / salary / exclusions
 ```
 
-Recommendation Profile 绑定 Prompt Profile，避免同一用户不同 Prompt 用途的 Analysis 被混算。
+Core 按 `(userId, informationType)` 唯一并绑定 Prompt Profile，避免不同领域或 Prompt 用途的 Analysis 被混算。JOB Extension 与 Core 组成完整 Profile；Run hash/snapshot 必须覆盖两者。
 
 ## 5. Prompt Version
 
@@ -125,6 +134,7 @@ Manual Refresh 不回退旧 Version，也不自动补跑 AI。
 
 ```text
 userId
+informationType
 promptVersionId
 profileSnapshot
 windowStart
@@ -142,8 +152,8 @@ AND successful JOB_USER_RELEVANCE
     same user
     same promptVersionId
     same current snapshot
-AND feedbackState != NOT_INTERESTED
-AND jobDisposition != CONTACTED_NOT_SUITABLE
+AND generic feedbackState != NOT_INTERESTED
+AND JOB disposition != CONTACTED_NOT_SUITABLE
 AND not excluded by excludedKeywords
 ```
 
@@ -155,20 +165,16 @@ Hard exclusion 基于：
 
 因此不因 Snapshot 更新而丢失。
 
-## 7. Interaction 设计
+## 7. Interaction Core 与 JOB Disposition Extension
 
-`user_information_interaction` 是用户 × Information 的 current aggregate state。
+`user_information_interaction` 是用户 × Information 的通用 current aggregate state，只保存 view、feedback 和最近归因。
 
 ```text
-feedbackState:
-  NONE
-  INTERESTED
-  NOT_INTERESTED
+UserInformationInteractionCore.feedbackState:
+  NONE / INTERESTED / NOT_INTERESTED
 
-jobDisposition:
-  NONE
-  CONTACTED
-  CONTACTED_NOT_SUITABLE
+UserJobDisposition.jobDisposition:
+  NONE / CONTACTED / CONTACTED_NOT_SUITABLE
 ```
 
 两者独立。
@@ -189,7 +195,7 @@ INTERESTED + CONTACTED
 INTERESTED + CONTACTED_NOT_SUITABLE
 ```
 
-数据库可以保留历史/current state，但 Recommendation hard exclusion 以 `CONTACTED_NOT_SUITABLE` 优先。
+Job disposition 通过 `interactionId` 1:1 扩展，Service 校验对应 Information 为 JOB。Recommendation hard exclusion 仍以 `CONTACTED_NOT_SUITABLE` 优先。
 
 前端在标记“不合适”时可选择同时把 feedbackState 改为 NOT_INTERESTED，但 Backend Contract 不强制耦合两个字段。
 
@@ -224,7 +230,7 @@ Run #100 已经 COMPLETED
 
 恢复状态为 NONE 后，如果 Item 仍属于当前成功 Run，可以再次出现在 Feed。
 
-## 9. Algorithm V1
+## 9. JOB Algorithm V1
 
 ```text
 AI relevance       70%
@@ -264,6 +270,8 @@ freshnessScore DESC
 informationId DESC
 ```
 
+该算法只属于 `JOB_RECOMMENDATION / V1`；未来 Information Type 使用独立 Algorithm Key/Version。
+
 ## 10. Deduplication
 
 不使用 Embedding。
@@ -299,6 +307,8 @@ normalizedCityName
 - 仍遵守 duplicate 去重。
 
 ## 12. Run Lifecycle
+
+Run 显式冻结 `informationType`，所有 Owner Run/Feed 查询同时按 Information Type 隔离。
 
 ```text
 PENDING
@@ -375,7 +385,8 @@ source_analysis_batch_id
 ```text
 POST refresh
 → current Owner
-→ current Profile
+→ informationType = JOB
+→ current JOB Profile Core + Extension
 → bound Prompt Profile Active Version
 → create PENDING Run
 → 202
@@ -395,14 +406,15 @@ AiProviderClient
 
 ```text
 latest COMPLETED Run
+same owner + informationType
 ```
 
 然后应用 current Interaction visibility：
 
 ```text
-NOT_INTERESTED             -> hidden
-CONTACTED_NOT_SUITABLE     -> hidden
-CONTACTED                  -> visible + badge
+generic NOT_INTERESTED               -> hidden
+JOB CONTACTED_NOT_SUITABLE           -> hidden
+JOB CONTACTED                        -> visible + badge
 ```
 
 因此 current feed total 是当前可见 Item 数，不必等下一 Recommendation Run。

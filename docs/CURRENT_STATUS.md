@@ -129,7 +129,7 @@ ai_model_invocation
 
 `TASK-035`：Recommendation Profile Domain And API（尚未实施）。
 
-`TASK-033` Backend Operational Logging Baseline 与 `TASK-034` Phase 4 Recommendation Data Model / Flyway 已完成；当前仅将实施顺序推进到 TASK-035，不代表 TASK-035 已开始编码。
+`TASK-033`、`TASK-034` 与数据模型通用化纠偏 `TASK-034A` 已完成；当前仅将实施顺序推进到 TASK-035，不代表 TASK-035 已开始编码。
 
 Phase 3 已归档。后续仅接受缺陷修复、安全修复、依赖维护和运行参数维护，不再在 Phase 3 范围继续增加新功能。
 
@@ -146,7 +146,8 @@ Phase 4：Personalized Recommendation MVP 已启动，规划基线已 Accepted�
 - Backend Operational Logging Conventions；
 - Codex Phase 4 Workflow；
 - TASK-033 Backend Operational Logging Baseline；
-- TASK-034 Recommendation Data Model / Flyway（V3）。
+- TASK-034 Recommendation Data Model / Flyway（V3）；
+- TASK-034A Generic Recommendation Core + JOB Domain Extension（V4）。
 
 尚未实施：
 

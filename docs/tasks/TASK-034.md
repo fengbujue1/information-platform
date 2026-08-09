@@ -72,3 +72,5 @@ TASK-033 完成；实施前检查真实最新 Flyway version。
 - 专用升级测试库从 V2 成功迁移至 V3；升级、Schema、FK、UNIQUE、默认值、EXPLAIN、Mapper CRUD 相关 6 项通过；最终定向测试合计 8 项通过；
 - 空库迁移测试已更新为 V1 → V3，但当前未配置 `INFORMATION_HUB_EMPTY_TEST_DB_URL`，因此该项按条件跳过；
 - 未执行破坏性数据库清理，也未修改既有 migration。
+
+后续说明：TASK-034 的 V3 是不可修改的历史事实；TASK-034A 已通过新增 V4 将其通用化为 Recommendation Core + JOB Domain Extension。

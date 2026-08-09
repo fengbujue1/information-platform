@@ -5,10 +5,12 @@
 ## Manual Refresh
 
 ```http
-POST /api/v1/recommendations/refresh
+POST /api/v1/recommendations/{informationType}/refresh
 ```
 
 Session + CSRF。
+
+Phase 4 当前只接受 `informationType = JOB`。
 
 成功：
 
@@ -46,11 +48,11 @@ Manual Refresh 不调用：
 ## Run API
 
 ```http
-GET /api/v1/recommendations/runs/{runId}
-GET /api/v1/recommendations/runs?limit=20
+GET /api/v1/recommendations/{informationType}/runs/{runId}
+GET /api/v1/recommendations/{informationType}/runs?limit=20
 ```
 
-Owner isolated。
+Owner + Information Type isolated。Run 响应显式返回 `informationType`。
 
 ## Auto Trigger
 
@@ -67,6 +69,7 @@ Eligibility：
 ```text
 same user
 same bound Prompt Profile
+informationType = JOB
 ```
 
 `FAILED/NOOP` 不创建。

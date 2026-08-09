@@ -16,6 +16,9 @@ public class RecommendationRunPo {
     /** Run Owner 的用户账号主键。 */
     private Long userId;
 
+    /** Run 冻结的 Information Type；Phase 4 当前只实际使用 JOB。 */
+    private String informationType;
+
     /** 触发类型：MANUAL 或 ANALYSIS_BATCH_COMPLETED。 */
     private String triggerType;
 
@@ -86,6 +89,8 @@ public class RecommendationRunPo {
     public void setId(Long id) { this.id = id; }
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
+    public String getInformationType() { return informationType; }
+    public void setInformationType(String informationType) { this.informationType = informationType; }
     public String getTriggerType() { return triggerType; }
     public void setTriggerType(String triggerType) { this.triggerType = triggerType; }
     public Long getSourceAnalysisBatchId() { return sourceAnalysisBatchId; }

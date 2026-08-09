@@ -1,15 +1,15 @@
 # Information Platform 数据库设计
 
-设计版本：3.0
+设计版本：4.0
 状态：Accepted
-当前阶段：Phase 4 V3 Recommendation 数据模型已实施
+当前阶段：Phase 4 V4 Recommendation 通用 Core + JOB Extension 已实施
 数据库：MySQL 8.x  
 字符集：utf8mb4  
 时间存储：UTC
 
 ## 1. 设计目标
 
-当前数据库同时支持 Phase 1/2 的职位采集与浏览、Phase 3 Identity/AI Processing，以及 Phase 4 Recommendation Profile、Interaction、Run、Item 的持久化基础；公共数据库模型不能绑定 BOSS。
+当前数据库同时支持 Phase 1/2 的职位采集与浏览、Phase 3 Identity/AI Processing，以及 Phase 4 Generic Recommendation Core + JOB Domain Extension 的持久化基础；公共数据库模型不能绑定 BOSS。
 
 Phase 1 创建：
 
@@ -17,7 +17,7 @@ Phase 1 创建：
 - `job_information`
 - `information_snapshot`
 
-Phase 3 已通过 V2 增加账号与 AI 处理持久化表；Phase 4 已通过 V3 增加 Recommendation 四表持久化骨架，但 Recommendation 业务和 Notification 尚未实现。
+Phase 3 已通过 V2 增加账号与 AI 处理持久化表；Phase 4 先通过 V3 增加 Recommendation 四表，再由 V4 无损纠偏为通用 Core + JOB Extension。Recommendation 业务和 Notification 尚未实现。
 
 ## 2. 实际输入数据事实
 
@@ -577,6 +577,8 @@ UNIQUE (information_id, content_hash)
 ```text
 V1__create_information_job_and_snapshot_tables.sql
 V2__create_phase3_ai_processing_tables.sql
+V3__create_phase4_recommendation_tables.sql
+V4__generalize_phase4_recommendation_model.sql
 ```
 
 V1 创建：
@@ -607,7 +609,16 @@ V3 实施：
 - 实施 Profile Owner、Interaction identity、Auto source Batch、Item Information/Rank 唯一约束；
 - `last_recommendation_item_id` 采用可空 FK，并在 `recommendation_item` 建表后通过 ALTER 补充约束。
 
-V1 未被修改。后续 migration 必须读取真实最新版本后命名。
+V4 实施：
+
+- Profile Core 新增 `information_type`，唯一约束改为 `(user_id, information_type)`；
+- 创建 `job_recommendation_profile` 并迁移 V3 JOB 偏好；
+- Interaction Core 删除 JOB 字段，创建 `user_job_disposition` 并迁移已有状态；
+- Recommendation Run 显式增加并回填 `information_type`；
+- Run Owner 索引加入 `information_type`；
+- 迁移前后使用校验表保证 V3 数据可安全归类且复制数量一致。
+
+V1、V2、V3 均未被修改。后续 migration 必须读取真实最新版本后命名。
 
 ## 15. 已冻结设计决策
 
@@ -737,9 +748,9 @@ ORDER BY first_seen_time DESC, id DESC
 
 V2 未创建 Spring Session JDBC、Preview、Definition、System Prompt、Usage Summary、Cost、推荐或通知表。V3 仅新增四张 Recommendation 核心表，仍未创建 Recommendation Schedule、Recommendation Batch、Recommendation Profile Version 或 Notification 表。Phase 3 的字段类型、NULL/default、索引、UNIQUE、CHECK 和 FK 继续以 V2 migration 为 SQL 事实。
 
-## 17. Phase 4 V3 已实施数据库事实
+## 17. Phase 4 V3 历史数据库事实
 
-TASK-034 已按 Accepted `docs/DATABASE_DESIGN_PHASE4_DRAFT.md` 实施 V3：
+TASK-034 曾按当时 Accepted 设计实施 V3；该 migration 保持不可变，当前结构已由 TASK-034A/V4 继续演进：
 
 ```text
 user_recommendation_profile
@@ -777,3 +788,40 @@ Item by run_id + rank_no
 ```
 
 V3 未新增 Candidate Resolver 专用大范围扫描索引；TASK-037 必须结合真实 Candidate SQL 再执行 EXPLAIN 后决定。
+
+## 18. Phase 4 V4 当前数据库事实
+
+TASK-034A 按 ADR-018 实施：
+
+```text
+Generic Core:
+  user_recommendation_profile
+  user_information_interaction
+  recommendation_run
+  recommendation_item
+
+JOB Extension:
+  job_recommendation_profile
+  user_job_disposition
+```
+
+### 18.1 Profile
+
+- Core 只保存 `information_type`、Prompt 绑定、window/topN、完整组合 hash；
+- `(user_id, information_type)` 唯一，同一用户可持有不同 Information Type Profile；
+- JOB 目标岗位、技能、城市、远程、薪资、排除词位于 1:1 extension；
+- `content_hash` 保持 Core + Domain Extension 完整组合语义。
+
+### 18.2 Interaction
+
+- Core 只保存 view、通用 Feedback 和最近 Recommendation Item 归因；
+- JOB disposition 位于 1:1 extension；
+- `NOT_INTERESTED` 是通用 hard exclusion；
+- `CONTACTED_NOT_SUITABLE` 是 JOB hard exclusion，`CONTACTED` 不排除。
+
+### 18.3 Run 与索引
+
+- Run 明确冻结 `information_type`，历史 V3 Run 和 snapshot 已回填 JOB；
+- Owner 查询索引为 `(user_id, information_type, status, created_at)`；
+- 最新成功 Feed 索引为 `(user_id, information_type, completed_at, id)`；
+- Profile、Interaction、Run、Item 的关键查询已在合法 MySQL 数据图上执行 EXPLAIN；Candidate 专用索引仍留待 TASK-037。

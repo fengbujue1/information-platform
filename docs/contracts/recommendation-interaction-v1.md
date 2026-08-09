@@ -25,6 +25,8 @@ viewCount += 1
 lastViewedAt = now
 ```
 
+View 与 Feedback 保存于通用 `user_information_interaction` Core。
+
 ## 2. Feedback
 
 ```http
@@ -66,6 +68,8 @@ PUT 覆盖 current state。
 - 取消 Feedback hard exclusion。
 
 ## 3. Job Disposition
+
+Job disposition 保存于 `user_job_disposition` JOB Extension，不进入通用 Interaction Core。
 
 ```http
 PUT /api/v1/recommendation/interactions/{informationId}/job-disposition
@@ -140,6 +144,8 @@ CONTACTED_NOT_SUITABLE
 Phase 4 不自动查询/同步 BOSS 聊天记录。
 
 该状态由用户手动设置。
+
+Backend 必须校验目标 `informationId` 的 `informationType = JOB`；其它 Information Type 不允许创建 Job disposition。
 
 ## 7. Logs
 

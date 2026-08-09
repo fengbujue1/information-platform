@@ -2,40 +2,39 @@
 
 状态：Accepted
 
+实施状态：TASK-034A 已通过 V4 完成通用化纠偏
+
 文件名保留 `_DRAFT` 仅用于兼容既有文档命名方式。
 
-## 1. 新增核心表
+## 1. Generic Core + Domain Extension
 
 ```text
-user_recommendation_profile
-user_information_interaction
-recommendation_run
-recommendation_item
+user_recommendation_profile       generic core
+└── job_recommendation_profile    JOB extension
+
+user_information_interaction      generic core
+└── user_job_disposition          JOB extension
+
+recommendation_run                generic core + informationType
+└── recommendation_item           immutable result fact
 ```
 
-不新增：
-
-```text
-recommendation_schedule
-recommendation_batch
-recommendation_profile_version
-```
+不新增 Recommendation Schedule、Batch 或 Profile Version。Phase 4 当前只实际使用 `informationType = JOB`。
 
 ## 2. 关系
 
 ```text
 user_account
-    │
     ├── ai_prompt_profile
     │       └── ai_prompt_version
-    │
     ├── user_recommendation_profile
-    │       └── binds ai_prompt_profile
-    │
+    │       ├── binds ai_prompt_profile
+    │       └── job_recommendation_profile (JOB only)
     ├── user_information_interaction
-    │       └── information_item
-    │
+    │       ├── information_item
+    │       └── user_job_disposition (JOB only)
     └── recommendation_run
+            ├── informationType
             ├── ai_prompt_version
             ├── source ai_analysis_batch (optional)
             └── recommendation_item
@@ -44,61 +43,60 @@ user_account
                     └── information_analysis
 ```
 
-## 3. UserRecommendationProfile
+## 3. Recommendation Profile Core
 
 ```text
 id
 userId
+informationType
 analysisPromptProfileId
 windowDays
 topN
+contentHash
+createdAt
+updatedAt
+```
+
+唯一：
+
+```text
+(userId, informationType)
+```
+
+`contentHash` 是 Core + 对应领域扩展的完整 canonical hash，不是仅 Core hash。
+
+## 4. Job Recommendation Profile Extension
+
+```text
+profileId (PK + FK)
 targetRoles
 preferredSkills
 preferredCities
 preferredRemoteTypes
 salaryMinMonthlyYuan
 excludedKeywords
-contentHash
 createdAt
 updatedAt
 ```
 
-一个 user 最多一个 current Profile。
+Service 必须保证只关联 `informationType = JOB` 的 Core。Phase 4 不创建其它 Information Type 扩展。
 
-Run 创建时冻结：
-
-```text
-profileContentHash
-profileSnapshotJson
-```
-
-## 4. UserInformationInteraction
-
-职责：
-
-> 保存用户对一个 Information 的当前浏览、推荐反馈和求职处理状态。
+## 5. User Information Interaction Core
 
 ```text
 id
 userId
 informationId
-
 viewCount
 lastViewedAt
-
 feedbackState
 feedbackUpdatedAt
-
-jobDisposition
-dispositionUpdatedAt
-
 lastRecommendationItemId
-
 createdAt
 updatedAt
 ```
 
-### feedbackState
+唯一 `(userId, informationId)`。通用 Feedback：
 
 ```text
 NONE
@@ -106,7 +104,19 @@ INTERESTED
 NOT_INTERESTED
 ```
 
-### jobDisposition
+通用 hard exclusion 只有 `NOT_INTERESTED`。Interaction 绑定 Information，不因 Snapshot 更新丢失。
+
+## 6. User Job Disposition Extension
+
+```text
+interactionId (PK + FK)
+jobDisposition
+dispositionUpdatedAt
+createdAt
+updatedAt
+```
+
+JOB 状态：
 
 ```text
 NONE
@@ -114,80 +124,45 @@ CONTACTED
 CONTACTED_NOT_SUITABLE
 ```
 
-唯一：
+`CONTACTED` 不排除；`CONTACTED_NOT_SUITABLE` 是 JOB hard exclusion。Service 必须校验 Interaction 对应 `information_item.information_type = JOB`。
 
-```text
-(userId, informationId)
-```
-
-Hard exclusion：
-
-```text
-feedbackState == NOT_INTERESTED
-OR
-jobDisposition == CONTACTED_NOT_SUITABLE
-```
-
-`CONTACTED` 不排除。
-
-Interaction 绑定 `informationId`，因此职位更新 Snapshot 后状态仍保留。
-
-Phase 4 V1 不保存完整行为 Event Log。
-
-## 5. RecommendationRun
+## 7. Recommendation Run
 
 ```text
 id
 userId
+informationType
 triggerType
 sourceAnalysisBatchId
-
 profileId
 profileContentHash
 profileSnapshotJson
-
 promptProfileId
 promptVersionId
-
 algorithmKey
 algorithmVersion
-
 windowStart
 windowEnd
-
 candidateCount
 eligibleCount
 resultCount
-
 status
 skipReason
 failureCode
 failureMessage
-
 startedAt
 completedAt
 createdAt
 updatedAt
 ```
 
-Trigger：
+Run 显式冻结 Information Type。`profileSnapshotJson` 保存完整组合 Profile，JOB 至少包含 Core 字段和全部 JOB 偏好。
 
-```text
-ANALYSIS_BATCH_COMPLETED
-MANUAL
-```
+Trigger：`ANALYSIS_BATCH_COMPLETED` / `MANUAL`。Status：`PENDING` / `RUNNING` / `COMPLETED` / `FAILED` / `NOOP`。
 
-Status：
+## 8. Recommendation Item
 
-```text
-PENDING
-RUNNING
-COMPLETED
-FAILED
-NOOP
-```
-
-## 6. RecommendationItem
+Item 结构保持：
 
 ```text
 id
@@ -195,82 +170,40 @@ runId
 informationId
 snapshotId
 analysisId
-
 rankNo
-
 finalScore
 aiRelevanceScore
 profileMatchScore
 freshnessScore
-
 scoreBreakdownJson
 reasonsJson
 duplicateGroupKey
-
 createdAt
 ```
 
-Item 是推荐历史事实。
+Item 是不可变历史事实；Interaction 或 Job disposition 变化不修改、删除 Item。
 
-Interaction 修改：
+## 9. Algorithm Boundary
 
-- 不更新 Item；
-- 不删除 Item；
-- Feed Query 可基于 Interaction 隐藏；
-- 下一 Run Candidate 也基于 Interaction 排除。
-
-## 7. Algorithm Identity
+Phase 4 当前：
 
 ```text
+informationType = JOB
 algorithmKey = JOB_RECOMMENDATION
 algorithmVersion = 1
+70% AI relevance + 20% JOB profile match + 10% freshness
 ```
 
-Algorithm V1 冻结：
+该规则不是平台所有 Information Type 的统一算法。未来领域使用独立 Algorithm Key/Version。
 
-- candidate semantics；
-- 70/20/10 weights；
-- profile match；
-- freshness；
-- duplicate key；
-- diversity；
-- tie breaker；
-- hard exclusion definitions。
+## 10. Owner 与历史语义
 
-重大不兼容变化升级 Algorithm Version。
+- Owner 只来自 Session；客户端 userId 不可信；
+- Profile 以 Owner + Information Type 隔离；
+- Interaction 以 Owner + Information 隔离；
+- Run/Feed 同时按 Owner + Information Type 隔离；
+- 历史 Run 必须能回答 Information Type、Prompt Version、完整 Profile snapshot、Algorithm、Snapshot、Analysis、score、reasons 和 rank。
 
-## 8. Owner Boundary
+## 11. BOSS 边界
 
-Owner 来自 Session。
-
-以下都必须 Owner 隔离：
-
-- Profile；
-- Interaction；
-- Run；
-- Item / Feed。
-
-客户端 userId 不可信。
-
-## 9. 历史语义
-
-历史 Run 能回答：
-
-- 使用哪个 Prompt Version；
-- 当时 Profile；
-- Algorithm Version；
-- Snapshot；
-- Analysis；
-- score breakdown；
-- reasons；
-- rank。
-
-当前 Interaction 可改变 Feed visibility，但不篡改历史 Run/Item。
-
-## 10. BOSS 联系状态边界
-
-Phase 4 不把 BOSS 聊天记录接入数据模型。
-
-`CONTACTED` / `CONTACTED_NOT_SUITABLE` 是用户在 Information Platform 中手工维护的业务状态。
-
-如果来源职位以后以新的 source item identity 重新发布，它会成为新的 Information，V1 不保证自动继承旧 Information 的 disposition。
+Phase 4 不读取 BOSS 聊天记录。JOB disposition 由用户手工维护；新的 source item identity 是新的 Information，V1 不保证继承旧 disposition。

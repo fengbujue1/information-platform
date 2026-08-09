@@ -20,7 +20,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 
-/** 验证既有测试库升级至 V3 后的 Recommendation 物理结构与查询索引。 */
+/** 验证既有测试库升级至 V4 后的通用 Core、JOB 扩展与查询索引。 */
 @EnabledIfEnvironmentVariable(
         named = "INFORMATION_HUB_TEST_DB_URL",
         matches = "jdbc:mysql://.+")
@@ -45,8 +45,8 @@ class Phase4SchemaMigrationIntegrationTest {
 
         MigrateResult result = flyway.migrate();
 
-        assertTrue(result.success, "既有测试库升级至 V3 必须成功");
-        assertEquals("3", flyway.info().current().getVersion().getVersion());
+        assertTrue(result.success, "既有测试库升级至 V4 必须成功");
+        assertEquals("4", flyway.info().current().getVersion().getVersion());
     }
 
     @Test
@@ -55,7 +55,9 @@ class Phase4SchemaMigrationIntegrationTest {
             assertEquals(
                     Set.of(
                             "user_recommendation_profile",
+                            "job_recommendation_profile",
                             "user_information_interaction",
+                            "user_job_disposition",
                             "recommendation_run",
                             "recommendation_item"),
                     queryStrings(
@@ -66,7 +68,9 @@ class Phase4SchemaMigrationIntegrationTest {
                             WHERE table_schema = DATABASE()
                               AND table_name IN (
                                   'user_recommendation_profile',
+                                  'job_recommendation_profile',
                                   'user_information_interaction',
+                                  'user_job_disposition',
                                   'recommendation_run',
                                   'recommendation_item'
                               )
@@ -75,22 +79,35 @@ class Phase4SchemaMigrationIntegrationTest {
             Map<String, ColumnFact> profileDefaults = queryColumnFacts(
                     connection,
                     "user_recommendation_profile",
-                    Set.of("window_days", "top_n"));
+                    Set.of("information_type", "window_days", "top_n"));
+            assertEquals("NO", profileDefaults.get("information_type").nullable());
             assertEquals("7", profileDefaults.get("window_days").defaultValue());
             assertEquals("50", profileDefaults.get("top_n").defaultValue());
 
             Map<String, ColumnFact> interactionDefaults = queryColumnFacts(
                     connection,
                     "user_information_interaction",
-                    Set.of("view_count", "feedback_state", "job_disposition"));
+                    Set.of("view_count", "feedback_state"));
             assertEquals("0", interactionDefaults.get("view_count").defaultValue());
             assertEquals("NONE", interactionDefaults.get("feedback_state").defaultValue());
-            assertEquals("NONE", interactionDefaults.get("job_disposition").defaultValue());
+
+            Map<String, ColumnFact> dispositionDefaults = queryColumnFacts(
+                    connection,
+                    "user_job_disposition",
+                    Set.of("job_disposition", "disposition_updated_at"));
+            assertEquals("NONE", dispositionDefaults.get("job_disposition").defaultValue());
+            assertEquals("YES", dispositionDefaults.get("disposition_updated_at").nullable());
 
             Map<String, ColumnFact> runDefaults = queryColumnFacts(
                     connection,
                     "recommendation_run",
-                    Set.of("candidate_count", "eligible_count", "result_count", "status"));
+                    Set.of(
+                            "information_type",
+                            "candidate_count",
+                            "eligible_count",
+                            "result_count",
+                            "status"));
+            assertEquals("NO", runDefaults.get("information_type").nullable());
             assertEquals("0", runDefaults.get("candidate_count").defaultValue());
             assertEquals("0", runDefaults.get("eligible_count").defaultValue());
             assertEquals("0", runDefaults.get("result_count").defaultValue());
@@ -104,27 +121,31 @@ class Phase4SchemaMigrationIntegrationTest {
                     WHERE table_schema = DATABASE()
                       AND table_name IN (
                           'user_recommendation_profile',
+                          'job_recommendation_profile',
                           'user_information_interaction',
+                          'user_job_disposition',
                           'recommendation_run',
                           'recommendation_item'
                       )
                     """);
             assertTrue(indexes.containsAll(Set.of(
-                    "uk_user_recommendation_profile_user",
+                    "uk_user_recommendation_profile_identity",
                     "idx_user_recommendation_profile_prompt",
                     "uk_user_information_interaction_identity",
                     "idx_user_information_interaction_state",
                     "idx_user_information_interaction_information",
                     "uk_recommendation_run_source_batch",
-                    "idx_recommendation_run_user_status_created",
-                    "idx_recommendation_run_user_completed",
+                    "idx_recommendation_run_user_type_status_created",
+                    "idx_recommendation_run_user_type_completed",
                     "uk_recommendation_item_information",
                     "uk_recommendation_item_rank",
                     "idx_recommendation_item_information",
                     "idx_recommendation_item_analysis")));
 
             Map<String, String> uniqueColumns = queryUniqueIndexColumns(connection);
-            assertEquals("user_id", uniqueColumns.get("uk_user_recommendation_profile_user"));
+            assertEquals(
+                    "user_id,information_type",
+                    uniqueColumns.get("uk_user_recommendation_profile_identity"));
             assertEquals(
                     "user_id,information_id",
                     uniqueColumns.get("uk_user_information_interaction_identity"));
@@ -135,6 +156,21 @@ class Phase4SchemaMigrationIntegrationTest {
                     "run_id,information_id",
                     uniqueColumns.get("uk_recommendation_item_information"));
             assertEquals("run_id,rank_no", uniqueColumns.get("uk_recommendation_item_rank"));
+
+            assertColumnsAbsent(
+                    connection,
+                    "user_recommendation_profile",
+                    Set.of(
+                            "target_roles",
+                            "preferred_skills",
+                            "preferred_cities",
+                            "preferred_remote_types",
+                            "salary_min_monthly_yuan",
+                            "excluded_keywords"));
+            assertColumnsAbsent(
+                    connection,
+                    "user_information_interaction",
+                    Set.of("job_disposition", "disposition_updated_at"));
         }
     }
 
@@ -152,6 +188,8 @@ class Phase4SchemaMigrationIntegrationTest {
                               OR constraint_name LIKE 'fk_user_information_interaction_%'
                               OR constraint_name LIKE 'fk_recommendation_run_%'
                               OR constraint_name LIKE 'fk_recommendation_item_%'
+                              OR constraint_name LIKE 'fk_job_recommendation_profile_%'
+                              OR constraint_name LIKE 'fk_user_job_disposition_%'
                           )
                         """);
                 ResultSet resultSet = statement.executeQuery()) {
@@ -159,11 +197,13 @@ class Phase4SchemaMigrationIntegrationTest {
             while (resultSet.next()) {
                 deleteRules.put(resultSet.getString(1), resultSet.getString(2));
             }
-            assertEquals(14, deleteRules.size());
+            assertEquals(16, deleteRules.size());
             assertTrue(deleteRules.values().stream().allMatch("RESTRICT"::equals));
             assertEquals(
                     "RESTRICT",
                     deleteRules.get("fk_user_information_interaction_last_item"));
+            assertEquals("RESTRICT", deleteRules.get("fk_job_recommendation_profile_core"));
+            assertEquals("RESTRICT", deleteRules.get("fk_user_job_disposition_interaction"));
         }
     }
 
@@ -196,6 +236,29 @@ class Phase4SchemaMigrationIntegrationTest {
         }
         assertEquals(columnNames, facts.keySet());
         return facts;
+    }
+
+    private static void assertColumnsAbsent(
+            Connection connection, String tableName, Set<String> columnNames) throws SQLException {
+        String placeholders = String.join(",", columnNames.stream().map(ignored -> "?").toList());
+        try (PreparedStatement statement = connection.prepareStatement(
+                """
+                SELECT COUNT(*)
+                FROM information_schema.columns
+                WHERE table_schema = DATABASE()
+                  AND table_name = ?
+                  AND column_name IN (%s)
+                """.formatted(placeholders))) {
+            statement.setString(1, tableName);
+            int parameter = 2;
+            for (String columnName : columnNames) {
+                statement.setString(parameter++, columnName);
+            }
+            try (ResultSet resultSet = statement.executeQuery()) {
+                assertTrue(resultSet.next());
+                assertEquals(0, resultSet.getInt(1));
+            }
+        }
     }
 
     private static Set<String> queryStrings(Connection connection, String sql) throws SQLException {

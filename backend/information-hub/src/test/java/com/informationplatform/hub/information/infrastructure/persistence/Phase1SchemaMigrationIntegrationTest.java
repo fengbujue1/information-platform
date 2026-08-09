@@ -58,7 +58,7 @@ class Phase1SchemaMigrationIntegrationTest {
         MigrateResult result = flyway.migrate();
 
         assertTrue(result.success, "Flyway migration must succeed");
-        assertEquals(2, flyway.info().current().getVersion().getMajor().intValue());
+        assertEquals(4, flyway.info().current().getVersion().getMajor().intValue());
     }
 
     @Test
