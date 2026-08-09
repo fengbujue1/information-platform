@@ -106,25 +106,40 @@ V1 保持历史兼容，V2 为当前版本。
 
 ## Phase 4：个性化推荐
 
-状态：未开始。
+状态：**进行中。**
 
-候选方向：
+设计状态：Accepted。
 
-- 用户画像；
-- 主动匹配；
-- Recommendation Candidate；
-- 排序；
-- Top N；
-- 相似信息去重；
-- 多样性；
-- 用户反馈。
+当前任务：`TASK-033`（尚未实施）。
+
+### 计划交付
+
+- Recommendation Profile，并显式绑定 AI Prompt Profile；
+- 预计算 Recommendation Run / Item；
+- 确定性 scoring / ranking；
+- deduplication / diversity / Top N；
+- Analysis Batch 完成后的自动刷新；
+- Manual Refresh；
+- Feedback；
+- BOSS contact disposition；
+- Recommendation Feed；
+- Phase 4 Web。
 
 Phase 4 与 Phase 3 的区别：
 
 - Phase 3：用户通过 Prompt 主动或定时发起 USER_RELEVANCE 分析；
-- Phase 4：系统基于长期用户画像主动产生推荐。
+- Phase 4：系统消费 Phase 3 已有成功 Analysis，基于 Recommendation Profile 生成预计算推荐。
 
-Phase 4 开始前必须单独完成 Scope、ADR、Contract 与 TASK 规划。
+Scope、Architecture、Data Model、Database Design、ADR、Contract 与 TASK-033 ～ TASK-044 已 Accepted。Recommendation 功能尚未实施，将按 TASK 顺序推进。
+
+### 明确不做
+
+- 独立 Recommendation Schedule；
+- Recommendation 新增 AI 调用；
+- Embedding / Vector DB / RAG；
+- 自动读取 BOSS 聊天记录；
+- 全站 UI/UX 重构；
+- 生产部署与公网发布。
 
 ## Future：Retrieval / Semantic Search
 

@@ -64,4 +64,48 @@
 
 Phase 3 已归档。
 
-Phase 4 尚未启动。Phase 4 开始前需创建独立 Scope、ADR、Contract 和 TASK。
+## Phase 4
+
+状态：**进行中。**
+
+当前任务：`TASK-033`（尚未实施）。
+
+Phase 4 规划基线已 Accepted；Recommendation 功能将按 TASK 顺序实施，当前不得将规划内容写成已完成能力。
+
+- [Phase 4 正式规划包](../PHASE4_PACKAGE_MANIFEST.md)
+- [Phase 4 Scope](PHASE4_SCOPE.md)
+- [Phase 4 Architecture（Accepted）](PHASE4_ARCHITECTURE_DRAFT.md)
+- [Phase 4 Data Model（Accepted）](PHASE4_DATA_MODEL_DRAFT.md)
+- [Phase 4 Database Design（Accepted，尚未实施）](DATABASE_DESIGN_PHASE4_DRAFT.md)
+- [Backend Operational Logging Conventions](LOGGING_CONVENTIONS.md)
+- [Codex Phase 4 Workflow](CODEX_PHASE4_WORKFLOW.md)
+- [Phase 4 Existing Document Change Plan](PHASE4_EXISTING_DOC_CHANGES.md)
+
+### ADR
+
+- [ADR-014：Precomputed Recommendation](decisions/ADR-014-phase4-precomputed-recommendation.md)
+- [ADR-015：Recommendation Trigger Lifecycle](decisions/ADR-015-phase4-recommendation-trigger-lifecycle.md)
+- [ADR-016：Profile、Feedback 与 Job Disposition Boundary](decisions/ADR-016-phase4-profile-feedback-job-disposition-boundary.md)
+- [ADR-017：Backend Operational Logging Baseline](decisions/ADR-017-backend-operational-logging-baseline.md)
+
+### Contracts
+
+- [Recommendation Profile V1](contracts/recommendation-profile-v1.md)
+- [Recommendation Refresh V1](contracts/recommendation-refresh-v1.md)
+- [Recommendation Feed V1](contracts/recommendation-feed-v1.md)
+- [Recommendation Interaction V1](contracts/recommendation-interaction-v1.md)
+
+### TASK
+
+- [TASK-033：Backend Operational Logging Baseline](tasks/TASK-033.md)
+- [TASK-034：Recommendation Data Model 与 Flyway](tasks/TASK-034.md)
+- [TASK-035：Recommendation Profile Backend 与 API](tasks/TASK-035.md)
+- [TASK-036：User Interaction、Feedback 与 Job Disposition](tasks/TASK-036.md)
+- [TASK-037：Recommendation Candidate Resolver](tasks/TASK-037.md)
+- [TASK-038：Recommendation Scoring 与 Explainability](tasks/TASK-038.md)
+- [TASK-039：Ranking、Deduplication、Diversity 与 Top N](tasks/TASK-039.md)
+- [TASK-040：Recommendation Run、Worker 与 Manual Refresh](tasks/TASK-040.md)
+- [TASK-041：Analysis Batch Completion → Recommendation Auto Trigger](tasks/TASK-041.md)
+- [TASK-042：Recommendation Feed Query API](tasks/TASK-042.md)
+- [TASK-043：Phase 4 Web](tasks/TASK-043.md)
+- [TASK-044：Full-stack E2E、验收与收尾](tasks/TASK-044.md)

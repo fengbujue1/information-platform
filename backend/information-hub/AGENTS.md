@@ -16,6 +16,13 @@
 
 当前只实现 TASK 明确要求的功能。
 
+每个后端 TASK 开始前必须阅读：
+
+- 本文件；
+- `../../docs/LOGGING_CONVENTIONS.md`；
+- 当前 TASK 和其引用的 ADR / Contract；
+- `../../docs/CURRENT_STATUS.md`。
+
 ---
 
 ## 二、技术栈
@@ -354,6 +361,14 @@ Phase 3 数据库规则：
 - 不允许吞掉异常后返回成功。
 - 请求体上限按协议配置。
 
+### Backend Operational Logging
+
+详细规范：
+
+`../../docs/LOGGING_CONVENTIONS.md`
+
+所有新增或修改的后端业务代码必须遵守该规范。
+
 ---
 
 ## 十一、测试要求
@@ -420,3 +435,16 @@ Linux/macOS：
 - Provider Client 优先复用 Spring `RestClient` 和现有 Jackson，不安装 AI SDK。
 - API Key、Bootstrap 密码、Authorization、Cookie、完整 Provider 原始响应不得落库或写日志。
 - 结果不确定的 timeout/崩溃调用不得自动盲重试。
+
+---
+
+## 十四、Phase 4 Recommendation 边界
+
+- Recommendation 只消费已有成功 Analysis，不调用 AI Provider。
+- Recommendation Worker 只消费已经存在的 PENDING Run；不得增加独立 Recommendation Cron。
+- Feed 只读取预计算的最新成功 Run / Item，不在 GET 请求中实时重算。
+- Recommendation 业务刷新只允许 Analysis Batch 完成和 Manual Refresh 两种入口。
+- Hard exclusion 固定为 `NOT_INTERESTED` 或 `CONTACTED_NOT_SUITABLE`。
+- `CONTACTED` 表示已联系但仍可能继续沟通，不自动排除。
+- Phase 4 不自动读取或同步 BOSS 聊天记录。
+- Profile 修改不自动触发 AI Analysis 或 Recommendation Refresh。

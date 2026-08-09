@@ -24,7 +24,9 @@ BOSS Collector
 → Phase 3 Web
 ```
 
-Phase 4 尚未启动。
+Phase 4 已启动，当前处于进行中。
+
+当前任务：`TASK-033`（Backend Operational Logging Baseline，尚未实施）。
 
 ## Phase 1：采集与归档
 
@@ -152,13 +154,13 @@ API Key、Bootstrap 密码、Session Cookie、Collector Token 和完整 Provider
 - RBAC / 多租户；
 - 费用账单。
 
-## 下一阶段
+## Phase 4：Personalized Recommendation MVP
 
-Phase 4：个性化推荐。
+状态：**进行中。**
 
-当前状态：**未开始**。
+Phase 4 的 Scope、Architecture、Data Model、Database Design、ADR、Contract 和 TASK 已完成评审并进入 Accepted 实施基线。
 
-Phase 4 必须重新完成 Scope、ADR、Contract 和 TASK 规划后再进入实施。
+计划按 `TASK-033` ～ `TASK-044` 顺序实施。当前尚未实现 Recommendation Profile、Recommendation Run / Item、评分排序、Feed、Interaction 或 Phase 4 Web，不将规划能力视为已完成能力。
 
 ## 文档入口
 
@@ -172,6 +174,13 @@ Phase 4 必须重新完成 Scope、ADR、Contract 和 TASK 规划后再进入实
 - [Phase 3 完成总结](docs/PHASE3_COMPLETION.md)
 - [JOB User Relevance V1](docs/contracts/job-user-relevance-v1.md)
 - [JOB User Relevance V2](docs/contracts/job-user-relevance-v2.md)
+- [Phase 4 正式规划包](PHASE4_PACKAGE_MANIFEST.md)
+- [Phase 4 Scope](docs/PHASE4_SCOPE.md)
+- [Phase 4 Architecture](docs/PHASE4_ARCHITECTURE_DRAFT.md)
+- [Phase 4 Data Model](docs/PHASE4_DATA_MODEL_DRAFT.md)
+- [Phase 4 Database Design](docs/DATABASE_DESIGN_PHASE4_DRAFT.md)
+- [Backend Operational Logging Conventions](docs/LOGGING_CONVENTIONS.md)
+- [Codex Phase 4 Workflow](docs/CODEX_PHASE4_WORKFLOW.md)
 
 ## 合规说明
 

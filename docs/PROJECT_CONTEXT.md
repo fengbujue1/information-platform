@@ -8,13 +8,13 @@
 
 ## 已完成阶段
 
-截至 2026-08-07：
+截至 2026-08-09：
 
 - Phase 0：完成；
 - Phase 1：完成；
 - Phase 2：完成；
 - Phase 3：完成；
-- Phase 4：未开始。
+- Phase 4：进行中，当前任务为 TASK-033，代码尚未实施。
 
 ## 当前已落地核心流程
 
@@ -30,7 +30,7 @@ Collector
 → Phase 3 Web
 ```
 
-推荐与 Notification 尚未开始。
+Phase 4 Recommendation 规划基线已 Accepted，但 Recommendation 功能尚未实施；Notification 尚未开始。
 
 ## 长期核心流程
 
@@ -145,4 +145,4 @@ V1 作为历史版本保留，V2 为当前版本。
 
 Phase 3 已完成并归档。
 
-Phase 4 尚未启动。推荐、用户画像、Top N、反馈学习等能力必须进入独立 Phase 4 规划。
+Phase 4：Personalized Recommendation MVP 已启动，当前任务为 TASK-033。Scope、ADR、Contract 与 TASK 规划已 Accepted；Backend Operational Logging Baseline 和 Recommendation 功能均尚未实施。

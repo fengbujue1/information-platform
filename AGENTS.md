@@ -28,7 +28,8 @@
 
 - `frontend/information-hub-web`
   - 已完成 Phase 2 职位浏览 MVP 的 Vue 3 前端
-  - Phase 3 按 TASK 增加 Identity 与 AI 处理页面
+  - 已完成 Phase 3 Identity 与 AI 处理页面
+  - Phase 4 Web 必须等 TASK-043 再按范围实施
 
 ## 第一阶段数据链路
 
@@ -103,7 +104,7 @@ Java 代码注释要求：
 - 为未来需求提前引入复杂基础设施
 - 把密码、Cookie、Token 或数据库密码提交到 Git
 
-## Phase 3 实施约束
+## Phase 3 / Phase 4 实施约束
 
 - TASK-024 只能实施 Accepted `docs/DATABASE_DESIGN_PHASE3_DRAFT.md`，不得临场自由改表。
 - 后端账号模块命名为 `identity`；不要创建职责宽泛的 `user` 大模块。
@@ -111,4 +112,10 @@ Java 代码注释要求：
 - Prompt 跟账号走并版本化；用户不能编辑 System Prompt 或 Output Schema。
 - Preview 不调用 AI，第一版不创建 Preview 或 Spring Session JDBC 表。
 - 第一版 AI Client 使用 Spring `RestClient` 与 Jackson，不引入 AI SDK。
-- 不提前引入 Kafka、Redis、Elasticsearch、Vector DB、RAG、Agent、微服务、推荐或通知。
+- Phase 3 已完成；其 Analysis、Snapshot、Prompt Version 和 Provider Usage 历史语义保持不可变。
+- Phase 4 只能按 Accepted `docs/PHASE4_SCOPE.md`、ADR、Contract 和 TASK-033 ～ TASK-044 顺序实施。
+- 所有后端 TASK 必须遵守 `docs/LOGGING_CONVENTIONS.md`。
+- Recommendation 不调用 AI Provider，不增加独立 Recommendation Cron，Feed 不实时重算。
+- Hard exclusion 固定为 `NOT_INTERESTED` 或 `CONTACTED_NOT_SUITABLE`；`CONTACTED` 不排除。
+- 不自动读取 BOSS 聊天记录。
+- 不提前引入 Kafka、Redis、Elasticsearch、Vector DB、RAG、Agent、微服务或通知。

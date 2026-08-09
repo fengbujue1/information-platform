@@ -1,6 +1,6 @@
 # 当前开发状态
 
-更新时间：2026-08-07  
+更新时间：2026-08-09
 当前分支：dev
 
 ## 当前阶段
@@ -9,7 +9,7 @@
 - Phase 1：已完成。
 - Phase 2：已完成。
 - Phase 3：已完成。
-- Phase 4：未开始。
+- Phase 4：进行中。
 
 ## Phase 3 完成情况
 
@@ -127,9 +127,31 @@ ai_model_invocation
 
 ## 当前任务
 
-无正在实施的 Phase 3 TASK。
+`TASK-033`：Backend Operational Logging Baseline。
+
+当前仅完成 Phase 4 启动和文档基线整合，TASK-033 代码实施尚未开始。
 
 Phase 3 已归档。后续仅接受缺陷修复、安全修复、依赖维护和运行参数维护，不再在 Phase 3 范围继续增加新功能。
+
+## Phase 4 启动状态
+
+Phase 4：Personalized Recommendation MVP 已启动，规划基线已 Accepted。
+
+已完成：
+
+- Scope / Architecture / Data Model / Database Design Draft；
+- ADR-014 ～ ADR-017；
+- Recommendation Profile / Refresh / Feed / Interaction Contracts；
+- TASK-033 ～ TASK-044 拆分；
+- Backend Operational Logging Conventions；
+- Codex Phase 4 Workflow。
+
+尚未实施：
+
+- TASK-033 Backend Operational Logging Baseline；
+- Phase 4 Flyway 与四张 Recommendation 表；
+- Recommendation Profile、Interaction、Candidate、Scoring、Ranking、Run、Trigger、Feed；
+- Phase 4 Web 与 E2E。
 
 ## CI
 
@@ -137,13 +159,4 @@ CI 后续作为独立工程维护事项处理，不作为本次 Phase 3 阶段�
 
 ## 下一步
 
-Phase 4 尚未开始。
-
-进入 Phase 4 前必须先：
-
-1. 复盘 Phase 3 真实使用数据；
-2. 明确推荐与用户画像范围；
-3. 创建 Phase 4 Scope；
-4. 创建对应 ADR / Contract；
-5. 拆分 TASK；
-6. 用户确认后再实施。
+按 Accepted Phase 4 规划实施 `TASK-033`。本次启动任务不实施其业务代码。

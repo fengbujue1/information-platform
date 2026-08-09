@@ -13,8 +13,8 @@ Information Hub
     ├── information
     ├── job
     ├── identity（Identity MVP 已实施）
-    ├── analysis（Prompt 已实施，其余按 Phase 3 TASK 推进）
-    ├── recommendation（后续）
+    ├── analysis（Phase 3 已实施）
+    ├── recommendation（Phase 4 已规划，尚未实施）
     └── notification（后续）
     │
     ▼
@@ -192,8 +192,33 @@ Information Hub Web
 - Manual Preview Confirm、原子 Batch/Items 冻结、Candidate/Token Budget Guard、串行 MySQL Worker、重启 UNKNOWN 保护和 Batch Actual Usage 聚合。
 - Owner 隔离的每日 Schedule 配置 API、IANA/DST 计划点、due-row Dispatcher、Scheduled Batch 幂等、misfire/overlap NOOP 与现有 Worker 复用。
 
-当前尚未实施：
+Phase 3 已通过 TASK-020 ～ TASK-032 完成并归档，包括 Phase 3 Web、Fake Provider Full-stack E2E 和小规模真实 Provider 受控联调。
 
-- 真实模型与 Phase 3 E2E。
+详细设计以 Accepted / Implemented `PHASE3_ARCHITECTURE_DRAFT.md` 和 `DATABASE_DESIGN_PHASE3_DRAFT.md` 为准。文件名中的 `_DRAFT` 为保持既有链接而保留，不表示设计仍待讨论。
 
-详细设计以 Accepted `PHASE3_ARCHITECTURE_DRAFT.md` 和 `DATABASE_DESIGN_PHASE3_DRAFT.md` 为准。文件名中的 `_DRAFT` 为保持既有链接而保留，不表示设计仍待讨论。TASK-031 已完成 Phase 3 Web 与用户维度 Actual Usage 查询；当前下一实施任务是 TASK-032。
+## 12. Phase 4 Accepted 架构与当前实施边界
+
+Phase 4 已启动，当前任务为 TASK-033；Recommendation 业务代码与数据库结构尚未实施。
+
+Accepted 目标链路：
+
+```text
+analysis
+→ terminal event
+→ recommendation
+→ run / item
+→ feed
+→ interaction
+```
+
+计划边界：
+
+- Recommendation 只消费 Phase 3 已有成功 Analysis，不调用 AI Provider；
+- Feed 读取预计算的最新成功 Run / Item，不实时重算；
+- 业务刷新只来自 Analysis Batch 完成和 Manual Refresh；
+- 不增加独立 Recommendation Cron；
+- `NOT_INTERESTED` 与 `CONTACTED_NOT_SUITABLE` 是 hard exclusion；
+- `CONTACTED` 不排除；
+- 不自动读取 BOSS 聊天记录。
+
+以上为 Accepted 设计，不代表已经实现。实际实施进度以 `CURRENT_STATUS.md` 和 TASK-033 ～ TASK-044 为准；详细设计见 `PHASE4_ARCHITECTURE_DRAFT.md`。
