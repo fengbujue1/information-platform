@@ -127,9 +127,9 @@ ai_model_invocation
 
 ## 当前任务
 
-`TASK-036`：Recommendation Interaction / Feedback / Job Disposition（尚未实施）。
+`TASK-037`：Recommendation Candidate Resolver（尚未实施）。
 
-`TASK-033`、`TASK-034`、数据模型通用化纠偏 `TASK-034A` 与 `TASK-035` Recommendation Profile Backend/API 已完成；当前仅将实施顺序推进到 TASK-036，不代表 TASK-036 已开始编码。
+`TASK-033`、`TASK-034`、数据模型通用化纠偏 `TASK-034A`、`TASK-035` Recommendation Profile Backend/API 与 `TASK-036` Recommendation Interaction / Feedback / Job Disposition 已完成；当前仅将实施顺序推进到 TASK-037，不代表 TASK-037 已开始编码。
 
 Phase 3 已归档。后续仅接受缺陷修复、安全修复、依赖维护和运行参数维护，不再在 Phase 3 范围继续增加新功能。
 
@@ -149,10 +149,11 @@ Phase 4：Personalized Recommendation MVP 已启动，规划基线已 Accepted�
 - TASK-034 Recommendation Data Model / Flyway（V3）；
 - TASK-034A Generic Recommendation Core + JOB Domain Extension（V4）。
 - TASK-035 Recommendation Profile Domain And API。
+- TASK-036 Recommendation Interaction / Feedback / Job Disposition。
 
 尚未实施：
 
-- Interaction、Candidate、Scoring、Ranking、Run、Trigger、Feed；
+- Candidate、Scoring、Ranking、Run、Trigger、Feed；
 - Phase 4 Web 与 E2E。
 
 ## CI
@@ -161,4 +162,4 @@ CI 后续作为独立工程维护事项处理，不作为本次 Phase 3 阶段�
 
 ## 下一步
 
-按 Accepted Phase 4 规划实施 `TASK-036`；不得提前实施后续 Recommendation 业务任务。
+按 Accepted Phase 4 规划实施 `TASK-037`；不得提前实施后续 Recommendation 业务任务。

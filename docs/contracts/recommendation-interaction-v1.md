@@ -2,6 +2,8 @@
 
 状态：Accepted
 
+实施状态：TASK-036 已完成
+
 ## 1. View
 
 ```http
@@ -147,7 +149,18 @@ Phase 4 不自动查询/同步 BOSS 聊天记录。
 
 Backend 必须校验目标 `informationId` 的 `informationType = JOB`；其它 Information Type 不允许创建 Job disposition。
 
-## 7. Logs
+## 7. Implementation Note
+
+TASK-036 已按本 Contract 实施：
+
+- 三个写接口均使用 Session + CSRF，Owner 只来自认证上下文；
+- View 与 Feedback 通过 `(userId, informationId)` 原子 upsert 维护 current aggregate；
+- JOB disposition 通过 `interactionId` 原子 upsert 到独立扩展；
+- 可选 `recommendationItemId` 同时校验 Run Owner 与目标 Information；
+- 写入后返回不含 `userId` 的 current aggregate；
+- 不触发 Profile、Analysis 或 Recommendation Refresh。
+
+## 8. Logs
 
 ```text
 Recommendation feedback updated, informationId=..., feedbackState=...

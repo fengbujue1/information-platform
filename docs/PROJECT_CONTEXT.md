@@ -14,7 +14,7 @@
 - Phase 1：完成；
 - Phase 2：完成；
 - Phase 3：完成；
-- Phase 4：进行中，TASK-033、TASK-034、TASK-034A、TASK-035 已完成，当前任务为 TASK-036（尚未实施）。
+- Phase 4：进行中，TASK-033～TASK-036（含 TASK-034A）已完成，当前任务为 TASK-037（尚未实施）。
 
 ## 当前已落地核心流程
 
@@ -30,7 +30,7 @@ Collector
 → Phase 3 Web
 ```
 
-Phase 4 Recommendation 规划基线已 Accepted，运行日志基线、V4 Generic Recommendation Core + JOB Extension 持久化骨架及 Recommendation Profile Backend/API 已实施；Interaction、算法、Run/Feed 与 Notification 尚未开始。
+Phase 4 Recommendation 规划基线已 Accepted，运行日志基线、V4 Generic Recommendation Core + JOB Extension 持久化骨架、Recommendation Profile 与 Interaction Backend/API 已实施；Candidate、算法、Run/Feed 与 Notification 尚未开始。
 
 ## 长期核心流程
 
@@ -145,4 +145,4 @@ V1 作为历史版本保留，V2 为当前版本。
 
 Phase 3 已完成并归档。
 
-Phase 4：Personalized Recommendation MVP 已启动，当前任务为 TASK-036（尚未实施）。Scope、ADR、Contract 与 TASK 规划已 Accepted；Backend Operational Logging Baseline、V4 Generic Core + JOB Extension 持久化骨架及 Recommendation Profile API 已实施，Interaction、算法、Run/Feed 业务与 Web 尚未实施。
+Phase 4：Personalized Recommendation MVP 已启动，当前任务为 TASK-037（尚未实施）。Scope、ADR、Contract 与 TASK 规划已 Accepted；Backend Operational Logging Baseline、V4 Generic Core + JOB Extension 持久化骨架、Recommendation Profile 与 Interaction API 已实施，Candidate、算法、Run/Feed 业务与 Web 尚未实施。

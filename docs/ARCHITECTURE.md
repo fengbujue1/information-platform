@@ -198,7 +198,7 @@ Phase 3 已通过 TASK-020 ～ TASK-032 完成并归档，包括 Phase 3 Web、F
 
 ## 12. Phase 4 Accepted 架构与当前实施边界
 
-Phase 4 已启动，当前任务为 TASK-033；Recommendation 业务代码与数据库结构尚未实施。
+Phase 4 已启动，当前任务为 TASK-037。V4 Generic Recommendation Core + JOB Extension 数据库结构、Recommendation Profile API，以及 View / Feedback / JOB disposition API 已实施；Candidate、算法、Run/Feed 与 Web 尚未实施。
 
 Accepted 目标链路：
 
@@ -221,4 +221,4 @@ analysis
 - `CONTACTED` 不排除；
 - 不自动读取 BOSS 聊天记录。
 
-以上为 Accepted 设计，不代表已经实现。实际实施进度以 `CURRENT_STATUS.md` 和 TASK-033 ～ TASK-044 为准；详细设计见 `PHASE4_ARCHITECTURE_DRAFT.md`。
+以上目标链路仅有上述明确列出的能力已实现，其余仍是 Accepted 设计。实际实施进度以 `CURRENT_STATUS.md` 和 TASK-033 ～ TASK-044 为准；详细设计见 `PHASE4_ARCHITECTURE_DRAFT.md`。
