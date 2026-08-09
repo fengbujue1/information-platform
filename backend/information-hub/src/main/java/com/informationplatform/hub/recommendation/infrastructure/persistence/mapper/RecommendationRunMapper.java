@@ -28,6 +28,15 @@ public interface RecommendationRunMapper extends BaseMapper<RecommendationRunPo>
             @Param("userId") long userId,
             @Param("informationType") String informationType);
 
+    /** 按来源 Analysis Batch 唯一键读取既有 Auto Run。 */
+    @Select("""
+            SELECT *
+            FROM recommendation_run
+            WHERE source_analysis_batch_id = #{sourceAnalysisBatchId}
+            """)
+    RecommendationRunPo selectBySourceAnalysisBatchId(
+            @Param("sourceAnalysisBatchId") long sourceAnalysisBatchId);
+
     /** 使用 SKIP LOCKED 并发安全领取一个最早 PENDING Run。 */
     @Select("""
             SELECT *

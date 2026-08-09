@@ -2,7 +2,7 @@
 
 状态：Accepted
 
-实施状态：Manual Refresh 与 Run list/detail 已由 TASK-040 落地；Auto Trigger 留待 TASK-041。
+实施状态：Manual Refresh 与 Run list/detail 已由 TASK-040 落地；Auto Trigger 已由 TASK-041 落地。
 
 ## Manual Refresh
 
@@ -89,4 +89,13 @@ FAILED 不影响上一轮成功 Feed。
 - Run 冻结 Generic Profile Core、JOB Domain Extension、Prompt Active Version、算法身份与候选窗口；
 - Candidate、Scoring、Ranking 在事务外本地执行，不调用 AI Provider；
 - Recommendation Item 在最终短事务中一次性持久化，全部成功后 Run 才进入 `COMPLETED`，空结果进入 `NOOP`；
-- TASK-040 未实现本文 Auto Trigger 段落，该范围仍属于 TASK-041。
+- TASK-040 未实现本文 Auto Trigger 段落；该范围现已由 TASK-041 落地。
+
+## TASK-041 Implementation Note
+
+- Analysis Batch 在终态事务内发布进程内事件，Recommendation Listener 严格在 `AFTER_COMMIT` 阶段处理；
+- Auto Run 创建使用独立 `REQUIRES_NEW` 短事务，不改变已提交的 Analysis Batch 结果；
+- `COMPLETED/PARTIAL_FAILED` 进入 Profile、Owner、Prompt Profile 与 JOB eligibility；`FAILED/NOOP` 稳定跳过；
+- Manual/Scheduled Batch 共用触发链，Auto Run 冻结来源 Batch Prompt Version；
+- 同一 `sourceAnalysisBatchId` 先查重并由数据库唯一键提供并发最终幂等保证；
+- 未增加 Kafka、Outbox、Recommendation Cron 或新的数据库结构。

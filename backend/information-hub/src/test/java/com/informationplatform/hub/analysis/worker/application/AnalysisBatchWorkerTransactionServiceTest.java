@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.informationplatform.hub.analysis.infrastructure.persistence.mapper.AiAnalysisBatchItemMapper;
+import com.informationplatform.hub.analysis.batch.application.AnalysisBatchTerminalEventPublisher;
 import com.informationplatform.hub.analysis.infrastructure.persistence.mapper.AiAnalysisBatchMapper;
 import com.informationplatform.hub.analysis.infrastructure.persistence.mapper.AiModelInvocationMapper;
 import com.informationplatform.hub.analysis.infrastructure.persistence.mapper.InformationAnalysisMapper;
@@ -36,6 +37,7 @@ class AnalysisBatchWorkerTransactionServiceTest {
         assertThat(item.getStatus()).isEqualTo("SUCCEEDED");
         assertThat(batch.getStatus()).isEqualTo("COMPLETED");
         assertThat(batch.getCompletedAt()).isNotNull();
+        verify(fixture.terminalEvents).publishIfTerminal(batch);
     }
 
     @Test
@@ -97,13 +99,21 @@ class AnalysisBatchWorkerTransactionServiceTest {
         InformationAnalysisMapper analyses = mock(InformationAnalysisMapper.class);
         InformationAnalysisTransactionService analysisTransactions =
                 mock(InformationAnalysisTransactionService.class);
+        AnalysisBatchTerminalEventPublisher terminalEvents =
+                mock(AnalysisBatchTerminalEventPublisher.class);
         return new Fixture(
                 batches,
                 items,
                 invocations,
                 analyses,
+                terminalEvents,
                 new AnalysisBatchWorkerTransactionService(
-                        batches, items, invocations, analyses, analysisTransactions));
+                        batches,
+                        items,
+                        invocations,
+                        analyses,
+                        analysisTransactions,
+                        terminalEvents));
     }
 
     private AiAnalysisBatchItemPo runningItem() {
@@ -129,6 +139,7 @@ class AnalysisBatchWorkerTransactionServiceTest {
             /** Item Mapper。 */ AiAnalysisBatchItemMapper items,
             /** Invocation Mapper。 */ AiModelInvocationMapper invocations,
             /** Analysis Mapper。 */ InformationAnalysisMapper analyses,
+            /** Batch 终态事件发布器。 */ AnalysisBatchTerminalEventPublisher terminalEvents,
             /** 被测事务服务。 */ AnalysisBatchWorkerTransactionService service) {
     }
 }

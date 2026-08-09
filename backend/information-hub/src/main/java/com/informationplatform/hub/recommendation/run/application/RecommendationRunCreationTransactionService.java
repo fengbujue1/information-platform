@@ -1,6 +1,8 @@
 package com.informationplatform.hub.recommendation.run.application;
 
+import com.informationplatform.hub.analysis.infrastructure.persistence.mapper.AiAnalysisBatchMapper;
 import com.informationplatform.hub.analysis.infrastructure.persistence.mapper.AiPromptProfileMapper;
+import com.informationplatform.hub.analysis.infrastructure.persistence.po.AiAnalysisBatchPo;
 import com.informationplatform.hub.analysis.infrastructure.persistence.po.AiPromptProfilePo;
 import com.informationplatform.hub.recommendation.infrastructure.persistence.mapper.RecommendationRunMapper;
 import com.informationplatform.hub.recommendation.infrastructure.persistence.mapper.UserRecommendationProfileMapper;
@@ -12,14 +14,16 @@ import com.informationplatform.hub.recommendation.job.infrastructure.persistence
 import com.informationplatform.hub.recommendation.job.run.domain.JobRecommendationRunProfileSnapshot;
 import com.informationplatform.hub.recommendation.job.run.infrastructure.JobRecommendationRunProfileSnapshotCodec;
 import com.informationplatform.hub.recommendation.job.scoring.application.JobRecommendationScorer;
+import com.informationplatform.hub.recommendation.run.domain.RecommendationAutoTriggerOutcome;
 import com.informationplatform.hub.recommendation.run.domain.RecommendationRunAccepted;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Manual Refresh 原子冻结 Profile、Prompt Version、算法和时间窗口的短事务。 */
+/** Manual 与 Analysis Batch Auto Trigger 共用的 Run 冻结创建短事务。 */
 @Service
 public class RecommendationRunCreationTransactionService {
 
@@ -29,6 +33,8 @@ public class RecommendationRunCreationTransactionService {
     private final JobRecommendationProfileMapper jobProfileMapper;
     /** Prompt Profile Active Version 与 Owner 校验。 */
     private final AiPromptProfileMapper promptProfileMapper;
+    /** Auto Trigger 来源 Analysis Batch 读取。 */
+    private final AiAnalysisBatchMapper analysisBatchMapper;
     /** Run 创建与冲突查询。 */
     private final RecommendationRunMapper runMapper;
     /** JOB Profile 数组 JSON 解码。 */
@@ -40,12 +46,14 @@ public class RecommendationRunCreationTransactionService {
             UserRecommendationProfileMapper profileMapper,
             JobRecommendationProfileMapper jobProfileMapper,
             AiPromptProfileMapper promptProfileMapper,
+            AiAnalysisBatchMapper analysisBatchMapper,
             RecommendationRunMapper runMapper,
             JobRecommendationProfileJsonCodec profileJsonCodec,
             JobRecommendationRunProfileSnapshotCodec snapshotCodec) {
         this.profileMapper = profileMapper;
         this.jobProfileMapper = jobProfileMapper;
         this.promptProfileMapper = promptProfileMapper;
+        this.analysisBatchMapper = analysisBatchMapper;
         this.runMapper = runMapper;
         this.profileJsonCodec = profileJsonCodec;
         this.snapshotCodec = snapshotCodec;
@@ -116,6 +124,74 @@ public class RecommendationRunCreationTransactionService {
         return new RecommendationRunAccepted(run.getId(), run.getStatus());
     }
 
+    /**
+     * 从已提交的 Analysis Batch 终态创建幂等 Auto Run。
+     *
+     * <p>Auto Run 冻结当前完整 Recommendation Profile，但 Prompt Version 必须使用来源 Batch 的不可变版本。
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public RecommendationAutoTriggerOutcome createAuto(long batchId) {
+        AiAnalysisBatchPo batch = analysisBatchMapper.selectById(batchId);
+        if (batch == null) {
+            return RecommendationAutoTriggerOutcome.skipped("SOURCE_BATCH_NOT_FOUND");
+        }
+        if (!"COMPLETED".equals(batch.getStatus())
+                && !"PARTIAL_FAILED".equals(batch.getStatus())) {
+            return RecommendationAutoTriggerOutcome.skipped(
+                    "SOURCE_BATCH_STATUS_" + batch.getStatus());
+        }
+        if (!"MANUAL".equals(batch.getTriggerType())
+                && !"SCHEDULED".equals(batch.getTriggerType())) {
+            return RecommendationAutoTriggerOutcome.skipped("SOURCE_BATCH_TRIGGER_UNSUPPORTED");
+        }
+        if (!"JOB".equals(batch.getInformationType())) {
+            return RecommendationAutoTriggerOutcome.skipped("INFORMATION_TYPE_UNSUPPORTED");
+        }
+
+        RecommendationRunPo existing =
+                runMapper.selectBySourceAnalysisBatchId(batch.getId());
+        if (existing != null) {
+            return RecommendationAutoTriggerOutcome.duplicate(existing.getId());
+        }
+
+        // Profile 行锁冻结一个一致的 Core + JOB Extension，并串行化同 Profile 的重复事件。
+        UserRecommendationProfilePo profile = profileMapper.selectOwnedByTypeForUpdate(
+                batch.getUserId(), batch.getInformationType());
+        if (profile == null) {
+            return RecommendationAutoTriggerOutcome.skipped("RECOMMENDATION_PROFILE_NOT_FOUND");
+        }
+        if (!profile.getAnalysisPromptProfileId().equals(batch.getPromptProfileId())) {
+            return RecommendationAutoTriggerOutcome.skipped("PROMPT_PROFILE_MISMATCH");
+        }
+        JobRecommendationProfilePo jobProfile = jobProfileMapper.selectById(profile.getId());
+        if (jobProfile == null) {
+            throw persistence("JOB Recommendation Profile extension does not exist");
+        }
+
+        LocalDateTime windowEnd = LocalDateTime.now(ZoneOffset.UTC)
+                .truncatedTo(ChronoUnit.MILLIS);
+        RecommendationRunPo run = new RecommendationRunPo();
+        run.setUserId(batch.getUserId());
+        run.setInformationType(batch.getInformationType());
+        run.setTriggerType("ANALYSIS_BATCH_COMPLETED");
+        run.setSourceAnalysisBatchId(batch.getId());
+        run.setProfileId(profile.getId());
+        run.setProfileContentHash(profile.getContentHash());
+        run.setProfileSnapshotJson(snapshotCodec.encode(snapshot(profile, jobProfile)));
+        run.setPromptProfileId(batch.getPromptProfileId());
+        run.setPromptVersionId(batch.getPromptVersionId());
+        run.setAlgorithmKey(JobRecommendationScorer.ALGORITHM_KEY);
+        run.setAlgorithmVersion(JobRecommendationScorer.ALGORITHM_VERSION);
+        run.setWindowStart(windowEnd.minusDays(profile.getWindowDays()));
+        run.setWindowEnd(windowEnd);
+        run.setCandidateCount(0);
+        run.setEligibleCount(0);
+        run.setResultCount(0);
+        run.setStatus("PENDING");
+        insertRun(run);
+        return RecommendationAutoTriggerOutcome.created(run.getId());
+    }
+
     private JobRecommendationRunProfileSnapshot snapshot(
             UserRecommendationProfilePo core, JobRecommendationProfilePo extension) {
         return new JobRecommendationRunProfileSnapshot(
@@ -135,5 +211,11 @@ public class RecommendationRunCreationTransactionService {
 
     private RecommendationRunPersistenceException persistence(String message) {
         return new RecommendationRunPersistenceException(message);
+    }
+
+    private void insertRun(RecommendationRunPo run) {
+        if (runMapper.insert(run) != 1 || run.getId() == null) {
+            throw persistence("Recommendation Run insert affected no row");
+        }
     }
 }

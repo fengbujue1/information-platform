@@ -407,6 +407,15 @@ source_analysis_batch_id
 
 保证同一 Batch Auto Trigger 幂等。
 
+TASK-041 已按上述边界实施：
+
+- Manual/Scheduled Analysis Batch 在终态写入事务内发布统一进程内事件；
+- Recommendation Listener 使用 `AFTER_COMMIT`，并在独立 `REQUIRES_NEW` 短事务中重新读取 Batch、评估 eligibility 和创建 Run；
+- `COMPLETED/PARTIAL_FAILED` 可创建 Auto Run，`FAILED/NOOP` 仅记录稳定跳过日志；
+- Profile 按 Batch Owner + Information Type 读取并锁定，绑定 Prompt Profile 必须与 Batch 一致；
+- Run 冻结当前完整 Profile、来源 Batch Prompt Version 和 `sourceAnalysisBatchId`；
+- Mapper 预查重与既有数据库唯一键共同保证重复事件幂等；未新增 Migration、Cron、Kafka 或 Outbox。
+
 ## 15. Manual Refresh
 
 ```text

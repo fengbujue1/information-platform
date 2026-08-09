@@ -2,6 +2,7 @@ package com.informationplatform.hub.analysis.worker.application;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.informationplatform.hub.analysis.batch.application.AnalysisBatchPersistenceException;
+import com.informationplatform.hub.analysis.batch.application.AnalysisBatchTerminalEventPublisher;
 import com.informationplatform.hub.analysis.infrastructure.persistence.mapper.AiAnalysisBatchItemMapper;
 import com.informationplatform.hub.analysis.infrastructure.persistence.mapper.AiAnalysisBatchMapper;
 import com.informationplatform.hub.analysis.infrastructure.persistence.mapper.AiModelInvocationMapper;
@@ -40,18 +41,22 @@ public class AnalysisBatchWorkerTransactionService {
     private final InformationAnalysisMapper analysisMapper;
     /** 冻结 Analysis/Invocation 的共用单条能力。 */
     private final InformationAnalysisTransactionService analysisTransactions;
+    /** Batch 终态进程内事件发布器。 */
+    private final AnalysisBatchTerminalEventPublisher terminalEventPublisher;
 
     public AnalysisBatchWorkerTransactionService(
             AiAnalysisBatchMapper batchMapper,
             AiAnalysisBatchItemMapper itemMapper,
             AiModelInvocationMapper invocationMapper,
             InformationAnalysisMapper analysisMapper,
-            InformationAnalysisTransactionService analysisTransactions) {
+            InformationAnalysisTransactionService analysisTransactions,
+            AnalysisBatchTerminalEventPublisher terminalEventPublisher) {
         this.batchMapper = batchMapper;
         this.itemMapper = itemMapper;
         this.invocationMapper = invocationMapper;
         this.analysisMapper = analysisMapper;
         this.analysisTransactions = analysisTransactions;
+        this.terminalEventPublisher = terminalEventPublisher;
     }
 
     /**
@@ -207,6 +212,7 @@ public class AnalysisBatchWorkerTransactionService {
         }
         batch.setCompletedAt(utcNow());
         updateBatch(batch);
+        terminalEventPublisher.publishIfTerminal(batch);
         LOGGER.info(
                 "Analysis batch completed, batchId={}, status={}, executableCount={}, successfulCount={}, failedCount={}, durationMs={}",
                 batch.getId(),

@@ -54,6 +54,8 @@ class AnalysisBatchTransactionServiceTest {
         AnalysisPreviewService previews = mock(AnalysisPreviewService.class);
         AiProviderClient provider = mock(AiProviderClient.class);
         AnalysisBatchProperties properties = new AnalysisBatchProperties();
+        AnalysisBatchTerminalEventPublisher terminalEvents =
+                mock(AnalysisBatchTerminalEventPublisher.class);
         properties.setWorkerEnabled(true);
         PreviewTokenPayload payload = payload();
         ResolvedAnalysisPreview resolved = resolved();
@@ -71,7 +73,7 @@ class AnalysisBatchTransactionServiceTest {
         when(items.selectList(any())).thenReturn(List.of());
 
         AnalysisBatchTransactionService service = new AnalysisBatchTransactionService(
-                batches, items, invocations, previews, provider, properties);
+                batches, items, invocations, previews, provider, properties, terminalEvents);
         service.createConfirmed(payload);
 
         ArgumentCaptor<AiAnalysisBatchPo> batchCaptor =
@@ -93,6 +95,8 @@ class AnalysisBatchTransactionServiceTest {
         AnalysisPreviewService previews = mock(AnalysisPreviewService.class);
         AiProviderClient provider = mock(AiProviderClient.class);
         AnalysisBatchProperties properties = new AnalysisBatchProperties();
+        AnalysisBatchTerminalEventPublisher terminalEvents =
+                mock(AnalysisBatchTerminalEventPublisher.class);
         properties.setWorkerEnabled(true);
         List<AiAnalysisBatchItemPo> insertedItems = new ArrayList<>();
         when(batches.insert(any(AiAnalysisBatchPo.class))).thenAnswer(invocation -> {
@@ -105,7 +109,7 @@ class AnalysisBatchTransactionServiceTest {
             return 1;
         });
         AnalysisBatchTransactionService service = new AnalysisBatchTransactionService(
-                batches, items, invocations, previews, provider, properties);
+                batches, items, invocations, previews, provider, properties, terminalEvents);
         AiAnalysisSchedulePo schedule = new AiAnalysisSchedulePo();
         schedule.setId(21L);
         schedule.setUserId(7L);
@@ -136,13 +140,15 @@ class AnalysisBatchTransactionServiceTest {
         AnalysisPreviewService previews = mock(AnalysisPreviewService.class);
         AiProviderClient provider = mock(AiProviderClient.class);
         AnalysisBatchProperties properties = new AnalysisBatchProperties();
+        AnalysisBatchTerminalEventPublisher terminalEvents =
+                mock(AnalysisBatchTerminalEventPublisher.class);
         when(batches.insert(any(AiAnalysisBatchPo.class))).thenAnswer(invocation -> {
             AiAnalysisBatchPo batch = invocation.getArgument(0);
             batch.setId(31L);
             return 1;
         });
         AnalysisBatchTransactionService service = new AnalysisBatchTransactionService(
-                batches, items, invocations, previews, provider, properties);
+                batches, items, invocations, previews, provider, properties, terminalEvents);
         AiAnalysisSchedulePo schedule = new AiAnalysisSchedulePo();
         schedule.setId(21L);
         schedule.setUserId(7L);
@@ -156,6 +162,7 @@ class AnalysisBatchTransactionServiceTest {
         assertThat(created.getStatus()).isEqualTo("NOOP");
         assertThat(created.getSkipReason()).isEqualTo("CONCURRENT_RUN");
         assertThat(created.getSelectedCount()).isZero();
+        verify(terminalEvents).publishIfTerminal(created);
         verify(items, org.mockito.Mockito.never())
                 .insert(any(AiAnalysisBatchItemPo.class));
     }
@@ -168,13 +175,15 @@ class AnalysisBatchTransactionServiceTest {
         AnalysisPreviewService previews = mock(AnalysisPreviewService.class);
         AiProviderClient provider = mock(AiProviderClient.class);
         AnalysisBatchProperties properties = new AnalysisBatchProperties();
+        AnalysisBatchTerminalEventPublisher terminalEvents =
+                mock(AnalysisBatchTerminalEventPublisher.class);
         when(batches.insert(any(AiAnalysisBatchPo.class))).thenAnswer(invocation -> {
             AiAnalysisBatchPo batch = invocation.getArgument(0);
             batch.setId(31L);
             return 1;
         });
         AnalysisBatchTransactionService service = new AnalysisBatchTransactionService(
-                batches, items, invocations, previews, provider, properties);
+                batches, items, invocations, previews, provider, properties, terminalEvents);
         AiAnalysisSchedulePo schedule = new AiAnalysisSchedulePo();
         schedule.setId(21L);
         schedule.setUserId(7L);
@@ -194,6 +203,7 @@ class AnalysisBatchTransactionServiceTest {
 
         assertThat(created.getStatus()).isEqualTo("NOOP");
         assertThat(created.getSkipReason()).isEqualTo("NO_EXECUTABLE_ITEMS");
+        verify(terminalEvents).publishIfTerminal(created);
         verify(provider, org.mockito.Mockito.never()).validateRequest(any());
     }
 

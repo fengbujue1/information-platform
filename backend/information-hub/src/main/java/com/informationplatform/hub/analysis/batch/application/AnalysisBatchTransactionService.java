@@ -44,6 +44,8 @@ public class AnalysisBatchTransactionService {
     private final AiProviderClient providerClient;
     /** Worker 安全开关，关闭时禁止留下无法执行的 PENDING Batch。 */
     private final AnalysisBatchProperties batchProperties;
+    /** Batch 终态进程内事件发布器。 */
+    private final AnalysisBatchTerminalEventPublisher terminalEventPublisher;
 
     public AnalysisBatchTransactionService(
             AiAnalysisBatchMapper batchMapper,
@@ -51,13 +53,15 @@ public class AnalysisBatchTransactionService {
             AiModelInvocationMapper invocationMapper,
             AnalysisPreviewService previewService,
             AiProviderClient providerClient,
-            AnalysisBatchProperties batchProperties) {
+            AnalysisBatchProperties batchProperties,
+            AnalysisBatchTerminalEventPublisher terminalEventPublisher) {
         this.batchMapper = batchMapper;
         this.itemMapper = itemMapper;
         this.invocationMapper = invocationMapper;
         this.previewService = previewService;
         this.providerClient = providerClient;
         this.batchProperties = batchProperties;
+        this.terminalEventPublisher = terminalEventPublisher;
     }
 
     /**
@@ -245,17 +249,17 @@ public class AnalysisBatchTransactionService {
         if (batchMapper.insert(batch) != 1 || batch.getId() == null) {
             throw new AnalysisBatchPersistenceException("Analysis Batch insert affected no row");
         }
-        if (resolved == null) {
-            return;
-        }
-        int order = 1;
-        for (ResolvedPreviewCandidate candidate : resolved.candidates()) {
-            AiAnalysisBatchItemPo item = newItem(batch.getId(), order++, candidate, now);
-            if (itemMapper.insert(item) != 1) {
-                throw new AnalysisBatchPersistenceException(
-                        "Analysis Batch Item insert affected no row");
+        if (resolved != null) {
+            int order = 1;
+            for (ResolvedPreviewCandidate candidate : resolved.candidates()) {
+                AiAnalysisBatchItemPo item = newItem(batch.getId(), order++, candidate, now);
+                if (itemMapper.insert(item) != 1) {
+                    throw new AnalysisBatchPersistenceException(
+                            "Analysis Batch Item insert affected no row");
+                }
             }
         }
+        terminalEventPublisher.publishIfTerminal(batch);
     }
 
     private AiAnalysisBatchItemPo newItem(
