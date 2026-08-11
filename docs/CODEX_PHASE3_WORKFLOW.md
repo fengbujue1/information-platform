@@ -1,6 +1,6 @@
 # Phase 3 Codex 协作流程
 
-当前状态：TASK-020、TASK-024、TASK-021、TASK-022、TASK-023、TASK-025、TASK-026、TASK-027、TASK-028、TASK-029、TASK-030 和 TASK-031 已完成。当前下一实施任务为 TODO 状态的 TASK-032；第一、二节保留为审查历史模板，第四节保留为后续数据库变更检查清单。
+当前状态：Phase 3 已完成并归档，TASK-020～TASK-032 均已完成；第一、二节保留为审查历史模板，第四节保留为后续数据库变更检查清单。后续工作以 `docs/CURRENT_STATUS.md` 和新的 Accepted Scope/TASK 为准。
 
 ## 1. 第一次：只做 TASK-020 仓库审查
 

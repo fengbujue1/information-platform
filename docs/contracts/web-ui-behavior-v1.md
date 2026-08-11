@@ -1,6 +1,7 @@
 # Web UI Behavior V1
 
 状态：Accepted
+实施状态：TASK-012～TASK-019 已完成并通过 Phase 2 Browser E2E。
 接受日期：2026-07-29
 适用阶段：Phase 2
 依赖契约：Job Query API V1

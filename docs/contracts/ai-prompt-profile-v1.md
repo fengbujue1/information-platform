@@ -1,6 +1,7 @@
 # AI Prompt Profile V1
 
 状态：Accepted
+实施状态：TASK-022 已实现，并由 Phase 3/4 全栈验收持续覆盖。
 接受日期：2026-08-03
 适用阶段：Phase 3
 

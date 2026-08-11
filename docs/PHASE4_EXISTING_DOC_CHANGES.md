@@ -25,7 +25,7 @@ Phase 4 收尾再更新已实现能力。
 - Database Design
 - Logging Conventions
 - Codex Workflow
-- ADR-014 ～ ADR-017
+- ADR-014 ～ ADR-018
 - Recommendation Contracts
 - TASK-033 ～ TASK-044
 
@@ -87,6 +87,7 @@ analysis
 ## 6. DATABASE_DESIGN.md
 
 TASK-034 Flyway 完成后同步四张真实表、索引和 FK。
+TASK-034A V4 完成后继续同步为当前六张表：四张 Generic Core/Run/Item 表与两张 JOB Extension 表。
 
 草案不能冒充真实数据库事实。
 

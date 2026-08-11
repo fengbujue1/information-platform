@@ -2,7 +2,7 @@
 
 状态：Accepted
 
-实施状态：TASK-035 已完成 Backend 与 API；TASK-043/044 已完成 Web 与全栈验收
+实施状态：TASK-035 已完成 Backend 与 API；TASK-043/044 已完成 Web 与全栈验收。
 
 ## API
 

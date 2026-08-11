@@ -3,7 +3,7 @@
 状态：Accepted
 接受日期：2026-08-03
 适用阶段：Phase 3
-实现状态：TASK-028 已实现 Preview；TASK-029 已实现 Confirm、Batch、Budget Guard、Worker 与查询 API。
+实施状态：TASK-028 已实现 Preview；TASK-029 已实现 Confirm、Batch、Budget Guard、Worker 与查询 API。
 
 ## 1. Trigger
 

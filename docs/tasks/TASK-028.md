@@ -111,7 +111,7 @@
 - Schedule、Phase 3 Web、真实 Provider E2E、推荐与通知未实施。
 - 运行环境在提供 Preview API 前必须配置 `INFORMATION_HUB_PREVIEW_HMAC_SECRET`；缺失或不足 32 字节时 Preview 返回服务不可用。
 - 独立空库 Migration 测试仍需 `INFORMATION_HUB_TEST_EMPTY_DB_*` 环境变量，本次未配置。
-- 用户检查、确认测试结果以及 commit/push 尚待完成。
+- 用户检查、测试确认与 commit/push 已在本 TASK 完成确认中闭环，提交 `72915f5` 已位于 `origin/dev`。
 
 ## 11. 完成确认
 
