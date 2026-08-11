@@ -2,7 +2,7 @@
 
 ## 1. 配置范围
 
-本文件说明 Information Hub Spring Boot 服务端的数据库、Flyway、Collector Token 和请求体上限配置。
+本文件说明 Information Hub Spring Boot 服务端的数据库、Flyway、Session、Collector、Identity、AI Processing 和 Recommendation 运行配置。
 
 Collector 如何连接 Information Hub，参见 [BOSS Collector 集成说明](../../collectors/boss-zhipin-scraper/INTEGRATION.md)。
 
@@ -14,7 +14,7 @@ Spring Boot 原生支持从外部 `config/application.yml` 加载配置。先在
 Copy-Item backend/information-hub/config/application.yml.example backend/information-hub/config/application.yml
 ```
 
-然后修改 `backend/information-hub/config/application.yml` 中的数据库连接、数据库密码和 Collector Token。
+然后修改 `backend/information-hub/config/application.yml` 中的数据库连接、数据库密码和 Collector Token，并按实际运行范围配置 Bootstrap、Preview、AI Provider、Batch/Schedule 与 Recommendation Worker。
 
 真实 `application.yml` 已被 Git 忽略，仓库只提交不包含真实秘密的 `application.yml.example`。
 
@@ -179,6 +179,27 @@ https://provider.example.com/v1/chat/completions
 因此不要把 `/chat/completions` 再写入 `INFORMATION_HUB_AI_BASE_URL`。Provider 的真实域名、模型 ID
 和 Key 必须以该 Provider 的官方文档/控制台为准；仓库不会替你分配这些值。
 
+### 5.5 Recommendation Worker
+
+| YAML 配置键 | 环境变量 | 含义、格式与默认值 | 值的来源 |
+| --- | --- | --- | --- |
+| `information-hub.recommendation.worker-enabled` | `INFORMATION_HUB_RECOMMENDATION_WORKER_ENABLED` | 是否消费既有 `PENDING` Recommendation Run；默认 `false` | 需要执行手动刷新或 Batch 自动触发产生的 Run 时由部署管理员显式开启 |
+| `information-hub.recommendation.worker-initial-delay` | `INFORMATION_HUB_RECOMMENDATION_WORKER_INITIAL_DELAY` | 启动后首次扫描延迟；Spring Duration，默认 `3s` | 项目默认；联调可按启动时序调整 |
+| `information-hub.recommendation.worker-fixed-delay` | `INFORMATION_HUB_RECOMMENDATION_WORKER_FIXED_DELAY` | 上轮完成到下一轮开始的间隔；Spring Duration，默认 `1s` | 项目默认；按数据库和本地计算吞吐调整 |
+| `information-hub.recommendation.worker-stale-after` | `INFORMATION_HUB_RECOMMENDATION_WORKER_STALE_AFTER` | `RUNNING` Run 超过该阈值后恢复为 `PENDING`；Spring Duration，默认 `5m` | 项目确定性重试边界；只在有实际超时依据时调整 |
+
+Manual Refresh 只创建 `PENDING` Run。前端会持续轮询，直到 Run 进入 `COMPLETED`、`FAILED` 或 `NOOP`；如果 Recommendation Worker 保持默认关闭，Run 不会被消费。开启 Recommendation Worker 不会调用 AI Provider，它只消费数据库中已有的成功 Analysis，并执行确定性的 Candidate、Scoring 和 Ranking。
+
+在 PowerShell 中使用环境变量时，必须在启动后端的同一个进程环境中设置并重新启动：
+
+```powershell
+$env:INFORMATION_HUB_RECOMMENDATION_WORKER_ENABLED = "true"
+Set-Location backend/information-hub
+.\mvnw.cmd spring-boot:run
+```
+
+使用 IntelliJ IDEA 时，应将变量配置在实际启动 `InformationHubApplication` 的 Run Configuration 中；在另一个 PowerShell 窗口临时设置变量不会影响已打开的 IDE 或已运行的 Java 进程。
+
 ## 6. 环境变量覆盖与生效范围
 
 Spring Boot 使用 `${环境变量:默认值}` 读取上述变量。环境变量适合 CI、部署 Secret 和本地临时覆盖；
@@ -233,6 +254,25 @@ npm.cmd run test:e2e:phase3
 Batch Worker；只允许选择少量 JOB Snapshot。验收结束后必须关闭临时 Schedule，并移除
 Provider API Key 环境变量。
 
+### 6.2 Phase 4 全栈 E2E
+
+TASK-044 的全栈 E2E 使用真实 Information Hub、真实 V4 测试 MySQL、本机 Fake Provider、Vite 与 Chromium，并由运行器显式开启 Analysis Batch Worker 和 Recommendation Worker。运行前设置：
+
+```text
+INFORMATION_HUB_E2E_DB_URL
+INFORMATION_HUB_E2E_DB_USERNAME
+INFORMATION_HUB_E2E_DB_PASSWORD
+```
+
+也可以复用对应的 `INFORMATION_HUB_TEST_DB_URL/USERNAME/PASSWORD`。数据库名称必须包含 `test` 或 `e2e` 且不得包含 `dev`。测试账号、Collector Token、Preview Secret 和 Fake Provider Key 由运行器在内存中生成，不需要真实 Provider Key。
+
+```powershell
+Set-Location backend/information-hub
+.\mvnw.cmd -DskipTests package
+Set-Location ../../frontend/information-hub-web
+npm.cmd run test:e2e:phase4
+```
+
 ## 7. 安全要求
 
 - 不要把真实数据库密码、Token、Cookie 或服务器秘密写入 `.example` 文件。
@@ -242,6 +282,9 @@ Provider API Key 环境变量。
 - Preview HMAC Secret 不得进入前端、数据库业务表或日志；部署时使用独立随机值。
 - 启用 Batch Worker 前必须同时完成 Provider 配置并显式设置
   `INFORMATION_HUB_AI_BATCH_WORKER_ENABLED=true`；默认关闭可避免意外产生模型费用。
+
+- Recommendation Worker 默认关闭；需要消费手动或自动创建的 `PENDING` Run 时显式设置
+  `INFORMATION_HUB_RECOMMENDATION_WORKER_ENABLED=true`。它不调用 Provider，但会写入 Recommendation Run/Item。
 
 ## 8. Token 与 HMAC Secret 生成示例
 

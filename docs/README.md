@@ -7,6 +7,7 @@
 - [数据库设计](DATABASE_DESIGN.md)
 - [路线图](ROADMAP.md)
 - [当前状态](CURRENT_STATUS.md)
+- [Information Hub 配置说明](../backend/information-hub/CONFIGURATION.md)
 
 ## Phase 1
 
@@ -71,9 +72,10 @@ Phase 3、Phase 4 已归档。
 TASK-033～TASK-044（含 TASK-034A）均已完成。Phase 4 的 Generic Core + JOB Extension、Profile、Interaction、Candidate、Scoring/Ranking、Run/Worker、Auto Trigger、Feed、Web 和真实全栈 E2E 已验收。
 
 - [Phase 4 正式规划包](../PHASE4_PACKAGE_MANIFEST.md)
+- [Phase 4 官方设计摘要](../PHASE4_REVIEW_SUMMARY.md)
 - [Phase 4 Scope](PHASE4_SCOPE.md)
-- [Phase 4 Architecture（Accepted）](PHASE4_ARCHITECTURE_DRAFT.md)
-- [Phase 4 Data Model（Accepted）](PHASE4_DATA_MODEL_DRAFT.md)
+- [Phase 4 Architecture（Accepted / Implemented）](PHASE4_ARCHITECTURE_DRAFT.md)
+- [Phase 4 Data Model（Accepted / Implemented）](PHASE4_DATA_MODEL_DRAFT.md)
 - [Phase 4 Database Design（Accepted，V4 已实施）](DATABASE_DESIGN_PHASE4_DRAFT.md)
 - [Phase 4 完成总结](PHASE4_COMPLETION.md)
 - [Backend Operational Logging Conventions](LOGGING_CONVENTIONS.md)

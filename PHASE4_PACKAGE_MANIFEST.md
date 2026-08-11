@@ -14,7 +14,7 @@
 从 Phase 4 实施开始：
 
 - Scope、Architecture、Data Model、ADR、Contract 按本包执行；
-- TASK-033 ～ TASK-044 按顺序实施；
+- TASK-033 ～ TASK-044 已按顺序实施并完成；
 - 一个 Codex 实施上下文只处理一个明确 TASK；
 - 后端 TASK 必须遵守 `docs/LOGGING_CONVENTIONS.md`；
 - 不得在当前 TASK 中提前实现后续阶段功能。
@@ -83,6 +83,8 @@ User Interaction / Job Disposition
 - `docs/LOGGING_CONVENTIONS.md`
 - `docs/CODEX_PHASE4_WORKFLOW.md`
 - `docs/PHASE4_EXISTING_DOC_CHANGES.md`
+- `PHASE4_REVIEW_SUMMARY.md`
+- `docs/PHASE4_COMPLETION.md`
 
 ADR：
 

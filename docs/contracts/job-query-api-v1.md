@@ -1,6 +1,7 @@
 # Job Query API V1
 
 状态：Accepted
+实施状态：TASK-009 已实现 API，TASK-019 已完成 Web E2E，TASK-021 已纳入 Session Auth。
 接受日期：2026-07-29
 
 ## 1. 范围

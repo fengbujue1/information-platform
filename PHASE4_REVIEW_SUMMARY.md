@@ -1,5 +1,9 @@
 # Phase 4 Official Design Summary
 
+状态：Accepted / Implementation Completed
+
+实施状态：TASK-033～TASK-044（含 TASK-034A）已完成并由 TASK-044 验收
+
 ## 一句话目标
 
 基于用户长期 Recommendation Profile、Phase 3 AI USER_RELEVANCE 结果、职位事实和用户反馈，生成可解释、可追踪、可去重并具有基础多样性的 Top N 职位推荐。
@@ -42,7 +46,7 @@ User clicks Refresh
 
 ## 用户已联系 BOSS 后的状态
 
-Interaction 中同时存在：
+Interaction Core 与 JOB Extension 共同表达两类状态：
 
 ```text
 feedbackState
@@ -93,15 +97,18 @@ stable ranking
 
 ## Phase 4 数据表
 
-仅新增：
+当前 V4 共六张表：
 
 ```text
 user_recommendation_profile
+job_recommendation_profile
 user_information_interaction
+user_job_disposition
 recommendation_run
 recommendation_item
 ```
 
+V3 首先创建四张表；TASK-034A 通过不可变的 V4 Migration 无损演进为 Generic Core + JOB Extension。
 不增加 recommendation_schedule / recommendation_batch。
 
 ## 不做

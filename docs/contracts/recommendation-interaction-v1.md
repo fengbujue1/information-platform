@@ -2,7 +2,7 @@
 
 状态：Accepted
 
-实施状态：TASK-036 已完成 Backend/API；TASK-043/044 已完成 Web 与全栈验收
+实施状态：TASK-036 已完成 Backend/API；TASK-043/044 已完成 Web 与全栈验收。
 
 ## 1. View
 

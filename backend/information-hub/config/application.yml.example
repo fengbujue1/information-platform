@@ -74,6 +74,17 @@ information-hub:
       # Provider 配置允许范围为 1 至 5000；当前 JOB V2 使用 5000。
       max-output-tokens: 5000
 
+  recommendation:
+    # 是否允许后台 Worker 消费已存在的 PENDING Recommendation Run。
+    # 默认关闭；需要手动刷新或 Analysis Batch 自动触发真正执行时显式开启。
+    # Recommendation 只消费已有成功 Analysis，不调用 AI Provider。
+    worker-enabled: false
+    # Spring Duration 格式；应用启动后首次扫描和两轮扫描间隔。
+    worker-initial-delay: 3s
+    worker-fixed-delay: 1s
+    # RUNNING 超过该时间后恢复为 PENDING；确定性本地计算允许安全重试。
+    worker-stale-after: 5m
+
 mybatis-plus:
   configuration:
     # 项目固定：snake_case 数据库列自动映射 camelCase Java 字段。

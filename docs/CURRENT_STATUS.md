@@ -1,6 +1,6 @@
 # 当前开发状态
 
-更新时间：2026-08-09
+更新时间：2026-08-11
 当前分支：dev
 
 ## 当前阶段
@@ -106,6 +106,7 @@ V2 继续复用 V1：
 
 - Provider 默认关闭；
 - Batch Worker 默认关闭；
+- Recommendation Worker 默认关闭；手动或自动创建的 `PENDING` Run 只有在显式启用 Worker 后才会执行，且 Recommendation 不调用 Provider；
 - Schedule 默认关闭；
 - API Key 只来自服务端；
 - Actual Token 只来自 Provider Usage；
@@ -142,7 +143,7 @@ Phase 4：Personalized Recommendation MVP 已完成并归档。
 已完成：
 
 - Scope / Architecture / Data Model / Database Design Draft；
-- ADR-014 ～ ADR-017；
+- ADR-014 ～ ADR-018；
 - Recommendation Profile / Refresh / Feed / Interaction Contracts；
 - TASK-033 ～ TASK-044 拆分；
 - Backend Operational Logging Conventions；

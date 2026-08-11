@@ -139,6 +139,7 @@ INFORMATION_HUB_AI_MODEL
 ```
 
 Batch Worker 同样需要显式开启。
+Recommendation Worker 同样默认关闭；手动刷新只创建 `PENDING` Run，需要显式开启 `INFORMATION_HUB_RECOMMENDATION_WORKER_ENABLED=true` 才会执行。Recommendation 不调用 AI Provider。
 
 API Key、Bootstrap 密码、Session Cookie、Collector Token 和完整 Provider 原始响应不得进入 Git、前端或业务日志。
 
@@ -177,11 +178,13 @@ Phase 4 的 Scope、Architecture、Data Model、Database Design、ADR、Contract
 - [JOB User Relevance V1](docs/contracts/job-user-relevance-v1.md)
 - [JOB User Relevance V2](docs/contracts/job-user-relevance-v2.md)
 - [Phase 4 正式规划包](PHASE4_PACKAGE_MANIFEST.md)
+- [Phase 4 官方设计摘要](PHASE4_REVIEW_SUMMARY.md)
 - [Phase 4 Scope](docs/PHASE4_SCOPE.md)
 - [Phase 4 Architecture](docs/PHASE4_ARCHITECTURE_DRAFT.md)
 - [Phase 4 Data Model](docs/PHASE4_DATA_MODEL_DRAFT.md)
 - [Phase 4 Database Design](docs/DATABASE_DESIGN_PHASE4_DRAFT.md)
 - [Phase 4 完成总结](docs/PHASE4_COMPLETION.md)
+- [Information Hub 配置说明](backend/information-hub/CONFIGURATION.md)
 - [Backend Operational Logging Conventions](docs/LOGGING_CONVENTIONS.md)
 - [Codex Phase 4 Workflow](docs/CODEX_PHASE4_WORKFLOW.md)
 

@@ -30,10 +30,18 @@ npm.cmd run dev
 
 开发服务器启动后访问：
 
+- `http://localhost:5173/login`：账号登录
 - `http://localhost:5173/jobs`：职位列表
 - `http://localhost:5173/jobs/{id}`：职位详情
 - `http://localhost:5173/jobs/{id}/snapshots`：历史快照列表和版本内容
 - `http://localhost:5173/recommendations`：职位推荐画像、Feed、刷新与交互
+- `http://localhost:5173/ai/prompts`：Prompt Profile 与版本管理
+- `http://localhost:5173/ai/analyze`：手动 Analysis Preview 与确认
+- `http://localhost:5173/ai/analyses/{id}`：Analysis 结果
+- `http://localhost:5173/ai/batches`：Analysis Batch 列表
+- `http://localhost:5173/ai/batches/{id}`：Analysis Batch 详情
+- `http://localhost:5173/ai/schedules`：Analysis Schedule
+- `http://localhost:5173/ai/usage`：Actual Token Usage
 - 任意不存在的前端路径：404 页面
 
 ## API 开发配置

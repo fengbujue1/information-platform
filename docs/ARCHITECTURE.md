@@ -25,7 +25,10 @@ MySQL
     ├── user_account
     ├── ai_prompt_profile / ai_prompt_version
     ├── information_analysis / ai_model_invocation
-    └── ai_analysis_batch / item / schedule
+    ├── ai_analysis_batch / item / schedule
+    ├── user_recommendation_profile / job_recommendation_profile
+    ├── user_information_interaction / user_job_disposition
+    └── recommendation_run / recommendation_item
 ```
 
 Collector 不直接连接 MySQL。
