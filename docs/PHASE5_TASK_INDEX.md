@@ -4,12 +4,12 @@
 
 阶段：Phase 5 — Product Refinement & Stabilization
 
-更新时间：2026-08-11
+更新时间：2026-08-12
 
 ## Next Task Number
 
 ```text
-TASK-045
+TASK-046
 ```
 
 只有真正确认新的独立问题后才创建对应 TASK。
@@ -30,11 +30,9 @@ TASK-045
 
 ## READY
 
-当前为空。
-
 | Task | Title | Type | Priority | Status |
 |---|---|---|---|---|
-| - | - | - | - | - |
+| [TASK-045](tasks/TASK-045.md) | Phase 3 AI 页面中文化与展示文案统一 | Frontend | P2 | READY |
 
 ## VERIFYING
 
