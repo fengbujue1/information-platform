@@ -30,6 +30,7 @@
   - 已完成 Phase 2 职位浏览 MVP 的 Vue 3 前端
   - 已完成 Phase 3 Identity 与 AI 处理页面
   - Phase 4 Web 已由 TASK-043 完成，Phase 4 已由 TASK-044 验收收尾
+  - Phase 5 Product Refinement & Stabilization 正在进行
 
 ## 第一阶段数据链路
 
@@ -119,3 +120,14 @@ Java 代码注释要求：
 - Hard exclusion 固定为 `NOT_INTERESTED` 或 `CONTACTED_NOT_SUITABLE`；`CONTACTED` 不排除。
 - 不自动读取 BOSS 聊天记录。
 - 不提前引入 Kafka、Redis、Elasticsearch、Vector DB、RAG、Agent、微服务或通知。
+
+## Phase 5 实施约束
+
+- Phase 5 采用 Rolling / Just-in-Time Task Planning，不预先创建完整任务清单。
+- 下一个任务编号为 `TASK-045`；具体编号与状态以 `docs/PHASE5_TASK_INDEX.md` 为准。
+- 当前没有 Active TASK；未确认独立问题前，不创建空的 `TASK-045`。
+- 同一任务验收中的反馈继续记录在原 TASK，不为每轮调整创建新的 FIX TASK。
+- 只有边界清晰、可独立实现和验收的问题才创建新 TASK；零散微调应归入当前任务。
+- 只实施当前 TASK 的范围，不借完善或稳定化名义扩大功能边界。
+- 仅在实际实现需要时更新数据库设计、Contract、Architecture 或 ADR，不预先设计未来变更。
+- 完成当前 TASK 后运行相关测试和 `git diff --check`，只暂存本次相关文件；默认不 commit、不 push。

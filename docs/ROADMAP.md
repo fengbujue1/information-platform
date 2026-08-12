@@ -141,6 +141,22 @@ Scope、Architecture、Data Model、Database Design、ADR 与 Contract 已按 Ac
 - 全站 UI/UX 重构；
 - 生产部署与公网发布。
 
+## Phase 5：Product Refinement & Stabilization
+
+状态：**进行中。**
+
+Phase 5 不采用预先冻结完整 TASK 列表的方式，而是围绕真实使用、测试、联调和运行中确认的问题，按 Rolling / Just-in-Time 模式推进。
+
+主要方向：
+
+- 现有 UI / UX 细节优化；
+- 后端行为完善与缺陷修复；
+- 前后端联调与稳定性提升；
+- 测试、CI、安全、可靠性与生产准备；
+- 为解决已确认问题所必需的小规模重构。
+
+任务编号从 `TASK-045` 开始。当前没有 Active TASK，`TASK-045` 尚未创建。Phase 4 保持已完成和已归档状态；Phase 5 不重新打开 Phase 4，也不改变既有架构、数据模型、ADR 与 Contract 的冻结语义。
+
 ## Future：Retrieval / Semantic Search
 
 根据真实数据规模再评估：

@@ -63,7 +63,7 @@
 
 ## 当前阶段
 
-Phase 3、Phase 4 已归档。
+Phase 3、Phase 4 已归档，Phase 5 正在进行。
 
 ## Phase 4
 
@@ -112,3 +112,18 @@ TASK-033～TASK-044（含 TASK-034A）均已完成。Phase 4 的 Generic Core + 
 - [TASK-042：Recommendation Feed Query API](tasks/TASK-042.md)
 - [TASK-043：Phase 4 Web](tasks/TASK-043.md)
 - [TASK-044：Full-stack E2E、验收与收尾](tasks/TASK-044.md)
+
+## Phase 5
+
+状态：**进行中。**
+
+Phase 5 采用 Rolling / Just-in-Time Task Planning，不预先创建完整 TASK 列表。任务编号从 `TASK-045` 开始；当前没有 Active TASK，`TASK-045` 尚未创建。
+
+- [Phase 5 正式规划包](../PHASE5_PACKAGE_MANIFEST.md)
+- [Phase 5 Scope](PHASE5_SCOPE.md)
+- [Phase 5 Task Model](PHASE5_TASK_MODEL.md)
+- [Phase 5 Task Index](PHASE5_TASK_INDEX.md)
+- [Phase 5 Task Template](PHASE5_TASK_TEMPLATE.md)
+- [Codex Phase 5 Workflow](CODEX_PHASE5_WORKFLOW.md)
+- [Codex Phase 5 Interaction Guide](CODEX_PHASE5_INTERACTION_GUIDE.md)
+- [Phase 5 Existing Document Change Plan](PHASE5_EXISTING_DOC_CHANGES.md)

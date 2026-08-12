@@ -10,6 +10,7 @@
 - Phase 2：已完成。
 - Phase 3：已完成。
 - Phase 4：已完成。
+- Phase 5：进行中。
 
 ## Phase 3 完成情况
 
@@ -132,7 +133,11 @@ ai_model_invocation
 
 ## 当前任务
 
-当前无进行中的 Phase 4 TASK。`TASK-033`～`TASK-044`（含数据模型通用化纠偏 `TASK-034A`）均已完成。
+Phase 5 已启动，当前没有 Active TASK。
+
+下一个任务编号为 `TASK-045`，但在真实问题确认并达到独立任务标准前不创建空任务。任务状态与编号以 [Phase 5 Task Index](PHASE5_TASK_INDEX.md) 为准。
+
+`TASK-033`～`TASK-044`（含数据模型通用化纠偏 `TASK-034A`）均已完成，Phase 4 保持已完成和已归档状态。
 
 Phase 3 已归档。后续仅接受缺陷修复、安全修复、依赖维护和运行参数维护，不再在 Phase 3 范围继续增加新功能。
 
@@ -171,10 +176,22 @@ Phase 4：Personalized Recommendation MVP 已完成并归档。
 - V1～V4 Migration 未修改，当前数据库版本仍为 V4；
 - Phase 4 只实际实现 JOB，Notification、Retrieval/Embedding 与其它 Information Type 推荐仍未实施。
 
+## Phase 5 进行状态
+
+Phase 5：Product Refinement & Stabilization 已进入进行中状态，采用 Rolling / Just-in-Time Task Planning。
+
+当前启动事实：
+
+- 当前没有 Active TASK；
+- 下一个任务编号为 `TASK-045`；
+- 不预先创建空的 `TASK-045` 或完整任务列表；
+- 仅针对已确认的产品完善、缺陷、联调、稳定性、测试、CI、安全、可靠性或生产准备问题创建任务；
+- Phase 4 的完成结论与冻结边界保持不变。
+
 ## CI
 
-CI 后续作为独立工程维护事项处理，不作为 Phase 4 阶段关闭的阻塞条件。
+CI 可作为 Phase 5 的滚动改进方向，但仅在确认具体问题后创建任务；当前没有对应 Active TASK。CI 仍不影响 Phase 4 已完成的结论。
 
 ## 下一步
 
-后续功能需先建立新的 Scope、ADR/Contract 与 TASK 基线；不在已归档的 Phase 4 中继续扩展范围。
+从真实使用、测试、联调或运行反馈中确认下一个独立问题；满足任务标准后，按 Phase 5 Task Model 创建 `TASK-045` 并更新 Task Index。在此之前不创建占位任务，也不在已归档的 Phase 4 中继续扩展范围。

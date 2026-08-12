@@ -6,6 +6,8 @@
 
 Phase 1、Phase 2、Phase 3、Phase 4 已完成。
 
+Phase 5 — Product Refinement & Stabilization 正在进行，采用 Rolling / Just-in-Time Task Planning。
+
 当前已打通：
 
 ```text
@@ -165,6 +167,22 @@ Phase 4 的 Scope、Architecture、Data Model、Database Design、ADR、Contract
 
 `TASK-033`～`TASK-044`（含 `TASK-034A`）已完成。当前已落地 Generic Recommendation Core + JOB Extension、Recommendation Profile 与 Interaction API、JOB Candidate Resolver、`JOB_RECOMMENDATION / V1` 确定性评分与排序、Recommendation Run / Worker / Manual Refresh、Analysis Batch AFTER_COMMIT Auto Trigger、Recommendation Feed、Phase 4 Web，以及使用真实后端、真实测试 MySQL 和 Fake Provider 的全栈 E2E。Phase 4 仍只实现 JOB；Notification、Retrieval 和其它 Information Type 推荐不在本阶段范围。
 
+## Phase 5：Product Refinement & Stabilization
+
+状态：**进行中。**
+
+Phase 5 面向已交付产品的持续完善与稳定化，不预先创建完整 TASK 列表；仅在实际问题被确认并达到独立任务标准时，按 Rolling / Just-in-Time 模式创建任务。
+
+主要工作范围：
+
+- 现有 UI / UX 细节优化；
+- 后端行为完善与缺陷修复；
+- 前后端联调与稳定性提升；
+- 测试、CI、安全、可靠性与生产准备；
+- 为解决已确认问题所必需的小规模重构。
+
+Phase 5 的任务编号从 `TASK-045` 开始。当前没有 Active TASK，`TASK-045` 尚未创建。Phase 4 继续保持已完成和已归档状态，Phase 5 不重新打开或改变其冻结边界。
+
 ## 文档入口
 
 - [文档索引](docs/README.md)
@@ -187,7 +205,14 @@ Phase 4 的 Scope、Architecture、Data Model、Database Design、ADR、Contract
 - [Information Hub 配置说明](backend/information-hub/CONFIGURATION.md)
 - [Backend Operational Logging Conventions](docs/LOGGING_CONVENTIONS.md)
 - [Codex Phase 4 Workflow](docs/CODEX_PHASE4_WORKFLOW.md)
+- [Phase 5 正式规划包](PHASE5_PACKAGE_MANIFEST.md)
+- [Phase 5 Scope](docs/PHASE5_SCOPE.md)
+- [Phase 5 Task Model](docs/PHASE5_TASK_MODEL.md)
+- [Phase 5 Task Index](docs/PHASE5_TASK_INDEX.md)
 
+- [Phase 5 Task Template](docs/PHASE5_TASK_TEMPLATE.md)
+- [Codex Phase 5 Workflow](docs/CODEX_PHASE5_WORKFLOW.md)
+- [Codex Phase 5 Interaction Guide](docs/CODEX_PHASE5_INTERACTION_GUIDE.md)
 ## 合规说明
 
 采集器仅用于个人学习、技术研究和用户有权访问的数据处理。使用者应遵守目标网站规则、适用法律和合理访问频率。
