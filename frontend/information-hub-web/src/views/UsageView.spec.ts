@@ -47,7 +47,9 @@ describe('UsageView', () => {
     expect(wrapper.text()).toContain('150')
     expect(wrapper.text()).toContain('700')
     expect(wrapper.text()).toContain('1300')
-    expect(wrapper.text()).toContain('Estimated Token 不会补入')
+    expect(wrapper.text()).toContain('预估 Token 不会补入实际用量')
+    expect(wrapper.text()).toContain('实际 Token 总数')
+    expect(wrapper.text()).toContain('调用次数')
   })
 
   it('keeps unknown Actual Usage visibly unavailable', async () => {

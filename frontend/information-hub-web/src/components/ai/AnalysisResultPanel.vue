@@ -4,6 +4,11 @@ import { ElDescriptions, ElDescriptionsItem, ElTag } from 'element-plus'
 
 import type { InformationAnalysis } from '@/types/analysis'
 import { formatDateTime, formatNullableValue } from '@/utils/formatters'
+import {
+  formatAnalysisStatus,
+  formatExecutionStatus,
+  formatUsageStatus,
+} from '@/utils/aiDisplay'
 
 const props = defineProps<{
   analysis: InformationAnalysis
@@ -19,28 +24,28 @@ const resultText = computed(() =>
 <template>
   <section class="ai-section">
     <div class="ai-card-heading">
-      <h2>Analysis #{{ analysis.id }}</h2>
+      <h2>分析 #{{ analysis.id }}</h2>
       <ElTag
         :type="analysis.status === 'SUCCEEDED' ? 'success' : analysis.status === 'FAILED' ? 'danger' : 'info'"
       >
-        {{ analysis.status }}
+        {{ formatAnalysisStatus(analysis.status) }}
       </ElTag>
     </div>
 
     <ElDescriptions :column="2" border>
-      <ElDescriptionsItem label="Information">
+      <ElDescriptionsItem label="信息 ID">
         {{ analysis.informationId }}
       </ElDescriptionsItem>
-      <ElDescriptionsItem label="Snapshot">
+      <ElDescriptionsItem label="快照 ID">
         {{ analysis.snapshotId }}
       </ElDescriptionsItem>
-      <ElDescriptionsItem label="Prompt Version">
+      <ElDescriptionsItem label="提示词版本 ID">
         {{ analysis.promptVersionId }}
       </ElDescriptionsItem>
       <ElDescriptionsItem label="相关度">
         {{ formatNullableValue(analysis.relevanceScore) }}
       </ElDescriptionsItem>
-      <ElDescriptionsItem label="Estimated Total">
+      <ElDescriptionsItem label="预估 Token 总数">
         {{ formatNullableValue(analysis.estimatedTotalTokens) }}
       </ElDescriptionsItem>
       <ElDescriptionsItem label="完成时间">
@@ -64,9 +69,9 @@ const resultText = computed(() =>
       <pre class="ai-json">{{ resultText }}</pre>
     </template>
 
-    <h3>Provider Invocation</h3>
+    <h3>模型调用记录</h3>
     <p v-if="analysis.invocations.length === 0" class="ai-muted">
-      尚无 Provider Invocation
+      尚无模型调用记录
     </p>
     <ElDescriptions
       v-for="invocation in analysis.invocations"
@@ -75,17 +80,17 @@ const resultText = computed(() =>
       :column="2"
       border
     >
-      <ElDescriptionsItem label="Attempt">
-        {{ invocation.attemptNo }} / {{ invocation.status }}
+      <ElDescriptionsItem label="尝试次数 / 状态">
+        {{ invocation.attemptNo }} / {{ formatExecutionStatus(invocation.status) }}
       </ElDescriptionsItem>
-      <ElDescriptionsItem label="Provider / Model">
+      <ElDescriptionsItem label="模型服务 / 模型">
         {{ invocation.provider }} / {{ invocation.modelName }}
       </ElDescriptionsItem>
-      <ElDescriptionsItem label="Actual Total">
+      <ElDescriptionsItem label="实际 Token 总数">
         {{ formatNullableValue(invocation.totalTokens) }}
       </ElDescriptionsItem>
-      <ElDescriptionsItem label="Usage Status">
-        {{ invocation.usageStatus }}
+      <ElDescriptionsItem label="用量报告状态">
+        {{ formatUsageStatus(invocation.usageStatus) }}
       </ElDescriptionsItem>
     </ElDescriptions>
   </section>

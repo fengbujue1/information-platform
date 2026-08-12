@@ -88,7 +88,7 @@ describe('BatchDetailView', () => {
     await flushPromises()
     await vi.advanceTimersByTimeAsync(3_000)
 
-    expect(wrapper.text()).toContain('COMPLETED')
+    expect(wrapper.text()).toContain('已完成')
     expect(wrapper.text()).toContain('150')
     expect(getBatchMock).toHaveBeenCalledTimes(1)
     expect(getProgressMock).not.toHaveBeenCalled()

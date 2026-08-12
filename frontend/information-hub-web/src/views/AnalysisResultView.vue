@@ -39,26 +39,26 @@ onMounted(load)
   <section class="ai-page">
     <header class="ai-page-header">
       <div>
-        <RouterLink to="/ai/batches">← 返回 Batch</RouterLink>
-        <h1>Analysis Result</h1>
+        <RouterLink to="/ai/batches">← 返回分析批次</RouterLink>
+        <h1>分析结果</h1>
       </div>
       <ElButton v-if="validId" @click="load">刷新</ElButton>
     </header>
     <PageState
       v-if="!validId"
       kind="invalid"
-      title="Analysis 地址无效"
-      description="Analysis ID 必须为正整数"
+      title="分析地址无效"
+      description="分析 ID 必须为正整数"
     />
     <PageState
       v-else-if="loading"
       kind="loading"
-      title="正在加载 Analysis"
+      title="正在加载分析结果"
     />
     <PageState
       v-else-if="error"
       kind="error"
-      title="Analysis 加载失败"
+      title="分析结果加载失败"
       :description="error"
     >
       <ElButton type="primary" @click="load">重试</ElButton>

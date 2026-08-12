@@ -117,7 +117,7 @@ test('runs the complete Phase 3 flow through the real Web and backend', async ({
     usageStatus: 'REPORTED',
     totalTokens: VALID_USAGE_TOTAL,
   })
-  await expect(page.getByText('SUCCEEDED', { exact: true })).toBeVisible()
+  await expect(page.getByText('已成功', { exact: true })).toBeVisible()
   await expect(page.getByText(String(VALID_USAGE_TOTAL), { exact: true }))
     .toBeVisible()
 
@@ -127,8 +127,8 @@ test('runs the complete Phase 3 flow through the real Web and backend', async ({
       response.request().method() === 'POST',
   )
   await page.goto('/ai/analyze')
-  await page.getByRole('spinbutton', { name: /Max Candidates/ }).fill('1')
-  await page.getByRole('button', { name: 'Preview', exact: true }).click()
+  await page.getByRole('spinbutton', { name: /最大候选数量/ }).fill('1')
+  await page.getByRole('button', { name: '预览', exact: true }).click()
   const preview = await unwrapResponse<AnalysisPreview>(
     await previewResponsePromise,
   )
@@ -136,18 +136,18 @@ test('runs the complete Phase 3 flow through the real Web and backend', async ({
   expect(preview.selectedCount).toBe(1)
   expect(preview.deferredByItemLimitCount).toBeGreaterThanOrEqual(1)
   expect(preview.estimatedTotalTokens).toBeGreaterThan(0)
-  await expect(page.getByText('Preview 没有 Actual Token。')).toBeVisible()
+  await expect(page.getByText('预览不产生实际 Token。')).toBeVisible()
 
-  await page.getByRole('spinbutton', { name: /Max Candidates/ }).fill('2')
+  await page.getByRole('spinbutton', { name: /最大候选数量/ }).fill('2')
   await page.getByRole('spinbutton', {
-    name: /Estimated Token Budget/,
+    name: /预估 Token 预算/,
   }).fill(String(preview.estimatedTotalTokens))
   const budgetPreviewResponsePromise = page.waitForResponse(
     (response) =>
       response.url().endsWith('/api/v1/ai/analysis-batches/preview') &&
       response.request().method() === 'POST',
   )
-  await page.getByRole('button', { name: 'Preview', exact: true }).click()
+  await page.getByRole('button', { name: '预览', exact: true }).click()
   const budgetPreview = await unwrapResponse<AnalysisPreview>(
     await budgetPreviewResponsePromise,
   )
@@ -164,7 +164,7 @@ test('runs the complete Phase 3 flow through the real Web and backend', async ({
       response.url().endsWith('/api/v1/ai/analysis-batches/confirm') &&
       response.request().method() === 'POST',
   )
-  await page.getByRole('button', { name: '确认并创建 Batch' }).click()
+  await page.getByRole('button', { name: '确认并创建分析批次' }).click()
   const confirmedBatch = await unwrapResponse<AnalysisBatch>(
     await confirmResponsePromise,
   )
@@ -178,7 +178,7 @@ test('runs the complete Phase 3 flow through the real Web and backend', async ({
   expect(completedBatch.progress.actualTotalTokens).toBe(VALID_USAGE_TOTAL)
   expect(completedBatch.estimatedTotalTokens).toBeGreaterThan(0)
   await page.reload()
-  await expect(page.getByText('COMPLETED', { exact: true })).toBeVisible()
+  await expect(page.getByText('已完成', { exact: true })).toBeVisible()
 
   const failedProfile = await createPromptProfile(
     page,
@@ -196,7 +196,7 @@ test('runs the complete Phase 3 flow through the real Web and backend', async ({
     usageStatus: 'REPORTED',
     totalTokens: FAILED_USAGE_TOTAL,
   })
-  await expect(page.getByText('FAILED', { exact: true })).toBeVisible()
+  await expect(page.getByText('已失败', { exact: true })).toBeVisible()
 
   const scheduleJobId = (await ingestJobs(page, `${runId}-schedule`, 1))[0]!
   expect(scheduleJobId).toBeGreaterThan(0)
@@ -306,9 +306,9 @@ async function createPromptProfile(
     await profileResponsePromise,
   )
 
-  await page.getByLabel('创建新 Version').fill(content)
-  await page.getByRole('button', { name: '创建并激活新 Version' }).click()
-  await expect(page.getByText('Active', { exact: true })).toBeVisible()
+  await page.getByLabel('创建新版本').fill(content)
+  await page.getByRole('button', { name: '创建并启用新版本' }).click()
+  await expect(page.getByText('当前生效', { exact: true })).toBeVisible()
   return profile
 }
 
@@ -327,7 +327,7 @@ async function executeSingleAnalysis(
   )
   expect(requestedProfile).toBeDefined()
   await page.locator('.ai-form-field')
-    .filter({ hasText: 'Prompt Profile' })
+    .filter({ hasText: '提示词方案' })
     .locator('.el-select__wrapper')
     .click()
   await page.getByRole('option', { name: requestedProfile!.name }).click()
@@ -359,7 +359,7 @@ async function createDisabledSchedule(
   )
   expect(requestedProfile).toBeDefined()
   await page.locator('.ai-form-field')
-    .filter({ hasText: 'Prompt Profile' })
+    .filter({ hasText: '提示词方案' })
     .locator('.el-select__wrapper')
     .click()
   await page.getByRole('option', { name: requestedProfile!.name }).click()

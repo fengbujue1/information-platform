@@ -1,6 +1,6 @@
 # TASK-045：Phase 3 AI 页面中文化与展示文案统一
 
-状态：READY
+状态：VERIFYING
 
 所属阶段：Phase 5
 
@@ -83,31 +83,50 @@ Phase 3 AI 页面存在大量直接面向用户的英文或中英文混排，包
 ## 7. Acceptance Criteria
 
 - [ ] 原问题无法按原步骤复现。
-- [ ] Expected Behavior 已实现。
-- [ ] 现有相关流程没有回归。
-- [ ] 相关 targeted test 通过。
+- [x] Expected Behavior 已实现。
+- [x] 现有相关流程没有回归。
+- [x] 相关 targeted test 通过。
 - [ ] 必要的 frontend / browser test 通过。
-- [ ] `git diff --check` 通过。
-- [ ] 必要文档已同步。
-- [ ] 顶部 Phase 3 AI 导航全部使用准确中文。
-- [ ] 提示词方案、手动分析、分析结果、批次列表与详情、定时分析、Token 用量页面的标题、字段、操作和说明文案完成中文化。
-- [ ] loading、empty、error、success 状态文案完成中文化。
-- [ ] 后端协议枚举只在展示层映射中文，API 值和业务判断保持不变。
-- [ ] 必要技术术语和真实业务数据未被错误翻译。
-- [ ] 未引入完整 i18n，未修改后端、数据库、Contract、Architecture、ADR 或安全边界。
-- [ ] 受影响的组件测试和 Phase 3 Browser E2E 文案定位已同步。
+- [x] `git diff --check` 通过。
+- [x] 必要文档已同步。
+- [x] 顶部 Phase 3 AI 导航全部使用准确中文。
+- [x] 提示词方案、手动分析、分析结果、批次列表与详情、定时分析、Token 用量页面的标题、字段、操作和说明文案完成中文化。
+- [x] loading、empty、error、success 状态文案完成中文化。
+- [x] 后端协议枚举只在展示层映射中文，API 值和业务判断保持不变。
+- [x] 必要技术术语和真实业务数据未被错误翻译。
+- [x] 未引入完整 i18n，未修改后端、数据库、Contract、Architecture、ADR 或安全边界。
+- [x] 受影响的组件测试和 Phase 3 Browser E2E 文案定位已同步。
 
 ## 8. Adjustment Log
 
-当前尚未实施，无 Adjustment。
+实施过程中未调整冻结 Scope。首次全量前端测试发现新增批次列表测试的中文断言编码异常，修正测试文件编码后重新执行并通过；业务实现方案未变化。
 
 ## 9. Test / Verification Record
 
-当前状态为 READY，尚未实施或执行测试。
+已执行：
+
+```text
+npm.cmd test -- src/utils/aiDisplay.spec.ts src/views/PromptProfilesView.spec.ts src/views/ManualAnalysisView.spec.ts src/views/BatchDetailView.spec.ts src/views/SchedulesView.spec.ts src/views/UsageView.spec.ts src/tests/appShell.spec.ts
+结果：7 个测试文件、10 个测试全部通过。
+
+npm.cmd test -- src/views/BatchListView.spec.ts
+结果：1 个测试文件、1 个测试通过。
+
+npm.cmd test
+结果：30 个测试文件、90 个测试全部通过。
+
+npm.cmd run typecheck
+结果：通过。
+
+npm.cmd run build
+结果：通过；vue-tsc 与 Vite 生产构建成功。
+```
+
+未执行 `npm.cmd run test:e2e:phase3`：当前环境未配置该脚本要求的 7 个 `INFORMATION_HUB_E2E_*` 变量，且缺少后端构建 JAR。Browser E2E 的中文文案定位与断言已同步，真实浏览器链路留待人工验证或具备 MySQL、后端 JAR 和 E2E 密钥的环境执行。
 
 ## 10. Documentation Sync
 
-- [ ] `docs/CURRENT_STATUS.md`
+- [x] `docs/CURRENT_STATUS.md`
 - [x] `docs/PHASE5_TASK_INDEX.md`
 - [ ] `docs/ARCHITECTURE.md`
 - [ ] `docs/DATABASE_DESIGN.md`
@@ -115,26 +134,31 @@ Phase 3 AI 页面存在大量直接面向用户的英文或中英文混排，包
 - [ ] ADR
 - [ ] AGENTS
 - [ ] README / ROADMAP
-- [ ] 无额外事实文档变化
+- [x] 无额外事实文档变化
 
 ## 11. Completion Checklist
 
-- [ ] Scope review
-- [ ] Security / Owner review（如相关）
-- [ ] Logging review（后端改动）
-- [ ] Database / migration review（如相关）
-- [ ] Contract compatibility review（如相关）
-- [ ] Tests
-- [ ] `git diff --check`
-- [ ] Implementation Record
+- [x] Scope review
+- [x] Security / Owner review（前端展示改动，边界未变化）
+- [x] Logging review（无后端改动）
+- [x] Database / migration review（无数据库改动）
+- [x] Contract compatibility review（协议枚举与 API 值未变化）
+- [x] Tests
+- [x] `git diff --check`
+- [x] Implementation Record
 - [x] Task Index
-- [ ] Current Status
-- [ ] 当前 TASK 相关文件已 `git add`
+- [x] Current Status
+- [x] 当前 TASK 相关文件已 `git add`
 - [x] 未自动 commit / push
 
 ## 12. Implementation Record
 
-当前状态为 READY，尚未实施。
+- 在全局导航和 Phase 3 AI 页面域内统一用户可见中文文案，覆盖提示词方案、手动分析、分析结果、分析批次列表与详情、定时分析和 Token 用量统计。
+- 新增集中、类型安全的展示格式化工具，将提示词方案状态、分析状态、批次触发方式、批次与条目状态、调用状态和跳过原因映射为中文；未知值回退为 `未知（原值）`，空值回退为 `—`。
+- 保留 Token、IANA、Java、MySQL、Hash、ID、AI 与真实 IANA 时区值等必要技术内容；协议枚举、API 请求响应、业务判断保持原值。
+- 同步 Phase 3 API 错误提示、组件测试、应用壳测试和 Browser E2E 的用户可见文案定位。
+- 未修改后端、数据库、Migration、Contract、Architecture、ADR、安全边界或 Phase 4 独立页面文案，未引入完整 i18n。
+- 当前状态转为 `VERIFYING`，等待人工浏览器验收。
 
 ## 13. Commit
 

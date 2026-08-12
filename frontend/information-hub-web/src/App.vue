@@ -55,7 +55,7 @@ async function signOut(): Promise<void> {
             to="/ai/prompts"
             class="app-navigation-link"
           >
-            Prompt
+            提示词方案
           </RouterLink>
           <RouterLink
             v-if="authState.currentUser.value"
@@ -69,21 +69,21 @@ async function signOut(): Promise<void> {
             to="/ai/batches"
             class="app-navigation-link"
           >
-            Batches
+            分析批次
           </RouterLink>
           <RouterLink
             v-if="authState.currentUser.value"
             to="/ai/schedules"
             class="app-navigation-link"
           >
-            Schedules
+            定时分析
           </RouterLink>
           <RouterLink
             v-if="authState.currentUser.value"
             to="/ai/usage"
             class="app-navigation-link"
           >
-            Usage
+            用量统计
           </RouterLink>
           <span v-if="authState.currentUser.value" class="app-user">
             {{ userLabel }}

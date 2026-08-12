@@ -29,6 +29,10 @@ import type {
 } from '@/types/schedule'
 import { authState } from '@/stores/authSession'
 import { formatDateTime, formatNullableValue } from '@/utils/formatters'
+import {
+  formatBatchStatus,
+  formatReason,
+} from '@/utils/aiDisplay'
 
 const schedules = ref<AnalysisSchedule[]>([])
 const profiles = ref<PromptProfile[]>([])
@@ -99,7 +103,7 @@ function resetForm(): void {
 
 async function save(): Promise<void> {
   if (!form.value.name.trim() || !form.value.promptProfileId) {
-    error.value = '请输入名称并选择 Prompt Profile'
+    error.value = '请输入名称并选择提示词方案'
     return
   }
   saving.value = true
@@ -166,21 +170,21 @@ onMounted(load)
   <section class="ai-page">
     <header class="ai-page-header">
       <div>
-        <h1>Analysis Schedules</h1>
-        <p>Schedule 新建时默认关闭；默认本地执行时间为 02:00。</p>
+        <h1>定时分析</h1>
+        <p>定时分析新建时默认关闭；默认本地执行时间为 02:00。</p>
       </div>
-      <ElButton @click="resetForm">新建 Schedule</ElButton>
+      <ElButton @click="resetForm">新建定时分析</ElButton>
     </header>
 
     <PageState
       v-if="loading"
       kind="loading"
-      title="正在加载 Schedules"
+      title="正在加载定时分析"
     />
     <PageState
       v-else-if="error && schedules.length === 0"
       kind="error"
-      title="Schedules 加载失败"
+      title="定时分析加载失败"
       :description="error"
     >
       <ElButton type="primary" @click="load">重试</ElButton>
@@ -189,14 +193,14 @@ onMounted(load)
     <template v-else>
       <p v-if="error" class="ai-error" role="alert">{{ error }}</p>
       <section class="ai-section">
-        <h2>{{ editingId === null ? '新建 Schedule' : `编辑 Schedule #${editingId}` }}</h2>
+        <h2>{{ editingId === null ? '新建定时分析' : `编辑定时分析 #${editingId}` }}</h2>
         <div class="ai-form-grid">
           <label class="ai-form-field">
             名称
             <ElInput v-model="form.name" maxlength="255" />
           </label>
           <label class="ai-form-field">
-            Prompt Profile
+            提示词方案
             <ElSelect v-model="form.promptProfileId">
               <ElOption
                 v-for="profile in profiles"
@@ -216,19 +220,19 @@ onMounted(load)
             />
           </label>
           <label class="ai-form-field">
-            IANA Timezone
+            IANA 时区
             <ElInput v-model="form.timezone" placeholder="Asia/Shanghai" />
           </label>
           <label class="ai-form-field">
-            Window Days
+            候选时间范围（天）
             <ElInputNumber v-model="form.windowDays" :min="1" :max="14" />
           </label>
           <label class="ai-form-field">
-            Max Candidates
+            最大候选数量
             <ElInputNumber v-model="form.maxCandidates" :min="1" :max="50" />
           </label>
           <label class="ai-form-field">
-            Estimated Token Budget
+            预估 Token 预算
             <ElInputNumber
               v-model="form.maxEstimatedTokens"
               :min="1"
@@ -247,9 +251,9 @@ onMounted(load)
       </section>
 
       <section class="ai-section">
-        <h2>已保存 Schedules</h2>
+        <h2>已保存的定时分析</h2>
         <p v-if="schedules.length === 0" class="ai-muted">
-          尚无 Schedule。
+          尚无定时分析。
         </p>
         <div class="ai-card-list">
           <ElCard
@@ -275,9 +279,9 @@ onMounted(load)
               最大 {{ schedule.maxCandidates }} 条
             </p>
             <p class="ai-muted">
-              上次：{{ schedule.lastRun ? `${schedule.lastRun.status} / ${formatDateTime(schedule.lastRun.scheduledFor)}` : '—' }}
+              上次：{{ schedule.lastRun ? `${formatBatchStatus(schedule.lastRun.status)} / ${formatDateTime(schedule.lastRun.scheduledFor)}` : '—' }}
               · 下次：{{ formatDateTime(schedule.nextRunAt) }}
-              · 原因：{{ formatNullableValue(schedule.lastRun?.skipReason) }}
+              · 原因：{{ formatReason(schedule.lastRun?.skipReason) }}
             </p>
             <div class="ai-actions">
               <ElButton link @click="edit(schedule)">编辑</ElButton>
@@ -286,13 +290,13 @@ onMounted(load)
                 :loading="saving"
                 @click="testPreview(schedule.id)"
               >
-                Test Current Config Preview
+                预览当前配置
               </ElButton>
               <RouterLink
                 v-if="schedule.lastRun"
                 :to="`/ai/batches/${schedule.lastRun.batchId}`"
               >
-                查看上次 Batch
+                查看上次分析批次
               </RouterLink>
             </div>
           </ElCard>
@@ -300,27 +304,27 @@ onMounted(load)
       </section>
 
       <section v-if="preview" class="ai-section">
-        <h2>Schedule Preview</h2>
+        <h2>定时分析预览</h2>
         <div class="ai-metric-grid">
           <div class="ai-metric">
-            <span class="ai-metric-label">Total / Eligible</span>
+            <span class="ai-metric-label">窗口内总数 / 符合条件</span>
             <strong class="ai-metric-value">
               {{ preview.totalInWindow }} / {{ preview.eligibleCount }}
             </strong>
           </div>
           <div class="ai-metric">
-            <span class="ai-metric-label">Selected</span>
+            <span class="ai-metric-label">已选择</span>
             <strong class="ai-metric-value">{{ preview.selectedCount }}</strong>
           </div>
           <div class="ai-metric">
-            <span class="ai-metric-label">Estimated Total</span>
+            <span class="ai-metric-label">预估 Token 总数</span>
             <strong class="ai-metric-value">
               {{ preview.estimatedTotalTokens }}
             </strong>
           </div>
         </div>
         <p class="ai-muted">
-          此 Preview 不创建 Batch、Invocation，也不调用 Provider。
+          此预览不创建分析批次或模型调用，也不调用模型服务。
         </p>
       </section>
     </template>

@@ -63,12 +63,14 @@ describe('PromptProfilesView', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('历史正文不会被覆盖')
-    expect(wrapper.text()).toContain('Version 1')
+    expect(wrapper.text()).toContain('版本 1')
     expect(wrapper.text()).toContain('关注 Java 后端职位')
 
+    expect(wrapper.text()).toContain('当前生效')
+    expect(wrapper.text()).not.toContain('Prompt Profiles')
     await wrapper.get('textarea').setValue('新增云原生要求')
     const createButton = wrapper.findAll('button').find(
-      (button) => button.text().includes('创建并激活新 Version'),
+      (button) => button.text().includes('创建并启用新版本'),
     )
     await createButton!.trigger('click')
     await flushPromises()

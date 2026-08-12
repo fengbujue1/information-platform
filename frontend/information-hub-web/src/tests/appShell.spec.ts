@@ -61,6 +61,14 @@ describe('application shell', () => {
     expect(wrapper.get('nav[aria-label="主要导航"]').text()).toContain(
       '职位推荐',
     )
+    const navigationText = wrapper.get('nav[aria-label="主要导航"]').text()
+    expect(navigationText).toContain('提示词方案')
+    expect(navigationText).toContain('手动分析')
+    expect(navigationText).toContain('分析批次')
+    expect(navigationText).toContain('定时分析')
+    expect(navigationText).toContain('用量统计')
+    expect(navigationText).not.toContain('Batches')
+    expect(navigationText).not.toContain('Schedules')
     expect(
       wrapper.get('.app-navigation-link').classes(),
     ).toContain('router-link-active')

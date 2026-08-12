@@ -31,9 +31,9 @@ onMounted(load)
   <section class="ai-page">
     <header class="ai-page-header">
       <div>
-        <h1>Token Usage</h1>
+        <h1>Token 用量统计</h1>
         <p>
-          只展示 Provider 实际报告的 Actual Token；Estimated Token 不会补入。
+          只展示模型服务实际报告的 Token；预估 Token 不会补入实际用量。
         </p>
       </div>
       <ElButton @click="load">刷新</ElButton>
@@ -41,12 +41,12 @@ onMounted(load)
     <PageState
       v-if="loading"
       kind="loading"
-      title="正在加载 Token Usage"
+      title="正在加载 Token 用量统计"
     />
     <PageState
       v-else-if="error"
       kind="error"
-      title="Token Usage 加载失败"
+      title="Token 用量统计加载失败"
       :description="error"
     >
       <ElButton type="primary" @click="load">重试</ElButton>

@@ -71,7 +71,7 @@ describe('ManualAnalysisView', () => {
     await flushPromises()
 
     const previewButton = wrapper.findAll('button').find(
-      (button) => button.text() === 'Preview',
+      (button) => button.text() === '预览',
     )
     await previewButton!.trigger('click')
     await flushPromises()
@@ -82,12 +82,12 @@ describe('ManualAnalysisView', () => {
       maxCandidates: 20,
       maxEstimatedTokens: 75_000,
     })
-    expect(wrapper.text()).toContain('Preview 没有 Actual Token')
+    expect(wrapper.text()).toContain('预览不产生实际 Token')
     expect(wrapper.text()).toContain('3300')
     expect(confirmMock).not.toHaveBeenCalled()
 
     const confirmButton = wrapper.findAll('button').find(
-      (button) => button.text().includes('确认并创建 Batch'),
+      (button) => button.text().includes('确认并创建分析批次'),
     )
     await confirmButton!.trigger('click')
     await flushPromises()

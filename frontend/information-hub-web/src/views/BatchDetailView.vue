@@ -20,6 +20,12 @@ import PageState from '@/components/common/PageState.vue'
 import type { AnalysisBatch, AnalysisBatchProgress } from '@/types/batch'
 import { formatDateTime, formatNullableValue } from '@/utils/formatters'
 
+import {
+  formatBatchItemStatus,
+  formatBatchStatus,
+  formatBatchTrigger,
+  formatReason,
+} from '@/utils/aiDisplay'
 const route = useRoute()
 const batchId = Number(route.params.id)
 const batch = ref<AnalysisBatch | null>(null)
@@ -111,8 +117,8 @@ onBeforeUnmount(stopPolling)
   <section class="ai-page">
     <header class="ai-page-header">
       <div>
-        <RouterLink to="/ai/batches">← 返回 Batch 列表</RouterLink>
-        <h1>Batch #{{ batchId }}</h1>
+        <RouterLink to="/ai/batches">← 返回分析批次列表</RouterLink>
+        <h1>分析批次 #{{ batchId }}</h1>
       </div>
       <ElButton @click="load">刷新</ElButton>
     </header>
@@ -120,18 +126,18 @@ onBeforeUnmount(stopPolling)
     <PageState
       v-if="!validId"
       kind="invalid"
-      title="Batch 地址无效"
-      description="Batch ID 必须为正整数"
+      title="分析批次地址无效"
+      description="分析批次 ID 必须为正整数"
     />
     <PageState
       v-else-if="loading"
       kind="loading"
-      title="正在加载 Batch"
+      title="正在加载分析批次"
     />
     <PageState
       v-else-if="error && !batch"
       kind="error"
-      title="Batch 加载失败"
+      title="分析批次加载失败"
       :description="error"
     >
       <ElButton type="primary" @click="load">重试</ElButton>
@@ -142,30 +148,30 @@ onBeforeUnmount(stopPolling)
       <section class="ai-section">
         <div class="ai-card-heading">
           <h2>执行概况</h2>
-          <ElTag>{{ batch.status }}</ElTag>
+          <ElTag>{{ formatBatchStatus(batch.status) }}</ElTag>
         </div>
         <ElProgress :percentage="percentage" />
         <div v-if="progress" class="ai-metric-grid">
           <div class="ai-metric">
-            <span class="ai-metric-label">Succeeded / Failed</span>
+            <span class="ai-metric-label">成功 / 失败</span>
             <strong class="ai-metric-value">
               {{ progress.succeededCount }} / {{ progress.failedCount }}
             </strong>
           </div>
           <div class="ai-metric">
-            <span class="ai-metric-label">Running / Selected</span>
+            <span class="ai-metric-label">执行中 / 待执行</span>
             <strong class="ai-metric-value">
               {{ progress.runningCount }} / {{ progress.selectedCount }}
             </strong>
           </div>
           <div class="ai-metric">
-            <span class="ai-metric-label">Estimated Total</span>
+            <span class="ai-metric-label">预估 Token 总数</span>
             <strong class="ai-metric-value">
               {{ formatNullableValue(batch.estimatedTotalTokens) }}
             </strong>
           </div>
           <div class="ai-metric">
-            <span class="ai-metric-label">Actual Total</span>
+            <span class="ai-metric-label">实际 Token 总数</span>
             <strong class="ai-metric-value">
               {{ formatNullableValue(progress.actualTotalTokens) }}
             </strong>
@@ -176,35 +182,43 @@ onBeforeUnmount(stopPolling)
       <section class="ai-section">
         <h2>冻结参数</h2>
         <ElDescriptions :column="2" border>
-          <ElDescriptionsItem label="Trigger">{{ batch.triggerType }}</ElDescriptionsItem>
-          <ElDescriptionsItem label="Prompt Version">{{ batch.promptVersionId }}</ElDescriptionsItem>
+          <ElDescriptionsItem label="触发方式">{{ formatBatchTrigger(batch.triggerType) }}</ElDescriptionsItem>
+          <ElDescriptionsItem label="提示词版本 ID">{{ batch.promptVersionId }}</ElDescriptionsItem>
           <ElDescriptionsItem label="窗口">{{ formatDateTime(batch.windowStart) }} — {{ formatDateTime(batch.windowEnd) }}</ElDescriptionsItem>
-          <ElDescriptionsItem label="Limits">{{ batch.requestedMaxCandidates }} / {{ batch.requestedTokenBudget }}</ElDescriptionsItem>
-          <ElDescriptionsItem label="Eligible / Selected">{{ batch.eligibleCount }} / {{ batch.selectedCount }}</ElDescriptionsItem>
-          <ElDescriptionsItem label="Skip Reason">{{ formatNullableValue(batch.skipReason) }}</ElDescriptionsItem>
+          <ElDescriptionsItem label="候选上限 / Token 预算">{{ batch.requestedMaxCandidates }} / {{ batch.requestedTokenBudget }}</ElDescriptionsItem>
+          <ElDescriptionsItem label="符合条件 / 已选择">{{ batch.eligibleCount }} / {{ batch.selectedCount }}</ElDescriptionsItem>
+          <ElDescriptionsItem label="跳过原因">{{ formatReason(batch.skipReason) }}</ElDescriptionsItem>
         </ElDescriptions>
       </section>
 
       <section class="ai-section">
-        <h2>Items</h2>
+        <h2>批次项目</h2>
         <ElTable :data="batch.items" stripe>
           <ElTableColumn prop="selectionOrder" label="#" width="70" />
-          <ElTableColumn prop="informationId" label="Information" width="120" />
-          <ElTableColumn prop="snapshotId" label="Snapshot" width="110" />
-          <ElTableColumn prop="status" label="状态" width="110" />
-          <ElTableColumn prop="decisionReason" label="原因" />
-          <ElTableColumn label="Estimated" width="120">
+          <ElTableColumn prop="informationId" label="信息 ID" width="120" />
+          <ElTableColumn prop="snapshotId" label="快照 ID" width="110" />
+          <ElTableColumn label="状态" width="110">
+            <template #default="{ row }">
+              {{ formatBatchItemStatus(row.status) }}
+            </template>
+          </ElTableColumn>
+          <ElTableColumn label="原因">
+            <template #default="{ row }">
+              {{ formatReason(row.decisionReason) }}
+            </template>
+          </ElTableColumn>
+          <ElTableColumn label="预估 Token" width="120">
             <template #default="{ row }">
               {{ formatNullableValue(row.estimatedTotalTokens) }}
             </template>
           </ElTableColumn>
-          <ElTableColumn label="Result" width="120">
+          <ElTableColumn label="结果" width="120">
             <template #default="{ row }">
               <RouterLink
                 v-if="row.analysisId"
                 :to="`/ai/analyses/${row.analysisId}`"
               >
-                Analysis
+                查看分析
               </RouterLink>
               <span v-else>—</span>
             </template>

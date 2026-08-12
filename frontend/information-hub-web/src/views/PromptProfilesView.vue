@@ -21,6 +21,7 @@ import { toApiClientError } from '@/api/apiError'
 import PageState from '@/components/common/PageState.vue'
 import type { PromptProfile, PromptVersion } from '@/types/prompt'
 import { formatDateTime } from '@/utils/formatters'
+import { formatPromptProfileStatus } from '@/utils/aiDisplay'
 
 const profiles = ref<PromptProfile[]>([])
 const selectedProfileId = ref<number | null>(null)
@@ -64,7 +65,7 @@ async function loadVersions(): Promise<void> {
 
 async function addProfile(): Promise<void> {
   if (!profileName.value.trim()) {
-    error.value = '请输入 Prompt Profile 名称'
+    error.value = '请输入提示词方案名称'
     return
   }
   saving.value = true
@@ -87,7 +88,7 @@ async function addProfile(): Promise<void> {
 
 async function addVersion(): Promise<void> {
   if (selectedProfileId.value === null || !versionContent.value.trim()) {
-    error.value = '请选择 Profile 并输入 User Prompt'
+    error.value = '请选择提示词方案并输入用户提示词'
     return
   }
   saving.value = true
@@ -150,20 +151,20 @@ onMounted(loadProfiles)
   <section class="ai-page">
     <header class="ai-page-header">
       <div>
-        <h1>Prompt Profiles</h1>
-        <p>每次修改都会创建不可变 Version，历史正文不会被覆盖。</p>
+        <h1>提示词方案</h1>
+        <p>每次修改都会创建不可变版本，历史正文不会被覆盖。</p>
       </div>
     </header>
 
     <PageState
       v-if="loading"
       kind="loading"
-      title="正在加载 Prompt Profiles"
+      title="正在加载提示词方案"
     />
     <PageState
       v-else-if="error && profiles.length === 0"
       kind="error"
-      title="Prompt Profiles 加载失败"
+      title="提示词方案加载失败"
       :description="error"
     >
       <ElButton type="primary" @click="loadProfiles">重试</ElButton>
@@ -173,7 +174,7 @@ onMounted(loadProfiles)
       <p v-if="error" class="ai-error" role="alert">{{ error }}</p>
 
       <section class="ai-section">
-        <h2>新建 Profile</h2>
+        <h2>新建提示词方案</h2>
         <div class="ai-toolbar">
           <ElInput
             v-model="profileName"
@@ -187,15 +188,15 @@ onMounted(loadProfiles)
       </section>
 
       <section class="ai-section">
-        <h2>Profile 与 Version</h2>
+        <h2>提示词方案与版本</h2>
         <p v-if="profiles.length === 0" class="ai-muted">
-          尚无 Prompt Profile，请先创建。
+          尚无提示词方案，请先创建。
         </p>
         <template v-else>
           <div class="ai-toolbar">
             <ElSelect
               v-model="selectedProfileId"
-              aria-label="选择 Prompt Profile"
+              aria-label="选择提示词方案"
               @change="loadVersions"
             >
               <ElOption
@@ -206,7 +207,7 @@ onMounted(loadProfiles)
               />
             </ElSelect>
             <ElTag :type="currentProfile()?.status === 'ACTIVE' ? 'success' : 'info'">
-              {{ currentProfile()?.status }}
+              {{ formatPromptProfileStatus(currentProfile()?.status) }}
             </ElTag>
             <ElButton
               :loading="saving"
@@ -217,7 +218,7 @@ onMounted(loadProfiles)
           </div>
 
           <div class="ai-form-field ai-form-field-wide">
-            <label for="prompt-content">创建新 Version</label>
+            <label for="prompt-content">创建新版本</label>
             <ElInput
               id="prompt-content"
               v-model="versionContent"
@@ -225,14 +226,14 @@ onMounted(loadProfiles)
               :rows="6"
               maxlength="8000"
               show-word-limit
-              placeholder="只填写 User Prompt；System Prompt 与 Schema 由平台控制"
+              placeholder="只填写用户提示词；系统提示词与输出结构由平台控制"
             />
             <ElButton
               type="primary"
               :loading="saving"
               @click="addVersion"
             >
-              创建并激活新 Version
+              创建并启用新版本
             </ElButton>
           </div>
 
@@ -240,12 +241,12 @@ onMounted(loadProfiles)
             <ElCard v-for="version in versions" :key="version.id" shadow="never">
               <template #header>
                 <div class="ai-card-heading">
-                  <strong>Version {{ version.versionNo }}</strong>
+                  <strong>版本 {{ version.versionNo }}</strong>
                   <ElTag
                     v-if="currentProfile()?.activeVersionId === version.id"
                     type="success"
                   >
-                    Active
+                    当前生效
                   </ElTag>
                   <ElButton
                     v-else
@@ -253,7 +254,7 @@ onMounted(loadProfiles)
                     :loading="saving"
                     @click="activate(version.id)"
                   >
-                    设为 Active
+                    设为生效版本
                   </ElButton>
                 </div>
               </template>
@@ -264,7 +265,7 @@ onMounted(loadProfiles)
               </small>
             </ElCard>
             <p v-if="versions.length === 0" class="ai-muted">
-              当前 Profile 尚无 Version，不能用于 Analysis。
+              当前提示词方案尚无版本，不能用于分析。
             </p>
           </div>
         </template>

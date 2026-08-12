@@ -64,7 +64,7 @@ async function load(): Promise<void> {
 
 async function runPreview(): Promise<void> {
   if (promptProfileId.value === null) {
-    error.value = '请先创建并激活 Prompt Version'
+    error.value = '请先创建并启用提示词版本'
     return
   }
   submitting.value = true
@@ -100,7 +100,7 @@ async function confirmBatch(): Promise<void> {
 
 async function runSingle(): Promise<void> {
   if (promptProfileId.value === null || informationId.value === null) {
-    error.value = '请输入有效 Information ID 并选择可执行 Profile'
+    error.value = '请输入有效的信息 ID 并选择可执行的提示词方案'
     return
   }
   submitting.value = true
@@ -126,19 +126,19 @@ onMounted(load)
     <header class="ai-page-header">
       <div>
         <h1>手动分析</h1>
-        <p>Preview 只读取候选并估算 Token，不调用 Provider。</p>
+        <p>预览只读取候选并估算 Token，不调用模型服务。</p>
       </div>
     </header>
 
     <PageState
       v-if="loading"
       kind="loading"
-      title="正在加载可用 Prompt"
+      title="正在加载可用提示词方案"
     />
     <PageState
       v-else-if="error && profiles.length === 0"
       kind="error"
-      title="Prompt 加载失败"
+      title="提示词方案加载失败"
       :description="error"
     >
       <ElButton type="primary" @click="load">重试</ElButton>
@@ -149,18 +149,18 @@ onMounted(load)
       <PageState
         v-if="executableProfiles.length === 0"
         kind="empty"
-        title="没有可执行的 Prompt Profile"
-        description="请先创建 Prompt Version、设为 Active，并确保 Profile 已启用。"
+        title="没有可执行的提示词方案"
+        description="请先创建提示词版本、设为生效版本，并确保提示词方案已启用。"
       >
-        <RouterLink to="/ai/prompts">管理 Prompt</RouterLink>
+        <RouterLink to="/ai/prompts">管理提示词方案</RouterLink>
       </PageState>
 
       <template v-else>
         <section class="ai-section">
-          <h2>最近 N 天 Batch</h2>
+          <h2>最近 N 天分析批次</h2>
           <div class="ai-form-grid">
             <label class="ai-form-field">
-              Prompt Profile
+              提示词方案
               <ElSelect v-model="promptProfileId">
                 <ElOption
                   v-for="profile in executableProfiles"
@@ -171,15 +171,15 @@ onMounted(load)
               </ElSelect>
             </label>
             <label class="ai-form-field">
-              Window Days
+              候选时间范围（天）
               <ElInputNumber v-model="windowDays" :min="1" :max="14" />
             </label>
             <label class="ai-form-field">
-              Max Candidates
+              最大候选数量
               <ElInputNumber v-model="maxCandidates" :min="1" :max="50" />
             </label>
             <label class="ai-form-field">
-              Estimated Token Budget
+              预估 Token 预算
               <ElInputNumber
                 v-model="maxEstimatedTokens"
                 :min="1"
@@ -193,32 +193,32 @@ onMounted(load)
               :loading="submitting"
               @click="runPreview"
             >
-              Preview
+              预览
             </ElButton>
           </div>
         </section>
 
         <section v-if="preview" class="ai-section">
-          <h2>Preview 结果</h2>
+          <h2>预览结果</h2>
           <div class="ai-metric-grid">
             <div class="ai-metric">
-              <span class="ai-metric-label">Total / Eligible</span>
+              <span class="ai-metric-label">窗口内总数 / 符合条件</span>
               <strong class="ai-metric-value">
                 {{ preview.totalInWindow }} / {{ preview.eligibleCount }}
               </strong>
             </div>
             <div class="ai-metric">
-              <span class="ai-metric-label">Pending / Already</span>
+              <span class="ai-metric-label">待分析 / 已分析</span>
               <strong class="ai-metric-value">
                 {{ preview.pendingCount }} / {{ preview.alreadyAnalyzedCount }}
               </strong>
             </div>
             <div class="ai-metric">
-              <span class="ai-metric-label">Selected</span>
+              <span class="ai-metric-label">已选择</span>
               <strong class="ai-metric-value">{{ preview.selectedCount }}</strong>
             </div>
             <div class="ai-metric">
-              <span class="ai-metric-label">Estimated Total Token</span>
+              <span class="ai-metric-label">预估 Token 总数</span>
               <strong class="ai-metric-value">
                 {{ preview.estimatedTotalTokens }}
               </strong>
@@ -226,7 +226,7 @@ onMounted(load)
           </div>
           <p class="ai-muted">
             Token 到期：{{ formatDateTime(preview.expiresAt) }}。
-            Preview 没有 Actual Token。
+            预览不产生实际 Token。
           </p>
           <ElButton
             type="success"
@@ -234,17 +234,17 @@ onMounted(load)
             :loading="submitting"
             @click="confirmBatch"
           >
-            确认并创建 Batch
+            确认并创建分析批次
           </ElButton>
         </section>
 
         <section class="ai-section">
-          <h2>单条 Information Analysis</h2>
+          <h2>单条信息分析</h2>
           <div class="ai-toolbar">
             <ElInputNumber
               v-model="informationId"
               :min="1"
-              placeholder="Information ID"
+              placeholder="信息 ID"
             />
             <ElButton
               type="primary"
