@@ -6,7 +6,8 @@
 
 ---
 
-## 1. Phase 5 第一次启动
+## 1
+### 1.Phase 5 第一次启动
 
 适用：
 
@@ -46,6 +47,72 @@
 最后汇报修改文件和建议提交信息。
 ```
 
+### 2.换电脑后，继续Phase5
+```text
+这是一个新的 Codex 对话。
+
+我要继续开发 `information-platform` 的 Phase 5。
+
+不要依赖之前任何 Codex 对话的上下文或记忆，以当前 Git 仓库、Phase 5 文档和代码状态作为唯一事实基线。
+
+请先执行并检查：
+
+bash
+git status
+git branch --show-current
+git log --oneline -10
+git diff
+git diff --cached
+
+
+确认当前分支和本地工作区状态。
+
+然后依次阅读：
+
+1. 根 `AGENTS.md`
+2. 当前涉及模块的 `AGENTS.md`
+3. `docs/PROJECT_CONTEXT.md`
+4. `docs/PHASE5_SCOPE.md`
+5. `docs/PHASE5_TASK_MODEL.md`
+6. `docs/PHASE5_TASK_INDEX.md`
+7. `docs/CODEX_PHASE5_WORKFLOW.md`
+8. `docs/CURRENT_STATUS.md`
+9. 当前 Active TASK 对应的 `docs/tasks/TASK-XXX.md`
+10. 当前 TASK 相关的 ADR / Contract / Architecture / Database Design 文档
+
+如果是后端任务，还需要阅读：
+
+* `docs/LOGGING_CONVENTIONS.md`
+
+如果当前 TASK 涉及数据库：
+
+* 阅读 `docs/DATABASE_DESIGN.md`
+* 检查当前最新 Flyway Migration
+
+请以：
+
+* 当前仓库代码；
+* Git commit；
+* staged / unstaged diff；
+* `PHASE5_TASK_INDEX.md`；
+* 当前 TASK 的 Problem / Expected Behavior / Adjustment Log / Implementation Record；
+
+作为继续开发的事实依据。
+
+先不要修改代码。
+
+先告诉我：
+
+1. 当前 Phase 5 进行到哪个 TASK；
+2. 当前 TASK 的状态；
+3. 这个 TASK 已经完成了什么；
+4. 还有什么未完成；
+5. 当前工作区是否存在未提交修改；
+6. 下一步最合理的操作是什么。
+
+不要重新实施已经完成并有代码或 TASK 记录证明的工作。
+
+```
 ---
 
 ## 2. 发现一个问题，但先不要改
