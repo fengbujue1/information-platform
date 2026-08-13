@@ -12,13 +12,14 @@ import { executeAnalysis } from '@/api/analysisApi'
 import {
   confirmAnalysisBatch,
   createAnalysisPreview,
+  getAnalysisPreviewLimits,
 } from '@/api/batchApi'
 import { toApiClientError } from '@/api/apiError'
 import { listPromptProfiles } from '@/api/promptApi'
 import AnalysisResultPanel from '@/components/ai/AnalysisResultPanel.vue'
 import PageState from '@/components/common/PageState.vue'
 import type { InformationAnalysis } from '@/types/analysis'
-import type { AnalysisPreview } from '@/types/batch'
+import type { AnalysisPreview, AnalysisPreviewLimits } from '@/types/batch'
 import type { PromptProfile } from '@/types/prompt'
 import { formatDateTime } from '@/utils/formatters'
 import { showError, showSuccess, showWarning } from '@/utils/userFeedback'
@@ -28,9 +29,10 @@ const router = useRouter()
 const profiles = ref<PromptProfile[]>([])
 const promptProfileId = ref<number | null>(null)
 const informationId = ref<number | null>(readPositiveNumber(route.query.informationId))
-const windowDays = ref(3)
-const maxCandidates = ref(20)
-const maxEstimatedTokens = ref(75_000)
+const limits = ref<AnalysisPreviewLimits | null>(null)
+const windowDays = ref(0)
+const maxCandidates = ref(0)
+const maxEstimatedTokens = ref(0)
 const preview = ref<AnalysisPreview | null>(null)
 const analysis = ref<InformationAnalysis | null>(null)
 const loading = ref(true)
@@ -54,8 +56,16 @@ async function load(): Promise<void> {
   loading.value = true
   error.value = null
   try {
-    profiles.value = await listPromptProfiles()
+    const [profileList, configuredLimits] = await Promise.all([
+      listPromptProfiles(),
+      getAnalysisPreviewLimits(),
+    ])
+    profiles.value = profileList
+    limits.value = configuredLimits
     promptProfileId.value = executableProfiles.value[0]?.id ?? null
+    windowDays.value = configuredLimits.windowDays.defaultValue
+    maxCandidates.value = configuredLimits.maxCandidates.defaultValue
+    maxEstimatedTokens.value = configuredLimits.maxEstimatedTokens.defaultValue
   } catch (cause) {
     error.value = toApiClientError(cause).message
   } finally {
@@ -139,15 +149,15 @@ onMounted(load)
       title="正在加载可用提示词方案"
     />
     <PageState
-      v-else-if="error && profiles.length === 0"
+      v-else-if="error && (profiles.length === 0 || limits === null)"
       kind="error"
-      title="提示词方案加载失败"
+      title="分析配置加载失败"
       :description="error"
     >
       <ElButton type="primary" @click="load">重试</ElButton>
     </PageState>
 
-    <template v-else>
+    <template v-else-if="limits">
       <p v-if="error" class="ai-error" role="alert">{{ error }}</p>
       <PageState
         v-if="executableProfiles.length === 0"
@@ -175,18 +185,26 @@ onMounted(load)
             </label>
             <label class="ai-form-field">
               候选时间范围（天）
-              <ElInputNumber v-model="windowDays" :min="1" :max="14" />
+              <ElInputNumber
+                v-model="windowDays"
+                :min="limits.windowDays.minimum"
+                :max="limits.windowDays.maximum"
+              />
             </label>
             <label class="ai-form-field">
               最大候选数量
-              <ElInputNumber v-model="maxCandidates" :min="1" :max="50" />
+              <ElInputNumber
+                v-model="maxCandidates"
+                :min="limits.maxCandidates.minimum"
+                :max="limits.maxCandidates.maximum"
+              />
             </label>
             <label class="ai-form-field">
               预估 Token 预算
               <ElInputNumber
                 v-model="maxEstimatedTokens"
-                :min="1"
-                :max="200000"
+                :min="limits.maxEstimatedTokens.minimum"
+                :max="limits.maxEstimatedTokens.maximum"
               />
             </label>
           </div>
@@ -217,7 +235,7 @@ onMounted(load)
               </strong>
             </div>
             <div class="ai-metric">
-              <span class="ai-metric-label">已选择</span>
+              <span class="ai-metric-label">本批预计分析条数</span>
               <strong class="ai-metric-value">{{ preview.selectedCount }}</strong>
             </div>
             <div class="ai-metric">

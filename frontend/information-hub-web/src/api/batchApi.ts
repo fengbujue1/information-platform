@@ -5,8 +5,17 @@ import type {
   AnalysisBatch,
   AnalysisBatchProgress,
   AnalysisPreview,
+  AnalysisPreviewLimits,
   CreateAnalysisPreviewRequest,
 } from '@/types/batch'
+
+export function getAnalysisPreviewLimits(): Promise<AnalysisPreviewLimits> {
+  return unwrapResponse(
+    httpClient.get<ApiResponse<AnalysisPreviewLimits>>(
+      '/v1/ai/analysis-batches/limits',
+    ),
+  )
+}
 
 export async function createAnalysisPreview(
   request: CreateAnalysisPreviewRequest,

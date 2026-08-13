@@ -11,12 +11,14 @@
 enabled = false
 localTime = 02:00:00
 timezone = user's IANA timezone
-windowDays = 3       (hard max 14)
-maxCandidates = 20  (hard max 50)
-maxEstimatedTokens = 75000 (hard max 200000)
+windowDays = configured default 3       (configured max 14)
+maxCandidates = configured default 20  (configured max 50)
+maxEstimatedTokens = configured default 75000 (configured max 200000)
 ```
 
-disabled 时 `nextRunAt=NULL`。
+disabled 时 `nextRunAt=NULL`。TASK-047 起，三个默认值和三个最大值均由
+`information-hub.ai.preview` 提供，与 Manual Preview 共用同一限制策略；省略新配置时保持
+上述数值，修改后重启生效。
 
 ## 2. 配置
 
@@ -100,6 +102,10 @@ UNIQUE(scheduleId, scheduledFor)
 ## 9. No Candidate / Invalid Config
 
 无候选、Profile 停用、无 Active Version 或 Definition 不可用时不得调用 Provider，使用 NOOP/FAILED Batch 表达稳定原因并推进日程。
+
+部署时降低平台上限不会回写已有 Schedule。超过当前限制的 Schedule 继续可查询，但不能
+成功 Preview 或重新启用；Dispatcher 将其作为 `INVALID_CONFIGURATION` 安全跳过、推进下一
+计划点，且不创建可执行 Batch、不调用 Provider。用户将三个值修改到当前范围并保存后可恢复。
 
 ## 10. API 与 UI
 

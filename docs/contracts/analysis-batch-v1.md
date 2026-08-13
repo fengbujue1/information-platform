@@ -20,9 +20,9 @@ Manual 创建 Batch 前必须 Preview。输入：
 
 ```text
 promptProfileId
-windowDays            default 3, hard max 14
-maxCandidates         default 20, hard max 50
-maxEstimatedTokens    default 75000, hard max 200000
+windowDays            configured default 3, configured max 14
+maxCandidates         configured default 20, configured max 50
+maxEstimatedTokens    configured default 75000, configured max 200000
 ```
 
 Preview：
@@ -40,8 +40,14 @@ Preview：
 已实现接口：
 
 ```text
+GET  /api/v1/ai/analysis-batches/limits
 POST /api/v1/ai/analysis-batches/preview
 ```
+
+TASK-047 起，服务端 `information-hub.ai.preview` 配置是 Manual 与 Schedule 的唯一限制来源。
+只读 `limits` 接口要求 Session，返回三组 `defaultValue / minimum / maximum`，不返回 HMAC
+Secret 或 Provider 配置。六个配置项省略时仍使用上述默认值和最大值，修改后重启生效；
+服务启动时拒绝非正数、默认值超过最大值或超过技术安全边界的配置。
 
 请求体使用上述四个字段，响应实现第 3 节汇总字段并显式返回 `pendingCount`。
 候选版本、Estimate、顺序和决策指纹冻结在签名 Token 中，Confirm 无需信任客户端
@@ -71,7 +77,9 @@ previewToken
 
 `previewToken` 是 10 分钟有效的 HMAC 签名载荷，包含 Owner、Profile/Version、Definition、绝对窗口、limits、有序候选/Estimate 指纹和随机 `manualRequestId`。
 
-Confirm 必须重新计算相同窗口和指纹。过期、篡改或候选漂移返回稳定冲突错误，不创建 Batch。`(userId, manualRequestId)` 保证重复 Confirm 返回同一 Batch。
+Confirm 必须重新计算相同窗口和指纹。过期、篡改、候选漂移或 Token 冻结限制已超过当前
+平台上限时返回稳定冲突错误，不创建 Batch。`(userId, manualRequestId)` 保证重复 Confirm
+返回同一 Batch。配置变化不回写已经创建的历史 Batch。
 
 TASK-029 冻结接口：
 

@@ -2,11 +2,15 @@ package com.informationplatform.hub.analysis.preview.api;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.informationplatform.hub.analysis.preview.application.AnalysisPreviewConfigurationException;
+import com.informationplatform.hub.analysis.preview.application.AnalysisPreviewLimitPolicy;
+import com.informationplatform.hub.analysis.preview.application.AnalysisPreviewLimitPolicy.AnalysisLimitRange;
+import com.informationplatform.hub.analysis.preview.application.AnalysisPreviewLimitPolicy.AnalysisPreviewLimitMetadata;
 import com.informationplatform.hub.analysis.preview.application.AnalysisPreviewRequestException;
 import com.informationplatform.hub.analysis.preview.application.AnalysisPreviewService;
 import com.informationplatform.hub.analysis.preview.domain.AnalysisPreview;
@@ -52,6 +56,9 @@ class AnalysisPreviewControllerTest {
     private AnalysisPreviewService previewService;
 
     @MockitoBean
+    private AnalysisPreviewLimitPolicy limitPolicy;
+
+    @MockitoBean
     private IdentityUserDetailsService identityUserDetailsService;
 
     @Test
@@ -60,6 +67,31 @@ class AnalysisPreviewControllerTest {
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody()))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("AUTHENTICATION_REQUIRED"));
+    }
+
+    @Test
+    @WithMockUser
+    void returnsAuthenticatedNonSensitiveLimitsWithoutCsrf() throws Exception {
+        when(limitPolicy.metadata()).thenReturn(new AnalysisPreviewLimitMetadata(
+                new AnalysisLimitRange(3, 1, 30),
+                new AnalysisLimitRange(20, 1, 100),
+                new AnalysisLimitRange(75_000, 1, 500_000)));
+
+        mockMvc.perform(get("/api/v1/ai/analysis-batches/limits"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("ANALYSIS_PREVIEW_LIMITS_RETRIEVED"))
+                .andExpect(jsonPath("$.data.windowDays.defaultValue").value(3))
+                .andExpect(jsonPath("$.data.windowDays.maximum").value(30))
+                .andExpect(jsonPath("$.data.maxCandidates.maximum").value(100))
+                .andExpect(jsonPath("$.data.maxEstimatedTokens.maximum").value(500000))
+                .andExpect(jsonPath("$.data.hmacSecret").doesNotExist());
+    }
+
+    @Test
+    void rejectsAnonymousLimits() throws Exception {
+        mockMvc.perform(get("/api/v1/ai/analysis-batches/limits"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("AUTHENTICATION_REQUIRED"));
     }

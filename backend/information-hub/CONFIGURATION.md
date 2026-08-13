@@ -157,12 +157,20 @@ Spring Duration 可写成 `200ms`、`3s`、`5m`、`1h`。值必须为正数；�
 | YAML 配置键 | 环境变量 | 含义、格式与默认值 | 值的来源 |
 | --- | --- | --- | --- |
 | `information-hub.ai.preview.hmac-secret` | `INFORMATION_HUB_PREVIEW_HMAC_SECRET` | Preview Token 的 HmacSHA256 秘密；敏感，至少 32 个 UTF-8 字节 | 使用安全随机数自行生成；不是 Provider API Key，也不从 AI 平台获取 |
+| `information-hub.ai.preview.default-window-days` | `INFORMATION_HUB_AI_PREVIEW_DEFAULT_WINDOW_DAYS` | Manual/Schedule 新表单的候选窗口默认值；正整数，默认 `3` | 部署管理员按常用候选时间范围设置，不得超过对应最大值 |
+| `information-hub.ai.preview.max-window-days` | `INFORMATION_HUB_AI_PREVIEW_MAX_WINDOW_DAYS` | 候选窗口平台上限；正整数，默认 `14`，技术安全上限 `3650` | 部署管理员按数据量和查询成本评估 |
+| `information-hub.ai.preview.default-max-candidates` | `INFORMATION_HUB_AI_PREVIEW_DEFAULT_MAX_CANDIDATES` | Manual/Schedule 新表单的候选数量默认值；正整数，默认 `20` | 部署管理员按常用批次大小设置，不得超过对应最大值 |
+| `information-hub.ai.preview.max-candidates` | `INFORMATION_HUB_AI_PREVIEW_MAX_CANDIDATES` | 单批候选数量平台上限；正整数，默认 `50`，技术安全上限 `10000` | 部署管理员结合数据库写入、Worker 吞吐和 Provider 费用评估 |
+| `information-hub.ai.preview.default-max-estimated-tokens` | `INFORMATION_HUB_AI_PREVIEW_DEFAULT_MAX_ESTIMATED_TOKENS` | Manual/Schedule 新表单的预估 Token 预算默认值；正整数，默认 `75000` | 部署管理员按常用预算设置，不得超过对应最大值 |
+| `information-hub.ai.preview.max-estimated-tokens` | `INFORMATION_HUB_AI_PREVIEW_MAX_ESTIMATED_TOKENS` | 单批预估 Token 预算平台上限；正整数，默认 `200000`，技术安全上限 `1000000000` | 部署管理员结合 Provider 成本和 Worker 运行时间评估 |
 | `information-hub.ai.provider.enabled` | `INFORMATION_HUB_AI_ENABLED` | 是否允许调用真实 Provider；默认 `false` | 部署管理员在其余 Provider 项完整后显式开启 |
 | `information-hub.ai.provider.base-url` | `INFORMATION_HUB_AI_BASE_URL` | OpenAI-compatible API 基础地址；通常包含 `/v1`，后端追加 `/chat/completions` | 所选 Provider 的官方 OpenAI-compatible API 文档；不要使用网页控制台地址 |
 | `information-hub.ai.provider.api-key` | `INFORMATION_HUB_AI_API_KEY` | Provider API Key；敏感，无默认值 | Provider 官方控制台的 API Key/凭据页面创建，只放服务端环境变量或 Secret Manager |
 | `information-hub.ai.provider.model` | `INFORMATION_HUB_AI_MODEL` | Chat Completions 使用的模型 ID | Provider 官方模型列表；填写 API 模型 ID，不是营销展示名称 |
 | `information-hub.ai.provider.timeout` | `INFORMATION_HUB_AI_TIMEOUT` | HTTP 连接和读取超时；Spring Duration，必须大于 0，默认 `2m` | 项目默认；按 Provider 延迟和部署网络调整 |
 | `information-hub.ai.provider.max-output-tokens` | `INFORMATION_HUB_AI_MAX_OUTPUT_TOKENS` | 单次最大输出 Token；整数 `1..5000`，默认 `5000` | Phase 3 Definition/Contract 冻结上限，不应按模型最大上下文随意扩大 |
+
+上述六个 Preview 限制由 Manual 与 Schedule 共用，修改后必须重启 Information Hub。所有值必须为正数，默认值不得超过对应最大值；不满足约束时服务会在启动期明确失败。浏览器只读取限制数值，不会读取 HMAC Secret 或 Provider 配置。
 
 Base URL 示例形状：
 

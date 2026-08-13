@@ -27,6 +27,7 @@ import com.informationplatform.hub.analysis.processing.domain.AnalysisTokenEstim
 import com.informationplatform.hub.analysis.processing.domain.AssembledAnalysisPrompt;
 import com.informationplatform.hub.analysis.preview.domain.AnalysisPreview;
 import com.informationplatform.hub.analysis.preview.domain.PreviewTokenPayload;
+import com.informationplatform.hub.analysis.preview.infrastructure.config.AnalysisPreviewProperties;
 import com.informationplatform.hub.analysis.provider.domain.AiProviderMessage;
 import com.informationplatform.hub.analysis.provider.domain.AiProviderMessageRole;
 import com.informationplatform.hub.analysis.provider.domain.AiProviderRequest;
@@ -101,8 +102,8 @@ class AnalysisPreviewServiceTest {
 
         AnalysisPreviewService service = new AnalysisPreviewService(
                 users, profiles, versions, definitions, resolvers, assembler, estimator,
-                fingerprints, tokens, Clock.fixed(now, ZoneOffset.UTC));
-        AnalysisPreview preview = service.preview(11, 3, 2, 1500L);
+                fingerprints, tokens, limitPolicy(100), Clock.fixed(now, ZoneOffset.UTC));
+        AnalysisPreview preview = service.preview(11, 3, 80, 1500L);
 
         assertThat(preview.windowEnd()).isEqualTo(Instant.parse("2026-08-05T06:00:00.123Z"));
         assertThat(preview.windowStart()).isEqualTo(Instant.parse("2026-08-02T06:00:00.123Z"));
@@ -120,12 +121,46 @@ class AnalysisPreviewServiceTest {
         org.mockito.Mockito.verify(resolver).resolve(requestCaptor.capture());
         assertThat(requestCaptor.getValue().windowStart())
                 .isEqualTo(LocalDateTime.ofInstant(preview.windowStart(), ZoneOffset.UTC));
+        assertThat(requestCaptor.getValue().maxCandidates()).isEqualTo(80);
         ArgumentCaptor<PreviewTokenPayload> tokenCaptor =
                 ArgumentCaptor.forClass(PreviewTokenPayload.class);
         org.mockito.Mockito.verify(tokens).issue(tokenCaptor.capture());
         assertThat(tokenCaptor.getValue().manualRequestId()).isNotBlank();
         assertThat(tokenCaptor.getValue().expiresAt())
                 .isEqualTo(preview.windowEnd().plusSeconds(600));
+    }
+
+    @Test
+    void rejectsFrozenTokenThatExceedsCurrentConfiguredLimits() {
+        CurrentUserProvider users = mock(CurrentUserProvider.class);
+        when(users.requireCurrentUser())
+                .thenReturn(new AuthenticatedUser(7, "owner", "Owner", "Asia/Shanghai"));
+        CandidateResolverRegistry resolvers = mock(CandidateResolverRegistry.class);
+        AnalysisPreviewProperties properties = new AnalysisPreviewProperties();
+        properties.setMaxCandidates(40);
+        properties.afterPropertiesSet();
+        AnalysisPreviewService service = new AnalysisPreviewService(
+                users,
+                mock(AiPromptProfileMapper.class),
+                mock(AiPromptVersionMapper.class),
+                mock(AnalysisDefinitionRegistry.class),
+                resolvers,
+                mock(AnalysisPromptAssembler.class),
+                mock(AnalysisTokenEstimator.class),
+                mock(CandidateFingerprintCalculator.class),
+                mock(PreviewTokenService.class),
+                new AnalysisPreviewLimitPolicy(properties),
+                Clock.systemUTC());
+        PreviewTokenPayload payload = mock(PreviewTokenPayload.class);
+        when(payload.userId()).thenReturn(7L);
+        when(payload.windowDays()).thenReturn(3);
+        when(payload.maxCandidates()).thenReturn(50);
+        when(payload.maxEstimatedTokens()).thenReturn(75_000L);
+
+        assertThatThrownBy(() -> service.recompute(payload))
+                .isInstanceOf(AnalysisPreviewConflictException.class)
+                .hasMessage("Preview limits no longer satisfy the current platform policy");
+        verifyNoInteractions(resolvers);
     }
 
     @Test
@@ -152,12 +187,24 @@ class AnalysisPreviewServiceTest {
                 estimator,
                 fingerprints,
                 tokens,
+                limitPolicy(),
                 Clock.systemUTC());
 
         assertThatThrownBy(() -> service.preview(99, 3, 20, 75_000L))
                 .isInstanceOf(AnalysisPreviewNotFoundException.class)
                 .hasMessage("Prompt Profile does not exist");
         verifyNoInteractions(versions, definitions, resolvers, assembler, estimator, tokens);
+    }
+
+    private AnalysisPreviewLimitPolicy limitPolicy() {
+        return limitPolicy(50);
+    }
+
+    private AnalysisPreviewLimitPolicy limitPolicy(int maxCandidates) {
+        AnalysisPreviewProperties properties = new AnalysisPreviewProperties();
+        properties.setMaxCandidates(maxCandidates);
+        properties.afterPropertiesSet();
+        return new AnalysisPreviewLimitPolicy(properties);
     }
 
     private AiPromptProfilePo profile() {

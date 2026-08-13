@@ -15,6 +15,19 @@ class BrowserApiErrorMessagesTest {
     }
 
     @Test
+    void returnsActionableChineseForConfiguredPreviewLimits() {
+        assertEquals(
+                "候选时间范围超出当前平台允许范围",
+                BrowserApiErrorMessages.message("PREVIEW_WINDOW_DAYS_INVALID"));
+        assertEquals(
+                "最大候选数量超出当前平台允许范围",
+                BrowserApiErrorMessages.message("PREVIEW_MAX_CANDIDATES_INVALID"));
+        assertEquals(
+                "预估 Token 预算超出当前平台允许范围",
+                BrowserApiErrorMessages.message("PREVIEW_MAX_ESTIMATED_TOKENS_INVALID"));
+    }
+
+    @Test
     void returnsSafeChineseFallbackForUnknownCode() {
         assertEquals("请求失败，请稍后重试", BrowserApiErrorMessages.message("UNKNOWN_CODE"));
     }

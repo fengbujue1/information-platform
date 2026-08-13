@@ -1,6 +1,7 @@
 package com.informationplatform.hub.analysis.schedule.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -11,7 +12,10 @@ import com.informationplatform.hub.analysis.infrastructure.persistence.mapper.Ai
 import com.informationplatform.hub.analysis.infrastructure.persistence.mapper.AiPromptProfileMapper;
 import com.informationplatform.hub.analysis.infrastructure.persistence.po.AiAnalysisSchedulePo;
 import com.informationplatform.hub.analysis.infrastructure.persistence.po.AiPromptProfilePo;
+import com.informationplatform.hub.analysis.preview.application.AnalysisPreviewLimitPolicy;
+import com.informationplatform.hub.analysis.preview.application.AnalysisPreviewRequestException;
 import com.informationplatform.hub.analysis.preview.application.AnalysisPreviewService;
+import com.informationplatform.hub.analysis.preview.infrastructure.config.AnalysisPreviewProperties;
 import com.informationplatform.hub.analysis.preview.domain.AnalysisPreview;
 import com.informationplatform.hub.analysis.schedule.domain.AnalysisScheduleCommand;
 import com.informationplatform.hub.analysis.schedule.domain.AnalysisScheduleTimeCalculator;
@@ -54,6 +58,27 @@ class AnalysisScheduleServiceTest {
     }
 
     @Test
+    void createsScheduleAboveLegacyCandidateCapWhenConfigured() {
+        Fixture fixture = fixture(100);
+        when(fixture.schedules.selectOwnedById(31, 7))
+                .thenAnswer(invocation -> fixture.inserted);
+
+        AnalysisScheduleView view = fixture.service.create(
+                new AnalysisScheduleCommand(
+                        "扩大批次",
+                        11,
+                        null,
+                        null,
+                        3,
+                        80,
+                        300_000L),
+                false);
+
+        assertThat(view.maxCandidates()).isEqualTo(80);
+        assertThat(view.maxEstimatedTokens()).isEqualTo(300_000L);
+    }
+
+    @Test
     void enablingCalculatesStrictlyFutureUtcRun() {
         Fixture fixture = fixture();
         AiAnalysisSchedulePo schedule = fixture.inserted;
@@ -83,6 +108,25 @@ class AnalysisScheduleServiceTest {
     }
 
     @Test
+    void rejectsReEnablingScheduleThatExceedsCurrentLimits() {
+        Fixture fixture = fixture();
+        AiAnalysisSchedulePo schedule = fixture.inserted;
+        schedule.setId(31L);
+        schedule.setUserId(7L);
+        schedule.setPromptProfileId(11L);
+        schedule.setEnabled(false);
+        schedule.setLocalTime(LocalTime.of(2, 0));
+        schedule.setTimezone("Asia/Shanghai");
+        schedule.setWindowDays(3);
+        schedule.setMaxCandidates(51);
+        schedule.setMaxEstimatedTokens(75_000L);
+        when(fixture.schedules.selectOwnedByIdForUpdate(31, 7)).thenReturn(schedule);
+
+        assertThatThrownBy(() -> fixture.service.updateStatus(31, true))
+                .isInstanceOf(AnalysisPreviewRequestException.class);
+    }
+
+    @Test
     void currentConfigPreviewReusesExistingPreviewWithoutCreatingScheduleRun() {
         Fixture fixture = fixture();
         AiAnalysisSchedulePo schedule = fixture.inserted;
@@ -102,11 +146,21 @@ class AnalysisScheduleServiceTest {
     }
 
     private Fixture fixture() {
+        return fixture(50);
+    }
+
+    private Fixture fixture(int maxCandidates) {
         CurrentUserProvider users = mock(CurrentUserProvider.class);
         AiAnalysisScheduleMapper schedules = mock(AiAnalysisScheduleMapper.class);
         AiPromptProfileMapper profiles = mock(AiPromptProfileMapper.class);
         AiAnalysisBatchMapper batches = mock(AiAnalysisBatchMapper.class);
         AnalysisPreviewService previews = mock(AnalysisPreviewService.class);
+        AnalysisPreviewProperties previewProperties = new AnalysisPreviewProperties();
+        previewProperties.setMaxCandidates(maxCandidates);
+        previewProperties.setMaxEstimatedTokens(500_000);
+        previewProperties.afterPropertiesSet();
+        AnalysisPreviewLimitPolicy limitPolicy =
+                new AnalysisPreviewLimitPolicy(previewProperties);
         when(users.requireCurrentUser()).thenReturn(
                 new AuthenticatedUser(7, "owner", "Owner", "Asia/Shanghai"));
         AiPromptProfilePo profile = new AiPromptProfilePo();
@@ -140,6 +194,7 @@ class AnalysisScheduleServiceTest {
                 profiles,
                 batches,
                 previews,
+                limitPolicy,
                 new AnalysisScheduleTimeCalculator(),
                 clock);
         return new Fixture(schedules, previews, inserted, service);

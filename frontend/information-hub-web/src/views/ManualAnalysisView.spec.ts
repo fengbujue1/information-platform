@@ -7,6 +7,7 @@ import ManualAnalysisView from '@/views/ManualAnalysisView.vue'
 const listProfilesMock = vi.hoisted(() => vi.fn())
 const previewMock = vi.hoisted(() => vi.fn())
 const confirmMock = vi.hoisted(() => vi.fn())
+const limitsMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@/api/promptApi', () => ({
   listPromptProfiles: listProfilesMock,
@@ -15,6 +16,7 @@ vi.mock('@/api/promptApi', () => ({
 vi.mock('@/api/batchApi', () => ({
   createAnalysisPreview: previewMock,
   confirmAnalysisBatch: confirmMock,
+  getAnalysisPreviewLimits: limitsMock,
 }))
 
 vi.mock('@/api/analysisApi', () => ({
@@ -26,6 +28,16 @@ describe('ManualAnalysisView', () => {
     listProfilesMock.mockReset()
     previewMock.mockReset()
     confirmMock.mockReset()
+    limitsMock.mockReset()
+    limitsMock.mockResolvedValue({
+      windowDays: { defaultValue: 5, minimum: 1, maximum: 30 },
+      maxCandidates: { defaultValue: 80, minimum: 1, maximum: 100 },
+      maxEstimatedTokens: {
+        defaultValue: 400_000,
+        minimum: 1,
+        maximum: 500_000,
+      },
+    })
     listProfilesMock.mockResolvedValue([
       {
         id: 11,
@@ -78,12 +90,14 @@ describe('ManualAnalysisView', () => {
 
     expect(previewMock).toHaveBeenCalledWith({
       promptProfileId: 11,
-      windowDays: 3,
-      maxCandidates: 20,
-      maxEstimatedTokens: 75_000,
+      windowDays: 5,
+      maxCandidates: 80,
+      maxEstimatedTokens: 400_000,
     })
     expect(wrapper.text()).toContain('预览不产生实际 Token')
     expect(wrapper.text()).toContain('3300')
+    expect(wrapper.text()).toContain('本批预计分析条数')
+    expect(wrapper.text()).not.toContain('已选择')
     expect(confirmMock).not.toHaveBeenCalled()
 
     const confirmButton = wrapper.findAll('button').find(

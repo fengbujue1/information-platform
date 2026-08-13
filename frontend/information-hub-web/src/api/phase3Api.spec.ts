@@ -8,6 +8,7 @@ import {
   createAnalysisPreview,
   getAnalysisBatch,
   getAnalysisBatchProgress,
+  getAnalysisPreviewLimits,
   listAnalysisBatches,
 } from '@/api/batchApi'
 import { httpClient } from '@/api/httpClient'
@@ -72,9 +73,22 @@ describe('Phase 3 API clients', () => {
   })
 
   it('uses CSRF for Preview and Confirm and supports Batch reads', async () => {
+    const limits = {
+      windowDays: { defaultValue: 3, minimum: 1, maximum: 14 },
+      maxCandidates: { defaultValue: 20, minimum: 1, maximum: 50 },
+      maxEstimatedTokens: {
+        defaultValue: 75_000,
+        minimum: 1,
+        maximum: 200_000,
+      },
+    }
     const preview = { previewToken: 'signed', selectedCount: 1 }
     const batch = { id: 41, status: 'PENDING' }
     const progress = { itemCount: 1, selectedCount: 1 }
+    mock.onGet('/v1/ai/analysis-batches/limits').reply(
+      200,
+      success('ANALYSIS_PREVIEW_LIMITS_RETRIEVED', limits),
+    )
     mock.onPost('/v1/ai/analysis-batches/preview').reply((config) => {
       expect(config.headers?.['X-CSRF-TOKEN']).toBe('phase3-csrf')
       return [200, success('ANALYSIS_PREVIEW_CREATED', preview)]
@@ -97,6 +111,7 @@ describe('Phase 3 API clients', () => {
       success('ANALYSIS_BATCH_PROGRESS_FOUND', progress),
     )
 
+    await expect(getAnalysisPreviewLimits()).resolves.toEqual(limits)
     await expect(createAnalysisPreview({
       promptProfileId: 11,
     })).resolves.toMatchObject({ previewToken: 'signed' })

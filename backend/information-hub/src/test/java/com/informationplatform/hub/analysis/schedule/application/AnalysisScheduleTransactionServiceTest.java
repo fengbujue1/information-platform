@@ -16,9 +16,11 @@ import com.informationplatform.hub.analysis.infrastructure.persistence.mapper.Ai
 import com.informationplatform.hub.analysis.infrastructure.persistence.mapper.AiAnalysisScheduleMapper;
 import com.informationplatform.hub.analysis.infrastructure.persistence.po.AiAnalysisBatchPo;
 import com.informationplatform.hub.analysis.infrastructure.persistence.po.AiAnalysisSchedulePo;
+import com.informationplatform.hub.analysis.preview.application.AnalysisPreviewLimitPolicy;
 import com.informationplatform.hub.analysis.preview.application.AnalysisPreviewService;
 import com.informationplatform.hub.analysis.preview.domain.AnalysisPreviewLimits;
 import com.informationplatform.hub.analysis.preview.domain.ResolvedAnalysisPreview;
+import com.informationplatform.hub.analysis.preview.infrastructure.config.AnalysisPreviewProperties;
 import com.informationplatform.hub.analysis.schedule.domain.AnalysisScheduleDispatchResult;
 import com.informationplatform.hub.analysis.schedule.domain.AnalysisScheduleTimeCalculator;
 import com.informationplatform.hub.analysis.schedule.infrastructure.config.AnalysisScheduleProperties;
@@ -93,6 +95,28 @@ class AnalysisScheduleTransactionServiceTest {
     }
 
     @Test
+    void safelySkipsScheduleThatExceedsCurrentLimits() {
+        Fixture fixture = fixture(LocalDateTime.of(2026, 8, 5, 12, 0));
+        fixture.schedule.setMaxCandidates(51);
+
+        AnalysisScheduleDispatchResult result =
+                fixture.service.dispatchNext(Instant.parse("2026-08-05T12:01:00Z"));
+
+        assertThat(result.outcome()).isEqualTo("INVALID_CONFIGURATION");
+        assertThat(result.batchId()).isNull();
+        verify(fixture.previews, never()).resolveScheduled(
+                anyLong(),
+                anyLong(),
+                any(Instant.class),
+                any(AnalysisPreviewLimits.class));
+        verify(fixture.batchTransactions, never()).createScheduled(
+                any(AiAnalysisSchedulePo.class),
+                any(LocalDateTime.class),
+                any(ResolvedAnalysisPreview.class),
+                nullable(String.class));
+    }
+
+    @Test
     void reusesExistingScheduledForWithoutResolvingCandidatesAgain() {
         Fixture fixture = fixture(LocalDateTime.of(2026, 8, 5, 12, 0));
         AiAnalysisBatchPo existing = new AiAnalysisBatchPo();
@@ -117,6 +141,10 @@ class AnalysisScheduleTransactionServiceTest {
         AiAnalysisScheduleMapper schedules = mock(AiAnalysisScheduleMapper.class);
         AiAnalysisBatchMapper batches = mock(AiAnalysisBatchMapper.class);
         AnalysisPreviewService previews = mock(AnalysisPreviewService.class);
+        AnalysisPreviewProperties previewProperties = new AnalysisPreviewProperties();
+        previewProperties.afterPropertiesSet();
+        AnalysisPreviewLimitPolicy limitPolicy =
+                new AnalysisPreviewLimitPolicy(previewProperties);
         AnalysisBatchTransactionService batchTransactions =
                 mock(AnalysisBatchTransactionService.class);
         AiAnalysisSchedulePo schedule = schedule(scheduledFor);
@@ -143,6 +171,7 @@ class AnalysisScheduleTransactionServiceTest {
                 schedules,
                 batches,
                 previews,
+                limitPolicy,
                 batchTransactions,
                 new AnalysisScheduleTimeCalculator(),
                 properties);

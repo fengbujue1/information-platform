@@ -133,9 +133,9 @@ ai_model_invocation
 
 ## 当前任务
 
-`TASK-046`：统一全局操作反馈与公共 API 中文错误消息已于 2026-08-13 完成人工验收，状态为 `DONE`。
+`TASK-047`：Analysis 批次限制配置化与预览结果文案澄清已完成人工验收并收尾，状态为 `DONE`。
 
-当前没有处于 `IN_PROGRESS` 的 Active TASK。下一个任务编号为 `TASK-047`，任务状态与编号以 [Phase 5 Task Index](PHASE5_TASK_INDEX.md) 为准。
+当前没有 Active TASK；下一个任务编号为 `TASK-048`。任务状态与编号以 [Phase 5 Task Index](PHASE5_TASK_INDEX.md) 为准。
 
 `TASK-033`～`TASK-044`（含数据模型通用化纠偏 `TASK-034A`）均已完成，Phase 4 保持已完成和已归档状态。
 
@@ -184,8 +184,9 @@ Phase 5：Product Refinement & Stabilization 已进入进行中状态，采用 R
 
 - `TASK-045` 已完成 Phase 3 AI 页面域及推荐画像复用术语的中文化，自动化测试、Fixture Browser E2E 与人工验证均已通过，状态为 `DONE`；
 - `TASK-046` 已统一浏览器操作反馈与公共 API 中文错误消息，自动化验证与人工验收均已通过，状态为 `DONE`；
-- 当前没有处于 `IN_PROGRESS` 的 Active TASK；
-- 下一个任务编号为 `TASK-047`；
+- `TASK-047` 已将 Manual / Schedule 的候选窗口、候选数量和预估 Token 预算改为统一服务端配置，并提供认证只读限制 API；Web 已使用动态默认值与上限，超限旧 Schedule 会明确提示并阻止新执行，自动化检查与人工验收均已完成，状态为 `DONE`；
+- 当前没有 Active TASK；
+- 下一个任务编号为 `TASK-048`；
 - 不预先创建空的后续 TASK 或完整任务列表；
 - 仅针对已确认的产品完善、缺陷、联调、稳定性、测试、CI、安全、可靠性或生产准备问题创建任务；
 - Phase 4 的完成结论与冻结边界保持不变。
@@ -196,4 +197,4 @@ CI 可作为 Phase 5 的滚动改进方向，但仅在确认具体问题后创�
 
 ## 下一步
 
-从真实使用、测试、联调或运行反馈中确认下一个独立问题；满足任务标准后，从 `TASK-047` 开始按 Phase 5 Task Model 创建并更新 Task Index。在此之前不创建占位任务。
+等待确认下一个边界清晰、可独立验收的 Phase 5 问题；新的独立问题从 `TASK-048` 开始，未确认前不创建占位任务。

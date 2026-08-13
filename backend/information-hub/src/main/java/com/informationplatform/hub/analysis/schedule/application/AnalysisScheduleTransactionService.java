@@ -5,6 +5,7 @@ import com.informationplatform.hub.analysis.infrastructure.persistence.mapper.Ai
 import com.informationplatform.hub.analysis.infrastructure.persistence.mapper.AiAnalysisScheduleMapper;
 import com.informationplatform.hub.analysis.infrastructure.persistence.po.AiAnalysisBatchPo;
 import com.informationplatform.hub.analysis.infrastructure.persistence.po.AiAnalysisSchedulePo;
+import com.informationplatform.hub.analysis.preview.application.AnalysisPreviewLimitPolicy;
 import com.informationplatform.hub.analysis.preview.application.AnalysisPreviewNotFoundException;
 import com.informationplatform.hub.analysis.preview.application.AnalysisPreviewRequestException;
 import com.informationplatform.hub.analysis.preview.application.AnalysisPreviewService;
@@ -31,6 +32,8 @@ public class AnalysisScheduleTransactionService {
     private final AiAnalysisBatchMapper batchMapper;
     /** 复用 Candidate Resolver、Estimate 与 Budget Guard。 */
     private final AnalysisPreviewService previewService;
+    /** 调度执行前按当前平台上限复核已有配置。 */
+    private final AnalysisPreviewLimitPolicy limitPolicy;
     /** 复用 Manual Batch 的冻结写入和 Worker 数据结构。 */
     private final AnalysisBatchTransactionService batchTransactionService;
     /** IANA 时区与 DST 计划点计算。 */
@@ -42,12 +45,14 @@ public class AnalysisScheduleTransactionService {
             AiAnalysisScheduleMapper scheduleMapper,
             AiAnalysisBatchMapper batchMapper,
             AnalysisPreviewService previewService,
+            AnalysisPreviewLimitPolicy limitPolicy,
             AnalysisBatchTransactionService batchTransactionService,
             AnalysisScheduleTimeCalculator timeCalculator,
             AnalysisScheduleProperties properties) {
         this.scheduleMapper = scheduleMapper;
         this.batchMapper = batchMapper;
         this.previewService = previewService;
+        this.limitPolicy = limitPolicy;
         this.batchTransactionService = batchTransactionService;
         this.timeCalculator = timeCalculator;
         this.properties = properties;
@@ -83,7 +88,7 @@ public class AnalysisScheduleTransactionService {
 
         ResolvedAnalysisPreview resolved;
         try {
-            AnalysisPreviewLimits limits = AnalysisPreviewLimits.resolve(
+            AnalysisPreviewLimits limits = limitPolicy.resolve(
                     schedule.getWindowDays(),
                     schedule.getMaxCandidates(),
                     schedule.getMaxEstimatedTokens());

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import {
   ElButton,
   ElCard,
@@ -12,6 +12,7 @@ import {
 } from 'element-plus'
 
 import { toApiClientError } from '@/api/apiError'
+import { getAnalysisPreviewLimits } from '@/api/batchApi'
 import { listPromptProfiles } from '@/api/promptApi'
 import {
   createAnalysisSchedule,
@@ -21,7 +22,7 @@ import {
   updateAnalysisScheduleStatus,
 } from '@/api/scheduleApi'
 import PageState from '@/components/common/PageState.vue'
-import type { AnalysisPreview } from '@/types/batch'
+import type { AnalysisPreview, AnalysisPreviewLimits } from '@/types/batch'
 import type { PromptProfile } from '@/types/prompt'
 import type {
   AnalysisSchedule,
@@ -37,6 +38,7 @@ import { showError, showSuccess, showWarning } from '@/utils/userFeedback'
 
 const schedules = ref<AnalysisSchedule[]>([])
 const profiles = ref<PromptProfile[]>([])
+const limits = ref<AnalysisPreviewLimits | null>(null)
 const editingId = ref<number | null>(null)
 const form = ref<SaveAnalysisScheduleRequest>(defaultForm())
 const preview = ref<AnalysisPreview | null>(null)
@@ -51,26 +53,66 @@ function defaultForm(): SaveAnalysisScheduleRequest {
     localTime: '02:00:00',
     timezone:
       authState.currentUser.value?.timezone || 'Asia/Shanghai',
-    windowDays: 3,
-    maxCandidates: 20,
-    maxEstimatedTokens: 75_000,
+    windowDays: limits.value?.windowDays.defaultValue ?? 0,
+    maxCandidates: limits.value?.maxCandidates.defaultValue ?? 0,
+    maxEstimatedTokens:
+      limits.value?.maxEstimatedTokens.defaultValue ?? 0,
     enabled: false,
   }
+}
+
+function limitMessage(configuration: {
+  windowDays?: number
+  maxCandidates?: number
+  maxEstimatedTokens?: number
+}): string | null {
+  const configured = limits.value
+  if (!configured) return '分析限制尚未加载'
+  if (
+    typeof configuration.windowDays !== 'number' ||
+    configuration.windowDays < configured.windowDays.minimum ||
+    configuration.windowDays > configured.windowDays.maximum
+  ) {
+    return `候选时间范围需在 ${configured.windowDays.minimum} 到 ${configured.windowDays.maximum} 天之间`
+  }
+  if (
+    typeof configuration.maxCandidates !== 'number' ||
+    configuration.maxCandidates < configured.maxCandidates.minimum ||
+    configuration.maxCandidates > configured.maxCandidates.maximum
+  ) {
+    return `最大候选数量需在 ${configured.maxCandidates.minimum} 到 ${configured.maxCandidates.maximum} 条之间`
+  }
+  if (
+    typeof configuration.maxEstimatedTokens !== 'number' ||
+    configuration.maxEstimatedTokens <
+      configured.maxEstimatedTokens.minimum ||
+    configuration.maxEstimatedTokens >
+      configured.maxEstimatedTokens.maximum
+  ) {
+    return `预估 Token 预算需在 ${configured.maxEstimatedTokens.minimum} 到 ${configured.maxEstimatedTokens.maximum} 之间`
+  }
+  return null
+}
+
+const formLimitMessage = computed(() => limitMessage(form.value))
+
+function isScheduleWithinLimits(schedule: AnalysisSchedule): boolean {
+  return limitMessage(schedule) === null
 }
 
 async function load(): Promise<void> {
   loading.value = true
   error.value = null
   try {
-    const [scheduleList, profileList] = await Promise.all([
+    const [scheduleList, profileList, configuredLimits] = await Promise.all([
       listAnalysisSchedules(),
       listPromptProfiles(),
+      getAnalysisPreviewLimits(),
     ])
     schedules.value = scheduleList
     profiles.value = profileList
-    if (!form.value.promptProfileId && profileList.length > 0) {
-      form.value.promptProfileId = profileList[0]!.id
-    }
+    limits.value = configuredLimits
+    if (editingId.value === null) resetForm()
   } catch (cause) {
     error.value = toApiClientError(cause).message
   } finally {
@@ -107,6 +149,10 @@ async function save(): Promise<void> {
     showWarning('请输入名称并选择提示词方案')
     return
   }
+  if (formLimitMessage.value) {
+    showWarning(formLimitMessage.value)
+    return
+  }
   saving.value = true
   error.value = null
   try {
@@ -138,6 +184,11 @@ async function save(): Promise<void> {
 }
 
 async function toggle(schedule: AnalysisSchedule, enabled: boolean): Promise<void> {
+  if (enabled && !isScheduleWithinLimits(schedule)) {
+    schedule.enabled = false
+    showWarning(`${limitMessage(schedule)}，请先编辑并保存为当前平台允许的配置`)
+    return
+  }
   saving.value = true
   error.value = null
   try {
@@ -153,6 +204,11 @@ async function toggle(schedule: AnalysisSchedule, enabled: boolean): Promise<voi
 }
 
 async function testPreview(scheduleId: number): Promise<void> {
+  const schedule = schedules.value.find((item) => item.id === scheduleId)
+  if (schedule && !isScheduleWithinLimits(schedule)) {
+    showWarning(`${limitMessage(schedule)}，请先编辑并保存为当前平台允许的配置`)
+    return
+  }
   saving.value = true
   error.value = null
   preview.value = null
@@ -186,7 +242,7 @@ onMounted(load)
       title="正在加载定时分析"
     />
     <PageState
-      v-else-if="error && schedules.length === 0"
+      v-else-if="error && (schedules.length === 0 || limits === null)"
       kind="error"
       title="定时分析加载失败"
       :description="error"
@@ -194,7 +250,7 @@ onMounted(load)
       <ElButton type="primary" @click="load">重试</ElButton>
     </PageState>
 
-    <template v-else>
+    <template v-else-if="limits">
       <p v-if="error" class="ai-error" role="alert">{{ error }}</p>
       <section class="ai-section">
         <h2>{{ editingId === null ? '新建定时分析' : `编辑定时分析 #${editingId}` }}</h2>
@@ -229,23 +285,39 @@ onMounted(load)
           </label>
           <label class="ai-form-field">
             候选时间范围（天）
-            <ElInputNumber v-model="form.windowDays" :min="1" :max="14" />
+            <ElInputNumber
+              v-model="form.windowDays"
+              :min="limits.windowDays.minimum"
+              :max="limits.windowDays.maximum"
+            />
           </label>
           <label class="ai-form-field">
             最大候选数量
-            <ElInputNumber v-model="form.maxCandidates" :min="1" :max="50" />
+            <ElInputNumber
+              v-model="form.maxCandidates"
+              :min="limits.maxCandidates.minimum"
+              :max="limits.maxCandidates.maximum"
+            />
           </label>
           <label class="ai-form-field">
             预估 Token 预算
             <ElInputNumber
               v-model="form.maxEstimatedTokens"
-              :min="1"
-              :max="200000"
+              :min="limits.maxEstimatedTokens.minimum"
+              :max="limits.maxEstimatedTokens.maximum"
             />
           </label>
         </div>
+        <p v-if="editingId !== null && formLimitMessage" class="ai-error" role="alert">
+          当前编辑配置不符合平台限制：{{ formLimitMessage }}。调整到允许范围后才能保存。
+        </p>
         <div class="ai-actions">
-          <ElButton type="primary" :loading="saving" @click="save">
+          <ElButton
+            type="primary"
+            :loading="saving"
+            :disabled="Boolean(formLimitMessage)"
+            @click="save"
+          >
             保存配置
           </ElButton>
           <span class="ai-muted">
@@ -271,6 +343,7 @@ onMounted(load)
                 <ElSwitch
                   v-model="schedule.enabled"
                   :loading="saving"
+                  :disabled="!schedule.enabled && !isScheduleWithinLimits(schedule)"
                   active-text="启用"
                   inactive-text="关闭"
                   @change="(value: string | number | boolean) => toggle(schedule, Boolean(value))"
@@ -282,16 +355,27 @@ onMounted(load)
               最近 {{ schedule.windowDays }} 天 ·
               最大 {{ schedule.maxCandidates }} 条
             </p>
+            <p
+              v-if="!isScheduleWithinLimits(schedule)"
+              class="ai-error"
+              role="alert"
+            >
+              当前配置已超过平台限制：{{ limitMessage(schedule) }}。请编辑并保存后再预览或启用。
+            </p>
             <p class="ai-muted">
               上次：{{ schedule.lastRun ? `${formatBatchStatus(schedule.lastRun.status)} / ${formatDateTime(schedule.lastRun.scheduledFor)}` : '—' }}
               · 下次：{{ formatDateTime(schedule.nextRunAt) }}
               · 原因：{{ formatReason(schedule.lastRun?.skipReason) }}
             </p>
-            <div class="ai-actions">
+            <p v-if="editingId !== null && formLimitMessage" class="ai-error" role="alert">
+          当前编辑配置不符合平台限制：{{ formLimitMessage }}。调整到允许范围后才能保存。
+        </p>
+        <div class="ai-actions">
               <ElButton link @click="edit(schedule)">编辑</ElButton>
               <ElButton
                 link
                 :loading="saving"
+                :disabled="!isScheduleWithinLimits(schedule)"
                 @click="testPreview(schedule.id)"
               >
                 预览当前配置
@@ -317,7 +401,7 @@ onMounted(load)
             </strong>
           </div>
           <div class="ai-metric">
-            <span class="ai-metric-label">已选择</span>
+            <span class="ai-metric-label">本批预计分析条数</span>
             <strong class="ai-metric-value">{{ preview.selectedCount }}</strong>
           </div>
           <div class="ai-metric">

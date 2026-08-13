@@ -67,6 +67,16 @@ interface AnalysisSchedule {
   } | null
 }
 
+interface AnalysisPreviewLimits {
+  windowDays: { defaultValue: number; minimum: number; maximum: number }
+  maxCandidates: { defaultValue: number; minimum: number; maximum: number }
+  maxEstimatedTokens: {
+    defaultValue: number
+    minimum: number
+    maximum: number
+  }
+}
+
 interface AnalysisUsage {
   allTime: {
     invocationCount: number
@@ -94,6 +104,19 @@ test('runs the complete Phase 3 flow through the real Web and backend', async ({
 
   const informationIds = await ingestJobs(page, runId, 3)
   await login(page)
+  const previewLimits = await apiGet<AnalysisPreviewLimits>(
+    page,
+    '/api/v1/ai/analysis-batches/limits',
+  )
+  expect(previewLimits).toEqual({
+    windowDays: { defaultValue: 3, minimum: 1, maximum: 30 },
+    maxCandidates: { defaultValue: 20, minimum: 1, maximum: 100 },
+    maxEstimatedTokens: {
+      defaultValue: 75_000,
+      minimum: 1,
+      maximum: 500_000,
+    },
+  })
   const baselineUsage = await apiGet<AnalysisUsage>(
     page,
     '/api/v1/ai/usage',

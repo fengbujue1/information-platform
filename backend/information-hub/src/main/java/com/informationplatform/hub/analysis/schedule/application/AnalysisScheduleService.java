@@ -7,6 +7,7 @@ import com.informationplatform.hub.analysis.infrastructure.persistence.mapper.Ai
 import com.informationplatform.hub.analysis.infrastructure.persistence.po.AiAnalysisBatchPo;
 import com.informationplatform.hub.analysis.infrastructure.persistence.po.AiAnalysisSchedulePo;
 import com.informationplatform.hub.analysis.infrastructure.persistence.po.AiPromptProfilePo;
+import com.informationplatform.hub.analysis.preview.application.AnalysisPreviewLimitPolicy;
 import com.informationplatform.hub.analysis.preview.application.AnalysisPreviewService;
 import com.informationplatform.hub.analysis.preview.domain.AnalysisPreview;
 import com.informationplatform.hub.analysis.preview.domain.AnalysisPreviewLimits;
@@ -49,6 +50,8 @@ public class AnalysisScheduleService {
     private final AiAnalysisBatchMapper batchMapper;
     /** Test Current Config 复用无 Provider Preview。 */
     private final AnalysisPreviewService previewService;
+    /** 保存、启用和预览共享的动态限制策略。 */
+    private final AnalysisPreviewLimitPolicy limitPolicy;
     /** IANA 时区和 DST 安全的未来计划点计算。 */
     private final AnalysisScheduleTimeCalculator timeCalculator;
     /** 可替换 UTC 时钟。 */
@@ -60,6 +63,7 @@ public class AnalysisScheduleService {
             AiPromptProfileMapper profileMapper,
             AiAnalysisBatchMapper batchMapper,
             AnalysisPreviewService previewService,
+            AnalysisPreviewLimitPolicy limitPolicy,
             AnalysisScheduleTimeCalculator timeCalculator,
             Clock clock) {
         this.currentUserProvider = currentUserProvider;
@@ -67,6 +71,7 @@ public class AnalysisScheduleService {
         this.profileMapper = profileMapper;
         this.batchMapper = batchMapper;
         this.previewService = previewService;
+        this.limitPolicy = limitPolicy;
         this.timeCalculator = timeCalculator;
         this.clock = clock;
     }
@@ -144,6 +149,11 @@ public class AnalysisScheduleService {
         AiAnalysisSchedulePo schedule = requireOwnedForUpdate(scheduleId, user.id());
         if (enabled) {
             requireExecutableProfile(schedule.getPromptProfileId(), user.id());
+            // 已有配置可能因部署时降低上限而失效，重新启用前必须按当前策略复核。
+            limitPolicy.resolve(
+                    schedule.getWindowDays(),
+                    schedule.getMaxCandidates(),
+                    schedule.getMaxEstimatedTokens());
             ZoneId zoneId = requireZoneId(schedule.getTimezone());
             schedule.setNextRunAt(nextRun(schedule.getLocalTime(), zoneId, clock.instant()));
         } else {
@@ -219,7 +229,7 @@ public class AnalysisScheduleService {
                 ? user.timezone()
                 : command.timezone().trim();
         ZoneId zoneId = requireZoneId(timezone);
-        AnalysisPreviewLimits limits = AnalysisPreviewLimits.resolve(
+        AnalysisPreviewLimits limits = limitPolicy.resolve(
                 command.windowDays(),
                 command.maxCandidates(),
                 command.maxEstimatedTokens());

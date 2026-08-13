@@ -60,6 +60,8 @@ public class AnalysisPreviewService {
     private final CandidateFingerprintCalculator fingerprintCalculator;
     /** 10 分钟 HMAC Token 签发器。 */
     private final PreviewTokenService tokenService;
+    /** 手动、确认和定时入口共享的动态限制策略。 */
+    private final AnalysisPreviewLimitPolicy limitPolicy;
     /** 固定绝对窗口与到期时间的 UTC Clock。 */
     private final Clock clock;
 
@@ -73,6 +75,7 @@ public class AnalysisPreviewService {
             AnalysisTokenEstimator tokenEstimator,
             CandidateFingerprintCalculator fingerprintCalculator,
             PreviewTokenService tokenService,
+            AnalysisPreviewLimitPolicy limitPolicy,
             Clock clock) {
         this.currentUserProvider = currentUserProvider;
         this.profileMapper = profileMapper;
@@ -83,6 +86,7 @@ public class AnalysisPreviewService {
         this.tokenEstimator = tokenEstimator;
         this.fingerprintCalculator = fingerprintCalculator;
         this.tokenService = tokenService;
+        this.limitPolicy = limitPolicy;
         this.clock = clock;
     }
 
@@ -101,7 +105,7 @@ public class AnalysisPreviewService {
             throw request("PREVIEW_PROFILE_ID_INVALID", "promptProfileId must be positive");
         }
         AnalysisPreviewLimits limits =
-                AnalysisPreviewLimits.resolve(windowDays, maxCandidates, maxEstimatedTokens);
+                limitPolicy.resolve(windowDays, maxCandidates, maxEstimatedTokens);
         // 只读取一次时钟并截断到 MySQL DATETIME(3) 精度，冻结绝对半开窗口。
         Instant issuedAt = clock.instant().truncatedTo(ChronoUnit.MILLIS);
         Instant windowEnd = issuedAt;
@@ -172,8 +176,18 @@ public class AnalysisPreviewService {
                     "PREVIEW_TOKEN_OWNER_MISMATCH",
                     "Preview Token does not belong to the current user");
         }
-        AnalysisPreviewLimits limits = AnalysisPreviewLimits.resolve(
-                payload.windowDays(), payload.maxCandidates(), payload.maxEstimatedTokens());
+        AnalysisPreviewLimits limits;
+        try {
+            // 部署时降低平台上限后，旧 Token 必须作为预览漂移拒绝，不能创建新批次。
+            limits = limitPolicy.resolve(
+                    payload.windowDays(),
+                    payload.maxCandidates(),
+                    payload.maxEstimatedTokens());
+        } catch (AnalysisPreviewRequestException exception) {
+            throw new AnalysisPreviewConflictException(
+                    "ANALYSIS_PREVIEW_DRIFTED",
+                    "Preview limits no longer satisfy the current platform policy");
+        }
         return resolve(
                 userId,
                 payload.promptProfileId(),

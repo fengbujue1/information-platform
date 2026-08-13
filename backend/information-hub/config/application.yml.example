@@ -59,6 +59,13 @@ information-hub:
     preview:
       # 自行生成至少 32 个 UTF-8 字节的随机秘密；它不是 Provider API Key。
       hmac-secret: CHANGE_ME_RANDOM_PREVIEW_HMAC_SECRET_AT_LEAST_32_BYTES
+      # 手动分析与定时分析共用；修改后重启服务生效。
+      default-window-days: 3
+      max-window-days: 14
+      default-max-candidates: 20
+      max-candidates: 50
+      default-max-estimated-tokens: 75000
+      max-estimated-tokens: 200000
 
     provider:
       # Base URL、API Key 和模型 ID 均从所选 Provider 的官方文档/控制台获取。

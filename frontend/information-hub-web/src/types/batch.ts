@@ -32,6 +32,18 @@ export interface AnalysisPreview {
   previewToken: string
 }
 
+export interface AnalysisLimitRange {
+  defaultValue: number
+  minimum: number
+  maximum: number
+}
+
+export interface AnalysisPreviewLimits {
+  windowDays: AnalysisLimitRange
+  maxCandidates: AnalysisLimitRange
+  maxEstimatedTokens: AnalysisLimitRange
+}
+
 export interface CreateAnalysisPreviewRequest {
   promptProfileId: number
   windowDays?: number
