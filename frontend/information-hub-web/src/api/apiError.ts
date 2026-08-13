@@ -48,6 +48,20 @@ const ERROR_MESSAGES: Readonly<Record<string, string>> = {
   ANALYSIS_WORKER_DISABLED: '分析 Worker 当前未启用',
   ANALYSIS_CONFIGURATION_INVALID: '分析配置当前不可执行',
   ANALYSIS_SCHEDULE_NAME_CONFLICT: '当前账号已存在同名定时分析',
+  ANALYSIS_SCHEDULE_PROFILE_ID_INVALID: '请选择有效的提示词方案',
+  ANALYSIS_SCHEDULE_PROFILE_DISABLED: '所选提示词方案已停用，请先启用后再保存定时分析',
+  ANALYSIS_SCHEDULE_ACTIVE_VERSION_REQUIRED: '所选提示词方案没有生效版本，请先创建并启用版本',
+  ANALYSIS_SCHEDULE_NAME_REQUIRED: '请输入定时分析名称',
+  ANALYSIS_SCHEDULE_NAME_TOO_LONG: '定时分析名称不能超过 255 个字符',
+  ANALYSIS_SCHEDULE_TIMEZONE_INVALID: '请输入有效的 IANA 时区',
+  ANALYSIS_SCHEDULE_RESOURCE_ID_INVALID: '定时分析 ID 必须为正整数',
+  ANALYSIS_SCHEDULE_PERSISTENCE_FAILED: '定时分析暂时无法保存，请稍后重试',
+  ANALYSIS_PREVIEW_NOT_CONFIGURED: '分析预览服务尚未配置',
+  ANALYSIS_BATCH_UNAVAILABLE: '分析批次当前不可执行，请检查模型服务和 Worker 配置',
+  ANALYSIS_BATCH_PERSISTENCE_FAILED: '分析批次暂时无法保存，请稍后重试',
+  ANALYSIS_PERSISTENCE_FAILED: '分析结果暂时无法保存，请稍后重试',
+  INVALID_JSON: '请求内容格式不正确',
+  REQUEST_TOO_LARGE: '请求内容超过允许大小',
   RECOMMENDATION_PROFILE_NOT_FOUND: '尚未配置职位推荐画像',
   RECOMMENDATION_PROMPT_PROFILE_NOT_FOUND: '绑定的提示词方案不存在',
   RECOMMENDATION_PROMPT_PROFILE_INCOMPATIBLE: '请选择用于职位相关性分析的提示词方案',
@@ -87,8 +101,16 @@ export class ApiClientError extends Error {
   }
 }
 
-export function getApiErrorMessage(code: string): string {
-  return ERROR_MESSAGES[code] ?? '请求失败，请稍后重试'
+export function getApiErrorMessage(
+  code: string,
+  serverMessage?: string,
+): string {
+  const mapped = ERROR_MESSAGES[code]
+  if (mapped) return mapped
+  if (serverMessage && /[\u3400-\u9fff]/u.test(serverMessage)) {
+    return serverMessage
+  }
+  return '请求失败，请稍后重试'
 }
 
 export function createBusinessApiError(
@@ -98,7 +120,7 @@ export function createBusinessApiError(
   return new ApiClientError({
     kind: 'business',
     code: failure.code,
-    message: getApiErrorMessage(failure.code),
+    message: getApiErrorMessage(failure.code, failure.message),
     status,
   })
 }

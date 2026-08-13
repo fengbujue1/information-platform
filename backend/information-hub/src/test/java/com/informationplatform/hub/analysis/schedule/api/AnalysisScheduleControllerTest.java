@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.informationplatform.hub.analysis.schedule.application.AnalysisScheduleService;
+import com.informationplatform.hub.analysis.schedule.application.AnalysisScheduleRequestException;
 import com.informationplatform.hub.analysis.schedule.domain.AnalysisScheduleCommand;
 import com.informationplatform.hub.analysis.schedule.domain.AnalysisScheduleView;
 import com.informationplatform.hub.common.api.ApiErrorWriter;
@@ -117,6 +118,23 @@ class AnalysisScheduleControllerTest {
                 .andExpect(jsonPath("$.code").value("ANALYSIS_SCHEDULE_STATUS_UPDATED"));
     }
 
+    @Test
+    @WithMockUser
+    void returnsChinesePublicMessageForDisabledPromptProfile() throws Exception {
+        when(scheduleService.create(any(AnalysisScheduleCommand.class), nullable(Boolean.class)))
+                .thenThrow(new AnalysisScheduleRequestException(
+                        "ANALYSIS_SCHEDULE_PROFILE_DISABLED",
+                        "Prompt Profile must be active"));
+
+        mockMvc.perform(post("/api/v1/ai/analysis-schedules")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("ANALYSIS_SCHEDULE_PROFILE_DISABLED"))
+                .andExpect(jsonPath("$.message").value(
+                        "所选提示词方案已停用，请先启用后再保存定时分析"));
+    }
     private AnalysisScheduleView view() {
         LocalDateTime timestamp = LocalDateTime.of(2026, 8, 5, 12, 0);
         return new AnalysisScheduleView(

@@ -14,7 +14,17 @@ const listRunsMock = vi.hoisted(() => vi.fn())
 const recordViewMock = vi.hoisted(() => vi.fn())
 const updateFeedbackMock = vi.hoisted(() => vi.fn())
 const updateDispositionMock = vi.hoisted(() => vi.fn())
+const showSuccessMock = vi.hoisted(() => vi.fn())
+const showWarningMock = vi.hoisted(() => vi.fn())
+const showErrorMock = vi.hoisted(() => vi.fn())
 
+
+vi.mock('@/utils/userFeedback', () => ({
+  showSuccess: showSuccessMock,
+  showWarning: showWarningMock,
+  showError: showErrorMock,
+  showErrorMessage: showErrorMock,
+}))
 vi.mock('@/api/promptApi', () => ({
   listPromptProfiles: listPromptProfilesMock,
 }))
@@ -183,6 +193,9 @@ beforeEach(() => {
     async (_informationId: number, _itemId: number, state: 'NONE' | 'INTERESTED' | 'NOT_INTERESTED') =>
       interaction(state, 'NONE'),
   )
+  showSuccessMock.mockReset()
+  showWarningMock.mockReset()
+  showErrorMock.mockReset()
   updateDispositionMock.mockReset().mockImplementation(
     async (_informationId: number, _itemId: number, state: 'NONE' | 'CONTACTED' | 'CONTACTED_NOT_SUITABLE') =>
       interaction('NONE', state),
@@ -240,7 +253,7 @@ describe('RecommendationsView', () => {
 
     expect(getRunMock).toHaveBeenCalledWith(32)
     expect(getFeedMock).toHaveBeenCalledTimes(2)
-    expect(wrapper.text()).toContain('Run #32 已完成')
+    expect(showSuccessMock).toHaveBeenCalledWith('Run #32 已完成，推荐列表已更新。')
     wrapper.unmount()
   })
 })

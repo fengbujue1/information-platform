@@ -36,6 +36,7 @@ import type {
   RecommendationRunStatus,
 } from '@/types/recommendation'
 import { formatDateTime } from '@/utils/formatters'
+import { showError, showErrorMessage, showSuccess, showWarning } from '@/utils/userFeedback'
 
 const POLL_INTERVAL_MS = 800
 const TERMINAL_STATUSES: ReadonlySet<RecommendationRunStatus> = new Set([
@@ -62,8 +63,6 @@ const savingProfile = ref(false)
 const refreshing = ref(false)
 const busyItemId = ref<number | null>(null)
 const loadError = ref<string | null>(null)
-const actionError = ref<string | null>(null)
-const notice = ref<string | null>(null)
 const undoAction = ref<UndoAction | null>(null)
 let pollTimer: ReturnType<typeof setTimeout> | null = null
 let pollGeneration = 0
@@ -118,11 +117,10 @@ async function loadInitialState(): Promise<void> {
 
 async function loadFeed(): Promise<void> {
   feedLoading.value = true
-  actionError.value = null
   try {
     feed.value = await getRecommendationFeed(page.value, pageSize.value)
   } catch (cause) {
-    actionError.value = toApiClientError(cause).message
+    showError(cause)
   } finally {
     feedLoading.value = false
   }
@@ -130,14 +128,12 @@ async function loadFeed(): Promise<void> {
 
 async function saveProfile(request: RecommendationProfileRequest): Promise<void> {
   savingProfile.value = true
-  actionError.value = null
-  notice.value = null
   try {
     profile.value = await saveRecommendationProfile(request)
-    notice.value = '推荐画像已保存；下一次自动或手动刷新时生效。'
+    showSuccess('推荐画像已保存；下一次自动或手动刷新时生效。')
     await loadFeed()
   } catch (cause) {
-    actionError.value = toApiClientError(cause).message
+    showError(cause)
   } finally {
     savingProfile.value = false
   }
@@ -145,15 +141,13 @@ async function saveProfile(request: RecommendationProfileRequest): Promise<void>
 
 async function requestRefresh(): Promise<void> {
   refreshing.value = true
-  actionError.value = null
-  notice.value = null
   try {
     const accepted = await refreshRecommendations()
     const pending = createPendingRun(accepted.runId)
-    notice.value = `推荐刷新已提交（Run #${accepted.runId}）。`
+    showSuccess(`推荐刷新已提交（Run #${accepted.runId}）。`)
     startPolling(pending)
   } catch (cause) {
-    actionError.value = toApiClientError(cause).message
+    showError(cause)
   } finally {
     refreshing.value = false
   }
@@ -205,13 +199,12 @@ async function pollRun(runId: number, generation: number): Promise<void> {
       pollTimer = null
       runs.value = await listRecommendationRuns()
       await loadFeed()
-      notice.value = current.status === 'COMPLETED'
-        ? `Run #${current.id} 已完成，推荐列表已更新。`
-        : current.status === 'NOOP'
-          ? `Run #${current.id} 未产生新推荐，当前成功 Feed 保持不变。`
-          : null
-      if (current.status === 'FAILED') {
-        actionError.value = current.failureMessage || '推荐刷新失败，旧的成功 Feed 仍可继续查看。'
+      if (current.status === 'COMPLETED') {
+        showSuccess(`Run #${current.id} 已完成，推荐列表已更新。`)
+      } else if (current.status === 'NOOP') {
+        showWarning(`Run #${current.id} 未产生新推荐，当前成功推荐列表保持不变。`)
+      } else {
+        showErrorMessage('推荐刷新失败，旧的成功推荐列表仍可继续查看。')
       }
       return
     }
@@ -219,7 +212,7 @@ async function pollRun(runId: number, generation: number): Promise<void> {
   } catch (cause) {
     if (disposed || generation !== pollGeneration) return
     pollTimer = null
-    actionError.value = toApiClientError(cause).message
+    showError(cause)
   }
 }
 
@@ -236,7 +229,6 @@ async function changeFeedback(
   state: RecommendationFeedbackState,
 ): Promise<void> {
   busyItemId.value = item.recommendationItemId
-  actionError.value = null
   try {
     const interaction = await updateRecommendationFeedback(
       item.informationId,
@@ -249,7 +241,7 @@ async function changeFeedback(
       item.feedbackState = interaction.feedbackState
     }
   } catch (cause) {
-    actionError.value = toApiClientError(cause).message
+    showError(cause)
   } finally {
     busyItemId.value = null
   }
@@ -260,7 +252,6 @@ async function changeDisposition(
   state: JobDisposition,
 ): Promise<void> {
   busyItemId.value = item.recommendationItemId
-  actionError.value = null
   try {
     const interaction = await updateJobDisposition(
       item.informationId,
@@ -273,7 +264,7 @@ async function changeDisposition(
       item.jobDisposition = interaction.jobDisposition
     }
   } catch (cause) {
-    actionError.value = toApiClientError(cause).message
+    showError(cause)
   } finally {
     busyItemId.value = null
   }
@@ -289,16 +280,15 @@ function removeWithUndo(
   )
   feed.value.total = Math.max(0, feed.value.total - 1)
   undoAction.value = { item, kind }
-  notice.value = kind === 'feedback'
-    ? '已标记为不感兴趣，该职位已从当前 Feed 隐藏。'
-    : '已标记为已联系且不合适，该职位已从当前 Feed 隐藏。'
+  showSuccess(kind === 'feedback'
+    ? '已标记为不感兴趣，该职位已从当前推荐列表隐藏。'
+    : '已标记为已联系且不合适，该职位已从当前推荐列表隐藏。')
 }
 
 async function undoHardExclusion(): Promise<void> {
   const action = undoAction.value
   if (!action) return
   busyItemId.value = action.item.recommendationItemId
-  actionError.value = null
   try {
     if (action.kind === 'feedback') {
       await updateRecommendationFeedback(
@@ -314,10 +304,10 @@ async function undoHardExclusion(): Promise<void> {
       )
     }
     undoAction.value = null
-    notice.value = '状态已恢复为 NONE；仍属于当前成功 Run 的职位会重新显示。'
+    showSuccess('状态已恢复；仍属于当前成功推荐批次的职位会重新显示。')
     await loadFeed()
   } catch (cause) {
-    actionError.value = toApiClientError(cause).message
+    showError(cause)
   } finally {
     busyItemId.value = null
   }
@@ -328,7 +318,7 @@ async function recordView(item: RecommendationFeedItem): Promise<void> {
     await recordRecommendationView(item.informationId, item.recommendationItemId)
     item.viewed = true
   } catch (cause) {
-    actionError.value = toApiClientError(cause).message
+    showError(cause)
   }
 }
 
@@ -383,22 +373,6 @@ onBeforeUnmount(() => {
     </PageState>
 
     <template v-else>
-      <ElAlert
-        v-if="actionError"
-        class="recommendation-alert"
-        type="error"
-        :title="actionError"
-        show-icon
-        @close="actionError = null"
-      />
-      <ElAlert
-        v-if="notice"
-        class="recommendation-alert"
-        type="success"
-        :title="notice"
-        show-icon
-        @close="notice = null"
-      />
       <div v-if="undoAction" class="recommendation-undo" role="status">
         <span>需要恢复刚才隐藏的职位？</span>
         <ElButton link type="primary" @click="undoHardExclusion">

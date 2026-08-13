@@ -8,6 +8,7 @@ import com.informationplatform.hub.analysis.schedule.application.AnalysisSchedul
 import com.informationplatform.hub.analysis.schedule.application.AnalysisSchedulePersistenceException;
 import com.informationplatform.hub.analysis.schedule.application.AnalysisScheduleRequestException;
 import com.informationplatform.hub.common.api.ApiResponse;
+import com.informationplatform.hub.common.api.BrowserApiErrorMessages;
 import com.informationplatform.hub.common.logging.OperationalLogExceptions;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
@@ -84,6 +85,6 @@ public class AnalysisScheduleApiExceptionHandler {
 
     private ResponseEntity<ApiResponse<Void>> error(
             HttpStatus status, String code, String message) {
-        return ResponseEntity.status(status).body(ApiResponse.error(code, message));
+        return ResponseEntity.status(status).body(ApiResponse.error(code, BrowserApiErrorMessages.message(code)));
     }
 }

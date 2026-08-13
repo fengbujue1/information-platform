@@ -1,6 +1,7 @@
 package com.informationplatform.hub.recommendation.api;
 
 import com.informationplatform.hub.common.api.ApiResponse;
+import com.informationplatform.hub.common.api.BrowserApiErrorMessages;
 import com.informationplatform.hub.common.logging.OperationalLogExceptions;
 import com.informationplatform.hub.recommendation.feed.application.RecommendationFeedPersistenceException;
 import com.informationplatform.hub.recommendation.feed.application.RecommendationFeedRequestException;
@@ -24,7 +25,7 @@ public class RecommendationFeedApiExceptionHandler {
     @ExceptionHandler(RecommendationFeedRequestException.class)
     ResponseEntity<ApiResponse<Void>> handleRequest(RecommendationFeedRequestException exception) {
         return ResponseEntity.badRequest()
-                .body(ApiResponse.error(exception.getCode(), exception.getMessage()));
+                .body(ApiResponse.error(exception.getCode(), BrowserApiErrorMessages.message(exception.getCode())));
     }
 
     @ExceptionHandler(RecommendationFeedPersistenceException.class)
@@ -35,7 +36,7 @@ public class RecommendationFeedApiExceptionHandler {
                 OperationalLogExceptions.sanitized(exception));
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error(
-                        "RECOMMENDATION_FEED_PERSISTENCE_FAILED",
-                        "Recommendation Feed data could not be read"));
+                                "RECOMMENDATION_FEED_PERSISTENCE_FAILED",
+                                BrowserApiErrorMessages.message("RECOMMENDATION_FEED_PERSISTENCE_FAILED")));
     }
 }

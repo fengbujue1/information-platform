@@ -259,3 +259,13 @@ input {
     justify-content: flex-start;
   }
 }
+.app-global-message {
+  position: fixed;
+  max-width: min(560px, calc(100vw - 32px));
+  box-sizing: border-box;
+}
+
+.app-global-message .el-message__content {
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}

@@ -21,7 +21,7 @@ class GlobalApiExceptionHandlerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
         assertThat(response.getBody()).isEqualTo(
-                ApiResponse.error("INTERNAL_ERROR", "The request could not be processed"));
+                ApiResponse.error("INTERNAL_ERROR", "服务暂时不可用，请稍后重试"));
         assertThat(output).contains(
                 "Unexpected Information Hub API failure",
                 "java.lang.IllegalStateException: unexpected-marker");

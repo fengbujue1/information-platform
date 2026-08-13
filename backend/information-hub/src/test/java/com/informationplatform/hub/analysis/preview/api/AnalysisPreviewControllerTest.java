@@ -85,7 +85,7 @@ class AnalysisPreviewControllerTest {
                         .content(requestBody()))
                 .andExpect(status().isServiceUnavailable())
                 .andExpect(jsonPath("$.code").value("ANALYSIS_PREVIEW_NOT_CONFIGURED"))
-                .andExpect(jsonPath("$.message").value("Analysis Preview signing is not configured"));
+                .andExpect(jsonPath("$.message").value("分析预览服务尚未配置"));
     }
 
     @Test

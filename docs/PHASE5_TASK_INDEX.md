@@ -9,7 +9,7 @@
 ## Next Task Number
 
 ```text
-TASK-046
+TASK-047
 ```
 
 只有真正确认新的独立问题后才创建对应 TASK。
@@ -30,8 +30,6 @@ TASK-046
 
 ## READY
 
-当前为空。
-
 | Task | Title | Type | Priority | Status |
 |---|---|---|---|---|
 | - | - | - | - | - |
@@ -48,6 +46,7 @@ TASK-046
 
 | Task | Title | Type | Priority | Completed |
 |---|---|---|---|---|
+| [TASK-046](tasks/TASK-046.md) | 统一全局操作反馈与公共 API 中文错误消息 | Integration | P2 | 2026-08-13 |
 | [TASK-045](tasks/TASK-045.md) | Phase 3 AI 页面中文化与展示文案统一 | Frontend | P2 | 2026-08-13 |
 
 ## DEFERRED

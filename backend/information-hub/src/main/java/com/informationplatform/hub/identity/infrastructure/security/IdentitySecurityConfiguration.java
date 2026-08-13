@@ -93,7 +93,7 @@ public class IdentitySecurityConfiguration {
                                     response,
                                     401,
                                     "AUTHENTICATION_REQUIRED",
-                                    "An authenticated user session is required");
+                                    "登录状态已失效，请重新登录");
                         })
                         .accessDeniedHandler((request, response, exception) -> {
                             LOGGER.warn(
@@ -105,7 +105,7 @@ public class IdentitySecurityConfiguration {
                                     response,
                                     403,
                                     "ACCESS_DENIED",
-                                    "The request is not allowed");
+                                    "没有权限执行此操作");
                         }));
         return http.build();
     }

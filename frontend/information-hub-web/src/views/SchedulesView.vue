@@ -33,6 +33,7 @@ import {
   formatBatchStatus,
   formatReason,
 } from '@/utils/aiDisplay'
+import { showError, showSuccess, showWarning } from '@/utils/userFeedback'
 
 const schedules = ref<AnalysisSchedule[]>([])
 const profiles = ref<PromptProfile[]>([])
@@ -103,7 +104,7 @@ function resetForm(): void {
 
 async function save(): Promise<void> {
   if (!form.value.name.trim() || !form.value.promptProfileId) {
-    error.value = '请输入名称并选择提示词方案'
+    showWarning('请输入名称并选择提示词方案')
     return
   }
   saving.value = true
@@ -128,8 +129,9 @@ async function save(): Promise<void> {
     }
     resetForm()
     await load()
+    showSuccess('定时分析配置已保存')
   } catch (cause) {
-    error.value = toApiClientError(cause).message
+    showError(cause)
   } finally {
     saving.value = false
   }
@@ -141,8 +143,9 @@ async function toggle(schedule: AnalysisSchedule, enabled: boolean): Promise<voi
   try {
     await updateAnalysisScheduleStatus(schedule.id, enabled)
     await load()
+    showSuccess(enabled ? '定时分析已启用' : '定时分析已关闭')
   } catch (cause) {
-    error.value = toApiClientError(cause).message
+    showError(cause)
     schedule.enabled = !enabled
   } finally {
     saving.value = false
@@ -156,8 +159,9 @@ async function testPreview(scheduleId: number): Promise<void> {
   try {
     preview.value = await previewAnalysisSchedule(scheduleId)
     editingId.value = scheduleId
+    showSuccess('当前配置预览已生成')
   } catch (cause) {
-    error.value = toApiClientError(cause).message
+    showError(cause)
   } finally {
     saving.value = false
   }

@@ -21,6 +21,7 @@ import type { InformationAnalysis } from '@/types/analysis'
 import type { AnalysisPreview } from '@/types/batch'
 import type { PromptProfile } from '@/types/prompt'
 import { formatDateTime } from '@/utils/formatters'
+import { showError, showSuccess, showWarning } from '@/utils/userFeedback'
 
 const route = useRoute()
 const router = useRouter()
@@ -64,7 +65,7 @@ async function load(): Promise<void> {
 
 async function runPreview(): Promise<void> {
   if (promptProfileId.value === null) {
-    error.value = '请先创建并启用提示词版本'
+    showWarning('请先创建并启用提示词版本')
     return
   }
   submitting.value = true
@@ -77,8 +78,9 @@ async function runPreview(): Promise<void> {
       maxCandidates: maxCandidates.value,
       maxEstimatedTokens: maxEstimatedTokens.value,
     })
+    showSuccess('批次预览已生成')
   } catch (cause) {
-    error.value = toApiClientError(cause).message
+    showError(cause)
   } finally {
     submitting.value = false
   }
@@ -100,7 +102,7 @@ async function confirmBatch(): Promise<void> {
 
 async function runSingle(): Promise<void> {
   if (promptProfileId.value === null || informationId.value === null) {
-    error.value = '请输入有效的信息 ID 并选择可执行的提示词方案'
+    showWarning('请输入有效的信息 ID 并选择可执行的提示词方案')
     return
   }
   submitting.value = true
@@ -111,8 +113,9 @@ async function runSingle(): Promise<void> {
       informationId: informationId.value,
       promptProfileId: promptProfileId.value,
     })
+    showSuccess('单条分析已完成')
   } catch (cause) {
-    error.value = toApiClientError(cause).message
+    showError(cause)
   } finally {
     submitting.value = false
   }

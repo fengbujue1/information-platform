@@ -7,6 +7,7 @@ import com.informationplatform.hub.analysis.processing.application.AnalysisReque
 import com.informationplatform.hub.analysis.provider.domain.AiProviderErrorType;
 import com.informationplatform.hub.analysis.provider.domain.AiProviderException;
 import com.informationplatform.hub.common.api.ApiResponse;
+import com.informationplatform.hub.common.api.BrowserApiErrorMessages;
 import com.informationplatform.hub.common.logging.OperationalLogExceptions;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
@@ -81,6 +82,6 @@ public class InformationAnalysisApiExceptionHandler {
 
     private ResponseEntity<ApiResponse<Void>> error(
             HttpStatus status, String code, String message) {
-        return ResponseEntity.status(status).body(ApiResponse.error(code, message));
+        return ResponseEntity.status(status).body(ApiResponse.error(code, BrowserApiErrorMessages.message(code)));
     }
 }

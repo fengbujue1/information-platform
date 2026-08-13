@@ -6,6 +6,7 @@ import com.informationplatform.hub.analysis.preview.application.AnalysisPreviewN
 import com.informationplatform.hub.analysis.preview.application.AnalysisPreviewRequestException;
 import com.informationplatform.hub.analysis.processing.application.AnalysisPersistenceException;
 import com.informationplatform.hub.common.api.ApiResponse;
+import com.informationplatform.hub.common.api.BrowserApiErrorMessages;
 import com.informationplatform.hub.common.logging.OperationalLogExceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,6 +65,6 @@ public class AnalysisPreviewApiExceptionHandler {
 
     private ResponseEntity<ApiResponse<Void>> error(
             HttpStatus status, String code, String message) {
-        return ResponseEntity.status(status).body(ApiResponse.error(code, message));
+        return ResponseEntity.status(status).body(ApiResponse.error(code, BrowserApiErrorMessages.message(code)));
     }
 }

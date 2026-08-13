@@ -22,6 +22,7 @@ import PageState from '@/components/common/PageState.vue'
 import type { PromptProfile, PromptVersion } from '@/types/prompt'
 import { formatDateTime } from '@/utils/formatters'
 import { formatPromptProfileStatus } from '@/utils/aiDisplay'
+import { showError, showSuccess, showWarning } from '@/utils/userFeedback'
 
 const profiles = ref<PromptProfile[]>([])
 const selectedProfileId = ref<number | null>(null)
@@ -65,7 +66,7 @@ async function loadVersions(): Promise<void> {
 
 async function addProfile(): Promise<void> {
   if (!profileName.value.trim()) {
-    error.value = '请输入提示词方案名称'
+    showWarning('请输入提示词方案名称')
     return
   }
   saving.value = true
@@ -79,8 +80,9 @@ async function addProfile(): Promise<void> {
     selectedProfileId.value = created.id
     versions.value = []
     profileName.value = ''
+    showSuccess('提示词方案已创建')
   } catch (cause) {
-    error.value = toApiClientError(cause).message
+    showError(cause)
   } finally {
     saving.value = false
   }
@@ -88,7 +90,7 @@ async function addProfile(): Promise<void> {
 
 async function addVersion(): Promise<void> {
   if (selectedProfileId.value === null || !versionContent.value.trim()) {
-    error.value = '请选择提示词方案并输入用户提示词'
+    showWarning('请选择提示词方案并输入用户提示词')
     return
   }
   saving.value = true
@@ -101,8 +103,9 @@ async function addVersion(): Promise<void> {
     await activatePromptVersion(selectedProfileId.value, version.id)
     versionContent.value = ''
     await loadProfiles()
+    showSuccess('新版本已创建并设为生效版本')
   } catch (cause) {
-    error.value = toApiClientError(cause).message
+    showError(cause)
   } finally {
     saving.value = false
   }
@@ -115,8 +118,9 @@ async function activate(versionId: number): Promise<void> {
   try {
     await activatePromptVersion(selectedProfileId.value, versionId)
     await loadProfiles()
+    showSuccess('生效版本已更新')
   } catch (cause) {
-    error.value = toApiClientError(cause).message
+    showError(cause)
   } finally {
     saving.value = false
   }
@@ -131,8 +135,9 @@ async function toggleStatus(profile: PromptProfile): Promise<void> {
       profile.status === 'ACTIVE' ? 'DISABLED' : 'ACTIVE',
     )
     await loadProfiles()
+    showSuccess(profile.status === 'ACTIVE' ? '提示词方案已停用' : '提示词方案已启用')
   } catch (cause) {
-    error.value = toApiClientError(cause).message
+    showError(cause)
   } finally {
     saving.value = false
   }

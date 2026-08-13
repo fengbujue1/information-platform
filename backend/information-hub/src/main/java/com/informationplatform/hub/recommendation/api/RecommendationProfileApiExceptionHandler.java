@@ -1,6 +1,7 @@
 package com.informationplatform.hub.recommendation.api;
 
 import com.informationplatform.hub.common.api.ApiResponse;
+import com.informationplatform.hub.common.api.BrowserApiErrorMessages;
 import com.informationplatform.hub.common.logging.OperationalLogExceptions;
 import com.informationplatform.hub.recommendation.application.RecommendationProfileConflictException;
 import com.informationplatform.hub.recommendation.application.RecommendationProfileNotFoundException;
@@ -55,6 +56,6 @@ public class RecommendationProfileApiExceptionHandler {
 
     private ResponseEntity<ApiResponse<Void>> error(
             HttpStatus status, String code, String message) {
-        return ResponseEntity.status(status).body(ApiResponse.error(code, message));
+        return ResponseEntity.status(status).body(ApiResponse.error(code, BrowserApiErrorMessages.message(code)));
     }
 }

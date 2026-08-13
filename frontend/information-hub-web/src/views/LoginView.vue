@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ElButton, ElInput, ElMessage } from 'element-plus'
+import { ElButton, ElInput } from 'element-plus'
 import { reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { ApiClientError } from '@/api'
 import { login } from '@/stores/authSession'
 import { resolveSafeReturnPath } from '@/utils/authRedirect'
+import { showError, showWarning } from '@/utils/userFeedback'
 
 const route = useRoute()
 const router = useRouter()
@@ -17,7 +18,7 @@ const form = reactive({
 
 async function submit(): Promise<void> {
   if (!form.username.trim() || !form.password) {
-    ElMessage.warning('请输入用户名和密码')
+    showWarning('请输入用户名和密码')
     return
   }
   submitting.value = true
@@ -28,10 +29,10 @@ async function submit(): Promise<void> {
     })
     await router.replace(resolveSafeReturnPath(route.query.redirect))
   } catch (error) {
-    ElMessage.error(
+    showError(
       error instanceof ApiClientError
-        ? error.message
-        : '登录失败，请稍后重试',
+        ? error
+        : new Error('登录失败，请稍后重试'),
     )
   } finally {
     submitting.value = false

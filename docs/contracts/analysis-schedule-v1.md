@@ -133,6 +133,7 @@ Dispatcher 默认启用并每 30 秒扫描一次；每条 Schedule 仍必须由�
 `NOOP/WORKER_DISABLED` 或 `NOOP/PROVIDER_UNAVAILABLE`，不会留下无法消费的
 `PENDING` Batch。
 
+浏览器调用失败时继续返回稳定错误码和既有 HTTP 状态码，公开 `message` 使用安全中文。客户端以 `code` 做程序判断，不能依赖 `message`。例如提示词方案已停用时返回 `ANALYSIS_SCHEDULE_PROFILE_DISABLED`，并给出“所选提示词方案已停用，请先启用后再保存定时分析”的可行动中文提示。
 ## 11. 不包含
 
 - Cron 表达式；

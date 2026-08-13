@@ -37,7 +37,7 @@ public class GlobalApiExceptionHandler {
         return error(
                 HttpStatus.BAD_REQUEST,
                 "VALIDATION_FAILED",
-                "Invalid request field: " + field);
+                "请求参数校验失败：" + field);
     }
 
     /** 区分请求体超限与普通 JSON 解析失败。 */
@@ -48,9 +48,9 @@ public class GlobalApiExceptionHandler {
             return error(
                     HttpStatus.PAYLOAD_TOO_LARGE,
                     "REQUEST_TOO_LARGE",
-                    "Request body exceeds the configured size limit");
+                    "请求内容超过允许大小");
         }
-        return error(HttpStatus.BAD_REQUEST, "INVALID_JSON", "Request body is not valid JSON");
+        return error(HttpStatus.BAD_REQUEST, "INVALID_JSON", "请求内容格式不正确");
     }
 
     /** 将接入层主动拒绝的业务请求转换为 400 响应。 */
@@ -63,7 +63,7 @@ public class GlobalApiExceptionHandler {
     @ExceptionHandler(JobQueryRequestException.class)
     ResponseEntity<ApiResponse<Void>> handleJobQueryRequest(
             JobQueryRequestException exception) {
-        return error(HttpStatus.BAD_REQUEST, exception.getCode(), exception.getMessage());
+        return error(HttpStatus.BAD_REQUEST, exception.getCode(), BrowserApiErrorMessages.message(exception.getCode()));
     }
 
     /** 将路径参数类型错误转换为稳定的 400 响应。 */
@@ -73,13 +73,13 @@ public class GlobalApiExceptionHandler {
         return error(
                 HttpStatus.BAD_REQUEST,
                 "INVALID_REQUEST_PARAMETER",
-                "Request parameter has an invalid type");
+                "请求参数格式不正确");
     }
 
     /** 对不存在的职位返回 404，不暴露数据库查询细节。 */
     @ExceptionHandler(JobNotFoundException.class)
     ResponseEntity<ApiResponse<Void>> handleJobNotFound(JobNotFoundException exception) {
-        return error(HttpStatus.NOT_FOUND, "JOB_NOT_FOUND", "Job does not exist");
+        return error(HttpStatus.NOT_FOUND, "JOB_NOT_FOUND", "职位不存在或已不可用");
     }
 
     /** 隐藏职位查询中的数据库或持久化 JSON 异常。 */
@@ -92,7 +92,7 @@ public class GlobalApiExceptionHandler {
         return error(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "JOB_QUERY_FAILED",
-                "Job information could not be queried");
+                "职位信息暂时无法查询");
     }
 
     /** 隐藏数据库异常细节并返回稳定错误码。 */
@@ -111,7 +111,7 @@ public class GlobalApiExceptionHandler {
         return error(
                 HttpStatus.UNAUTHORIZED,
                 "AUTHENTICATION_FAILED",
-                "Invalid username or password");
+                "用户名或密码错误");
     }
 
     /** 兜底处理未预期异常，避免向客户端暴露内部实现。 */
@@ -121,7 +121,7 @@ public class GlobalApiExceptionHandler {
         return error(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "INTERNAL_ERROR",
-                "The request could not be processed");
+                "服务暂时不可用，请稍后重试");
     }
 
     /** 沿异常链查找指定类型，用于识别被框架包装的根因。 */
