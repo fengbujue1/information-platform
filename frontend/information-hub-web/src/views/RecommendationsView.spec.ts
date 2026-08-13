@@ -197,6 +197,9 @@ describe('RecommendationsView', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('职位推荐')
+    expect(wrapper.text()).toContain('提示词方案')
+    expect(wrapper.text()).toContain('职位用户相关性分析')
+    expect(wrapper.text()).not.toContain('Prompt Profile')
     expect(wrapper.text()).toContain('推荐画像已在本轮推荐生成后修改')
     expect(wrapper.text()).toContain('Java Backend Engineer')
     expect(wrapper.text()).toContain('Spring Boot Engineer')

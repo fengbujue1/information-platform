@@ -87,11 +87,11 @@ watch(() => props.profile, replaceForm, { immediate: true })
 <template>
   <form class="recommendation-profile-form" @submit.prevent="submit">
     <div class="recommendation-field recommendation-field-wide">
-      <label for="recommendation-prompt-profile">Prompt Profile</label>
+      <label for="recommendation-prompt-profile">提示词方案</label>
       <ElSelect
         id="recommendation-prompt-profile"
         v-model="form.analysisPromptProfileId"
-        placeholder="选择已启用且具有 Active Version 的 Profile"
+        placeholder="选择已启用且具有生效版本的提示词方案"
       >
         <ElOption
           v-for="prompt in promptProfiles"
@@ -101,7 +101,7 @@ watch(() => props.profile, replaceForm, { immediate: true })
           :disabled="prompt.status !== 'ACTIVE' || prompt.activeVersionId === null"
         />
       </ElSelect>
-      <small>推荐只消费该 Profile 已有的 JOB_USER_RELEVANCE Analysis。</small>
+      <small>推荐只使用该提示词方案已有的职位用户相关性分析。</small>
     </div>
 
     <div class="recommendation-field">
@@ -196,7 +196,7 @@ watch(() => props.profile, replaceForm, { immediate: true })
         default-first-option
         placeholder="输入后按 Enter，例如 纯销售"
       />
-      <small>命中职位标题、正文或公司名时会被 hard exclude。</small>
+      <small>命中职位标题、正文或公司名时会被硬排除。</small>
     </div>
 
     <div class="recommendation-form-actions">
@@ -208,7 +208,7 @@ watch(() => props.profile, replaceForm, { immediate: true })
       >
         保存推荐画像
       </ElButton>
-      <span>保存画像不会自动运行 Analysis 或刷新推荐。</span>
+      <span>保存画像不会自动运行分析或刷新推荐。</span>
     </div>
   </form>
 </template>

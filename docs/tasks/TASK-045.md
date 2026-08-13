@@ -1,6 +1,8 @@
 # TASK-045：Phase 3 AI 页面中文化与展示文案统一
 
-状态：VERIFYING
+状态：DONE
+
+完成日期：2026-08-13
 
 所属阶段：Phase 5
 
@@ -82,11 +84,11 @@ Phase 3 AI 页面存在大量直接面向用户的英文或中英文混排，包
 
 ## 7. Acceptance Criteria
 
-- [ ] 原问题无法按原步骤复现。
+- [x] 原问题无法按原步骤复现。
 - [x] Expected Behavior 已实现。
 - [x] 现有相关流程没有回归。
 - [x] 相关 targeted test 通过。
-- [ ] 必要的 frontend / browser test 通过。
+- [x] 必要的 frontend / browser test 通过。
 - [x] `git diff --check` 通过。
 - [x] 必要文档已同步。
 - [x] 顶部 Phase 3 AI 导航全部使用准确中文。
@@ -100,6 +102,10 @@ Phase 3 AI 页面存在大量直接面向用户的英文或中英文混排，包
 ## 8. Adjustment Log
 
 实施过程中未调整冻结 Scope。首次全量前端测试发现新增批次列表测试的中文断言编码异常，修正测试文件编码后重新执行并通过；业务实现方案未变化。
+
+2026-08-13 人工验收发现职位推荐页面的推荐画像区块仍展示 Prompt Profile、Active Version、Analysis 等英文。该问题属于 TASK-045 中文化验收反馈，未创建新 TASK；已将该区块及相关推荐错误提示统一为中文，并同步组件测试与本地 Fixture Browser E2E 定位。推荐逻辑、协议、API 和数据结构未变化。
+
+上述 Adjustment 均已完成并通过自动化及人工验证，没有遗留项，也不需要拆分后续 TASK。
 
 ## 9. Test / Verification Record
 
@@ -120,9 +126,17 @@ npm.cmd run typecheck
 
 npm.cmd run build
 结果：通过；vue-tsc 与 Vite 生产构建成功。
+
+npm.cmd test -- src/views/RecommendationsView.spec.ts
+结果：1 个测试文件、3 个测试全部通过。
+
+npm.cmd run test:e2e
+结果：8 个本地 Fixture Browser E2E 全部通过，包括推荐画像、Feed、刷新、反馈和联系状态流程。
 ```
 
 未执行 `npm.cmd run test:e2e:phase3`：当前环境未配置该脚本要求的 7 个 `INFORMATION_HUB_E2E_*` 变量，且缺少后端构建 JAR。Browser E2E 的中文文案定位与断言已同步，真实浏览器链路留待人工验证或具备 MySQL、后端 JAR 和 E2E 密钥的环境执行。
+
+2026-08-13 用户已完成人工浏览器验证，确认原问题及推荐画像区块的验收遗漏均已解决，TASK-045 验收通过。
 
 ## 10. Documentation Sync
 
@@ -157,13 +171,14 @@ npm.cmd run build
 - 新增集中、类型安全的展示格式化工具，将提示词方案状态、分析状态、批次触发方式、批次与条目状态、调用状态和跳过原因映射为中文；未知值回退为 `未知（原值）`，空值回退为 `—`。
 - 保留 Token、IANA、Java、MySQL、Hash、ID、AI 与真实 IANA 时区值等必要技术内容；协议枚举、API 请求响应、业务判断保持原值。
 - 同步 Phase 3 API 错误提示、组件测试、应用壳测试和 Browser E2E 的用户可见文案定位。
+- 根据 2026-08-13 人工验收反馈，补齐职位推荐页面中复用 Phase 3 提示词方案与分析术语的中文展示，以及相关推荐错误提示。
 - 未修改后端、数据库、Migration、Contract、Architecture、ADR、安全边界或 Phase 4 独立页面文案，未引入完整 i18n。
-- 当前状态转为 `VERIFYING`，等待人工浏览器验收。
+- 两轮 Adjustment 已全部完成，无遗留或需拆分事项；2026-08-13 经人工浏览器验证通过，状态转为 `DONE`。
 
 ## 13. Commit
 
 建议提交信息：
 
 ```text
-feat: complete TASK-045 localize Phase 3 AI pages
+feat: 完成 TASK-045 Phase 3 AI 页面中文化与文案统一
 ```

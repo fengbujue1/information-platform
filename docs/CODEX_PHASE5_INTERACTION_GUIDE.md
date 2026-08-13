@@ -264,6 +264,27 @@ git diff --cached
 ```
 
 ---
+## 17. 用户已经人工验收通过，关闭 TASK
+
+```text
+TASK-0XX 我已经人工验证通过，可以收尾。
+
+请：
+1. 再检查当前 TASK 的 Acceptance Criteria；
+2. 更新最终 Test / Verification Record；
+3. 更新 Implementation Record；
+4. 如有 Adjustment，确认都已完成或明确拆出；
+5. TASK 状态改为 DONE；
+6. 更新 PHASE5_TASK_INDEX.md；
+7. 更新 CURRENT_STATUS.md；
+8. 必要时同步 Architecture / Database / Contract / ADR；
+9. git diff --check；
+10. git add 当前 TASK 全部相关文件；
+11. 不 commit / push；
+12. 给我一条最终提交用语。
+```
+
+---
 
 ## 7. 调整时发现其实是另一个独立问题
 
@@ -506,27 +527,7 @@ git diff --cached
 
 ---
 
-## 17. 用户已经人工验收通过，关闭 TASK
 
-```text
-TASK-0XX 我已经按你给出的步骤人工验证通过，可以收尾。
-
-请：
-1. 再检查当前 TASK 的 Acceptance Criteria；
-2. 更新最终 Test / Verification Record；
-3. 更新 Implementation Record；
-4. 如有 Adjustment，确认都已完成或明确拆出；
-5. TASK 状态改为 DONE；
-6. 更新 PHASE5_TASK_INDEX.md；
-7. 更新 CURRENT_STATUS.md；
-8. 必要时同步 Architecture / Database / Contract / ADR；
-9. git diff --check；
-10. git add 当前 TASK 全部相关文件；
-11. 不 commit / push；
-12. 给我一条最终提交用语。
-```
-
----
 
 ## 18. 让 Codex 提交代码
 

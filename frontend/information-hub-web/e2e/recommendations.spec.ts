@@ -17,6 +17,7 @@ test('completes the Profile, Feed, Refresh, feedback and contact workflow', asyn
   await page.goto('/recommendations')
 
   await expect(page.getByRole('heading', { name: '职位推荐' })).toBeVisible()
+  await expect(page.getByLabel('提示词方案')).toBeVisible()
   await expect(page.getByText('推荐画像已在本轮推荐生成后修改')).toBeVisible()
   await expect(page.getByText('Java Backend Engineer')).toBeVisible()
   await expect(page.getByText('Spring Boot Engineer')).toBeVisible()

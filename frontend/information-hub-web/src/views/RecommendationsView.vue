@@ -411,7 +411,7 @@ onBeforeUnmount(() => {
           <div class="recommendation-section-heading">
             <div>
               <h2>推荐画像</h2>
-              <p>配置 JOB 推荐偏好，并绑定已有的 Prompt Profile。</p>
+              <p>配置职位推荐偏好，并绑定已有的提示词方案。</p>
             </div>
             <ElTag :type="hasProfile ? 'success' : 'info'">
               {{ hasProfile ? '已配置' : '未配置' }}
@@ -477,7 +477,7 @@ onBeforeUnmount(() => {
           v-else-if="!feed?.run"
           kind="empty"
           title="尚无推荐结果"
-          description="请先保存推荐画像，再手动刷新；刷新只使用数据库中已有的成功 Analysis。"
+          description="请先保存推荐画像，再手动刷新；刷新只使用数据库中已有的成功分析。"
         />
         <PageState
           v-else-if="feed.items.length === 0"
