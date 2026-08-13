@@ -1,371 +1,508 @@
-# BOSS直聘爬虫 · 职位抓取工具 v2.1（Chrome CDP / 明文薪资）
+# Information Platform · BOSS 直聘采集器 v2.1.0
 
-> 🌐 English documentation: [README.en.md](./README.en.md)
+本目录是 Information Platform 当前使用的 BOSS 直聘职位采集器。它通过 Chrome DevTools Protocol（CDP）连接一个独立、真实的 Chrome，复用用户本人在该浏览器中的登录态，从 BOSS 搜索接口获取职位列表和明文薪资，并按需抓取职位详情。
 
-![Python](https://img.shields.io/badge/python-3.10+-blue.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
-![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-lightgrey.svg)
-![Version](https://img.shields.io/badge/version-2.1.0-orange.svg)
+采集结果会先保存为本地 JSON/CSV；启用 Information Hub 配置后，再映射为统一 `InformationEnvelope` 并逐条提交给后端。Hub 暂时不可用不会让已完成的本地采集失败，可重试数据会进入本地 Outbox，之后独立补传。
 
-一个轻量的 **BOSS直聘爬虫（spider / crawler / scraper）**：通过 Chrome DevTools Protocol 连接本地已登录的 Chrome，复用真实登录态调用 zhipin.com 搜索 API，绕过前端字体反爬，输出含**明文薪资**的职位数据（JSON / CSV），并生成薪资分布、技能词频和求职材料优化提示词。同时作为 Hermes Agent Skill 提供。
+当前版本：`2.1.0`。要求 Python 3.10+、Google Chrome，以及用户本人可正常使用的 BOSS 直聘账号。
 
-> 📌 **一句话介绍**：不用 Selenium/Playwright，直接通过 Chrome DevTools Protocol 连接本地已登录的 Chrome，复用真实登录态调搜索 API，输出含明文薪资的 JSON/CSV，并生成薪资分布、技能词频和求职材料优化提示词。
+> 本工具仅用于个人求职、学习和技术研究。请遵守 BOSS 直聘用户协议、访问规则及所在地法律法规，控制采集范围和频率，不要用于商业转售、批量滥用、绕过安全校验或对目标网站造成负担。
 
-![cover](cover.png)
+## 1. 实际工作流程
 
----
+```text
+启动 BOSS 专用 Chrome
+→ 用户手动登录 BOSS 直聘
+→ Collector 通过 CDP 检查登录状态
+→ 搜索 API 获取职位列表与明文薪资
+→ 可选：逐个打开详情页获取 JD
+→ JSON/CSV 本地落盘
+→ 可选：映射为 InformationEnvelope 并提交 Information Hub
+→ Hub 可重试失败时写入 Outbox
+→ Hub 恢复后独立补传
+```
 
-## ⚠️ 免责声明
+重要事实：
 
-本项目仅供学习和技术研究参考，旨在探讨 Chrome DevTools Protocol、前端反爬机制与数据采集技术。请勿用于任何违反 [BOSS直聘用户协议](https://www.zhipin.com/about/protocol.html) 或相关法律法规的用途，不得用于商业转售、恶意爬取或对目标网站造成负担的行为。使用本项目所产生的一切后果由使用者自行承担，作者不对任何滥用行为负责。
+- 不使用 Selenium 或 Playwright；采集器直接连接真实 Chrome 的 CDP。
+- 默认使用独立、持久化的 Chrome Profile，不读取或覆盖主 Chrome Profile。
+- 列表优先使用 BOSS 搜索 API；DOM 降级默认关闭，因为 DOM 薪资可能不可靠。
+- 详情抓取默认开启，只把明确的职位描述区域当作 JD。
+- 本地文件始终先保存；Information Hub 提交默认关闭且是 best-effort。
+- Collector 不直接访问平台数据库。
 
----
+## 2. 目录与输出
 
-## 🚀 30 秒快速开始
+所有默认路径都相对于本采集器目录，而不是终端当前目录：
+
+```text
+boss-zhipin-scraper/
+├── config/
+│   ├── collector.ini.example   # 无秘密的配置模板
+│   └── collector.ini           # 本地真实配置，Git 已忽略
+├── data/city_codes.json        # 本地城市码表
+├── integrations/               # Hub 映射、HTTP Client、Outbox
+├── result/
+│   ├── chrome-profile/         # BOSS 专用 Chrome 登录态
+│   ├── job-result/             # 列表、详情、CSV、分析结果
+│   │   └── raw-responses/      # 显式开启的原始响应诊断文件
+│   └── outbox/
+│       ├── pending/            # 等待补传
+│       ├── quarantine/         # 损坏文件
+│       └── rejected/           # 永久失败文件
+├── scripts/boss_cdp_raw.py     # 主入口
+└── scripts/job_summary.py      # 离线摘要与提示词
+```
+
+`result/`、真实 `collector.ini`、虚拟环境和浏览器 Profile 均已被 Git 忽略，不要手工提交这些内容。
+
+## 3. 首次安装
+
+以下命令默认在仓库根目录执行。
+
+### Windows PowerShell（推荐）
+
+```powershell
+Set-Location collectors/boss-zhipin-scraper
+
+py -3.10 -m venv .venv
+Set-ExecutionPolicy -Scope Process Bypass
+& .\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+如果本机 `py -3.10` 不存在，可以使用任意 Python 3.10+ 的实际命令创建 `.venv`。
+
+### macOS / Linux
 
 ```bash
-# 1. 克隆 + 装依赖
-git clone https://github.com/eatmoreduck/boss-zhipin-scraper.git
-cd boss-zhipin-scraper
-pip install -r requirements.txt          # 或 uv sync
+cd collectors/boss-zhipin-scraper
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
 
-# 2. 启动隔离 Chrome 并登录（只需一次，登录态持久保存）
+项目也支持 [uv](https://docs.astral.sh/uv/)：
+
+```bash
+uv sync
+```
+
+运行入口时可使用激活后的 `python`，也可使用 `uv run python`。
+
+## 4. 第一次登录与环境检查
+
+### 4.1 启动专用 Chrome
+
+```powershell
 python scripts/boss_cdp_raw.py --setup-chrome
+```
 
-# 检查登录及 CDP 状态
-python scripts\boss_cdp_raw.py --check
-# 3. 抓取 + 分析
-python scripts/boss_cdp_raw.py --keyword "AI Agent" --city 上海 --pages 3 --analysis
+该命令会：
 
-# 仅抓取数据：
-python scripts/boss_cdp_raw.py --keyword "java" --city 成都 --pages 1
-# 仅抓取数据，原始报文保存在本地：
-python scripts/boss_cdp_raw.py --keyword "java" --city 成都 --pages 1 --capture-raw-response
-# Information Hub 恢复后，独立补传本地 Outbox（不访问 Chrome/BOSS）：
-python scripts/boss_cdp_raw.py --flush-outbox
-# 查看支持的城市：--list-cities [关键词]
+1. 创建或复用 `result/chrome-profile/`；
+2. 在默认端口 `9222` 启动真实 Chrome；
+3. 打开 BOSS 直聘页面；
+4. 等待你在这个专用浏览器中手动登录；
+5. 用搜索接口确认登录态可用并能返回明文薪资。
+
+登录态保存在专用 Profile 中，正常情况下只需首次手动登录。重复运行 `--setup-chrome` 不会清空登录态，也不会影响主 Chrome。
+
+不要日常使用 `--copy-login-state`。只有明确需要从主 Chrome 导入 Cookie 时才执行：
+
+```powershell
+python scripts/boss_cdp_raw.py --setup-chrome --copy-login-state
+```
+
+若需要清空专用浏览器登录态并重建：
+
+```powershell
+python scripts/boss_cdp_raw.py --setup-chrome --reset-chrome-profile
+```
+
+### 4.2 检查环境
+
+保持专用 Chrome 运行，然后执行：
+
+```powershell
+python scripts/boss_cdp_raw.py --check
+```
+
+检查项包括 Python 依赖、CDP 端口和 BOSS 登录状态。还可以执行一次不写结果文件的真实接口检查：
+
+```powershell
+python scripts/boss_cdp_raw.py --smoke-test
+```
+
+只有 `--check` 通过后再开始正式采集。
+
+## 5. 采集职位
+
+### 5.1 最小命令
+
+```powershell
+python scripts/boss_cdp_raw.py --keyword "Java 后端" --city 成都 --pages 1
+```
+
+这会采集列表和详情，并默认保存到：
+
+```text
+result/job-result/boss_jobs_YYYYMMDD_HHMM.json
+result/job-result/boss_details_YYYYMMDD_HHMM.json
+```
+
+### 5.2 常用命令
+
+```powershell
+# 三页职位，详情默认开启
+python scripts/boss_cdp_raw.py --keyword "Java 后端" --city 成都 --pages 3
+
+# 仅列表，不打开职位详情
+python scripts/boss_cdp_raw.py --keyword "Java 后端" --city 成都 --pages 3 --no-detail
+
+# 最多抓 10 个详情
+python scripts/boss_cdp_raw.py --keyword "Java 后端" --city 成都 --pages 3 --max-details 10
+
+# 同时生成 CSV
+python scripts/boss_cdp_raw.py --keyword "Java 后端" --city 成都 --pages 3 --format csv
+
+# 抓取后在终端输出聚合分析
+python scripts/boss_cdp_raw.py --keyword "Java 后端" --city 成都 --pages 3 --analysis
+
+# 正常完成后关闭 BOSS 专用 Chrome
+python scripts/boss_cdp_raw.py --keyword "Java 后端" --city 成都 --pages 1 --close-chrome
+```
+
+单次页数最大为 10，超过时会自动调整为 10。建议从 1 页开始验证，不要高频、无节制重复执行。
+
+### 5.3 城市与筛选条件
+
+```powershell
+# 查看所有支持城市
+python scripts/boss_cdp_raw.py --list-cities
+
+# 按名称过滤城市
 python scripts/boss_cdp_raw.py --list-cities 江
 
-# 4. 抓取后生成聚合摘要 + 提示词（默认读取最新结果）
-python scripts/job_summary.py
+# 组合筛选
+python scripts/boss_cdp_raw.py `
+  --keyword "Java 后端" `
+  --city 成都 `
+  --pages 2 `
+  --scale 304 `
+  --salary 405 `
+  --experience 104 `
+  --degree 203
 ```
 
-抓完直接拿到：薪资分布、经验要求、高频技能词、求职材料优化提示词。提示词只基于岗位数据，不读取本地简历文件，也不给岗位算个人匹配分。
+常用代码：
 
-### 从任意工作目录启动
+| 参数 | 示例 | 含义 |
+| --- | --- | --- |
+| `--scale` | `304` | 公司规模，304 为 500～999 人 |
+| `--stage` | `807` | 融资阶段，807 为已上市 |
+| `--salary` | `405` | 薪资范围，405 为 10～20K |
+| `--experience` | `104` | 经验要求，104 为 1～3 年 |
+| `--degree` | `203` | 学历要求，203 为本科 |
+| `--industry` | `1001` | 行业，1001 为互联网 |
 
-`boss_cdp_raw.py` 会根据自身绝对路径定位 Collector 项目根目录。使用脚本绝对路径时，不需要先执行 `Set-Location`，也不需要手工设置 `PYTHONPATH`：
+运行 `python scripts/boss_cdp_raw.py --help` 可查看完整代码说明。
+
+### 5.4 自定义输出与合并
 
 ```powershell
-& 'D:\0.project\information-platform\collectors\boss-zhipin-scraper\.venv\Scripts\python.exe' `
-  'D:\0.project\information-platform\collectors\boss-zhipin-scraper\scripts\boss_cdp_raw.py' `
-  --keyword "Java" `
+# 指定列表和详情文件
+python scripts/boss_cdp_raw.py `
+  --keyword "Java 后端" `
   --city 成都 `
   --pages 1 `
-  --capture-raw-response
+  --output result/job-result/java-jobs.json `
+  --detail-output result/job-result/java-details.json
+
+# 把本轮职位与已有列表按 job_id 去重合并
+python scripts/boss_cdp_raw.py `
+  --keyword "Java 后端" `
+  --city 成都 `
+  --pages 1 `
+  --merge result/job-result/old-jobs.json `
+  --output result/job-result/merged-jobs.json
 ```
 
-以上路径仅为 Windows 示例，请按实际仓库位置调整。相对路径命令、`python -m scripts.boss_cdp_raw` 和安装后的 `boss-scraper` 命令仍然兼容。
+## 6. 写入 Information Hub
 
-## ✨ 特性
+仅需要本地 JSON/CSV 时可以跳过本节。Hub 提交默认关闭，不会产生任何后端请求。
 
-- 明文薪资（API 模式，绕过字体反爬）
-- JSON / CSV 双格式输出
-- 详情页 JD 抓取 + 技能分析
-- 抓取后聚合摘要 + 可复制提示词
-- 增量写入（异常退出不丢数据）
-- Information Hub 失败本地 Outbox 与独立补传
-- 一键环境检查 + 持久隔离 Chrome CDP profile
-- 多维筛选（规模、融资、薪资、经验、学历、行业）
-- macOS + Linux 支持（Windows 代码分支已预留，未经实测，不保证可用）
+### 6.1 前置条件
 
-<details>
-<summary>🔍 为什么不选 Selenium / Playwright 类爬虫？</summary>
+先确认 Information Hub 已启动，并且服务端配置了 Collector Token。服务端完整配置参见 [`../../backend/information-hub/CONFIGURATION.md`](../../backend/information-hub/CONFIGURATION.md)。
 
-- Selenium/Playwright 会启动完整的受控浏览器，体积大、指纹明显，容易触发 BOSS 的风控和验证码。
-- 本工具直接连接你已经登录的真实 Chrome（CDP），复用真实指纹和登录态，调用的也是页面内合法的搜索 API，返回的 `salaryDesc` 本就是明文——不需要解析被字体反爬加密的 DOM 薪资。
-- 因此比传统 DOM 抓取类爬虫更稳定，也更难被识别为自动化流量。
+Collector 与后端必须使用同一个安全随机 Token。PowerShell 可这样生成：
 
-</details>
-
-## 安装
-
-### 方式 1：克隆到本地再安装（推荐）
-
-由于 `hermes skills install` 的网络请求在某些环境下可能无法直接访问 GitHub，推荐先克隆仓库再本地安装：
-
-```bash
-# 1. 克隆仓库
-git clone https://github.com/eatmoreduck/boss-zhipin-scraper.git
-cd boss-zhipin-scraper
-
-# 2. 复制到 Hermes skills 目录
-mkdir -p ~/.hermes/skills/data-science/boss-zhipin-scraper/scripts
-cp SKILL.md ~/.hermes/skills/data-science/boss-zhipin-scraper/
-cp scripts/boss_cdp_raw.py ~/.hermes/skills/data-science/boss-zhipin-scraper/scripts/
-cp scripts/job_summary.py ~/.hermes/skills/data-science/boss-zhipin-scraper/scripts/
+```powershell
+$bytes = New-Object byte[] 32
+[System.Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
+[Convert]::ToBase64String($bytes)
 ```
 
-### 方式 2：curl 一键安装
+不要把真实 Token 提交到 Git、粘贴到截图或写入日志。
 
-不需要克隆整个仓库，直接下载必要文件：
+### 6.2 创建 Collector 配置
 
-```bash
-mkdir -p ~/.hermes/skills/data-science/boss-zhipin-scraper/scripts && \
-curl -sL https://raw.githubusercontent.com/eatmoreduck/boss-zhipin-scraper/master/SKILL.md \
-  -o ~/.hermes/skills/data-science/boss-zhipin-scraper/SKILL.md && \
-curl -sL https://raw.githubusercontent.com/eatmoreduck/boss-zhipin-scraper/master/scripts/boss_cdp_raw.py \
-  -o ~/.hermes/skills/data-science/boss-zhipin-scraper/scripts/boss_cdp_raw.py && \
-curl -sL https://raw.githubusercontent.com/eatmoreduck/boss-zhipin-scraper/master/scripts/job_summary.py \
-  -o ~/.hermes/skills/data-science/boss-zhipin-scraper/scripts/job_summary.py
+```powershell
+Copy-Item config/collector.ini.example config/collector.ini
 ```
 
-### 方式 3：hermes skills install（需网络直连 GitHub）
+编辑 `config/collector.ini`：
 
-```bash
-hermes skills install https://raw.githubusercontent.com/eatmoreduck/boss-zhipin-scraper/master/SKILL.md --category data-science
+```ini
+[collector]
+collector_id = boss-collector-desktop
+collector_version = 2.1.0
+historical_timezone = Asia/Shanghai
+
+[information_hub]
+enabled = true
+url = http://127.0.0.1:8080/api/v1/collector/items
+collector_token = 替换为与后端一致的真实Token
+connect_timeout_seconds = 3
+read_timeout_seconds = 10
 ```
 
-> 注意：此方式依赖 hermes 进程能直接访问 GitHub，如果遇到超时或连接失败，请使用方式 1 或 2。
+如果后端在其他主机或端口，请填写 Collector 所在机器实际可访问的完整写入接口 URL。
 
-### 验证安装
-
-```bash
-# 检查文件是否存在
-ls ~/.hermes/skills/data-science/boss-zhipin-scraper/SKILL.md
-ls ~/.hermes/skills/data-science/boss-zhipin-scraper/scripts/boss_cdp_raw.py
-ls ~/.hermes/skills/data-science/boss-zhipin-scraper/scripts/job_summary.py
-```
-
-安装后直接在 Hermes 对话中说"帮我搜一下 BOSS直聘 上上海的 AI Agent 岗位"。
-
-## 作为命令行工具使用
-
-不想装成 Skill 也可以直接当 CLI 用：
-
-```bash
-# 1. 克隆 + 安装依赖
-git clone https://github.com/eatmoreduck/boss-zhipin-scraper.git
-cd boss-zhipin-scraper
-pip install -r requirements.txt
-
-# 2. 启动 Chrome CDP
-python3 scripts/boss_cdp_raw.py --setup-chrome
-# 首次使用也不会复制主 Chrome 登录态；请在弹出的 BOSS 专用浏览器中登录 zhipin.com
-# setup 会等待登录完成，并确认接口能返回明文薪资
-
-# 3. 检查环境
-python3 scripts/boss_cdp_raw.py --check
-
-# 可选：真实浏览器/API smoke test（不写结果文件）
-python3 scripts/boss_cdp_raw.py --smoke-test
-
-# 4. 抓取
-python3 scripts/boss_cdp_raw.py --keyword "AI Agent" --city 上海 --pages 3 --format csv --analysis
-
-# 可选：本地打印并保存职位搜索 API 原始响应（默认关闭）
-python3 scripts/boss_cdp_raw.py --keyword "AI Agent" --city 上海 --pages 1 --no-detail --capture-raw-response
-
-# 5. 抓取后摘要和提示词
-python3 scripts/job_summary.py --top 15
-```
-
-## 参数
-
-| 参数 | 说明 |
-|------|------|
-| `--keyword` | 搜索关键词（默认 "AI Agent"） |
-| `--city` | 城市（中文或代码，默认上海）。**支持全国城市**（一二三四五线全覆盖，共 300+ 个），运行时自动从 BOSS 同步最新城市码；码表见 [`data/city_codes.json`](data/city_codes.json)，或用 `--list-cities` 查看 |
-| `--list-cities [关键词]` | 打印支持的城市列表，可选关键词过滤，如 `--list-cities 江` |
-| `--pages` | 页数（上限 10） |
-| `--format` | json / csv；csv 会同时导出列表和详情 CSV |
-| `--detail` | 抓取详情页 JD（默认开启） |
-| `--no-detail` | 不抓取详情页 |
-| `--analysis` | 分析报告 |
-| `--merge FILE` | 合并已有数据（按 job_id 去重） |
-| `--allow-dom-fallback` | API 无数据时允许降级 DOM 提取；默认关闭，薪资可能不可信 |
-| `--capture-raw-response` | 打印并保存职位搜索 API 的原始响应体；仅供本地诊断，默认关闭 |
-| `--raw-response-dir DIR` | 覆盖原始响应保存目录；默认 `result/job-result/raw-responses/` |
-| `--flush-outbox` | 补传本地 Information Hub Outbox；不初始化 Chrome、不访问 BOSS |
-| `--check` | 环境检查（CDP + 依赖 + 登录态） |
-| `--smoke-test` | 用真实 Chrome/CDP 跑一次 BOSS 搜索 API smoke test，不写结果文件 |
-| `--setup-chrome` | 一键启动 Chrome CDP（持久隔离 profile） |
-| `--copy-login-state` | 手动导入主 Chrome 的 Local State + Cookie 相关文件到隔离 profile（默认、首次启动、重复启动都不复制） |
-| `--reset-chrome-profile` | 重建 BOSS 专用 Chrome profile，会清除此专用浏览器内的登录态 |
-| `--no-wait-login` | `--setup-chrome` 启动后不等待登录完成 |
-| `--login-timeout` | `--setup-chrome` 等待登录完成的秒数（默认 300） |
-| `--stop-chrome` | 关闭 BOSS 专用 CDP Chrome（按隔离 profile 精准匹配，不碰主 Chrome） |
-| `--close-chrome` | 抓取正常结束后自动关闭专用 Chrome（默认不关；异常退出不触发，保留登录态） |
-| `--output` | 列表输出路径（默认 `~/.boss-zhipin-scraper/job-result/`） |
-| `--detail-output` | 详情输出路径（默认 `~/.boss-zhipin-scraper/job-result/`） |
-| `--cdp-port` | CDP 端口（默认 9222） |
-| `--scale/--salary/--experience/--degree` | 筛选条件 |
-
-## 职位搜索 API 原始响应诊断
-
-只有在核对 BOSS 来源字段或排查接口响应时才启用：
-
-```bash
-python3 scripts/boss_cdp_raw.py --keyword "java"  --city 成都 --pages 1 --no-detail --capture-raw-response
-```
-
-开启后，脚本会在字段筛选和结构化转换之前打印 `xhr.responseText`，并按运行 ID、页码、请求序号和 HTTP 状态保存到：
+配置优先级：
 
 ```text
-result/job-result/raw-responses/
+环境变量 > INI 文件 > 程序默认值
 ```
 
-可以通过 `--raw-response-dir DIR` 指定其他本地目录。合法 JSON 保存为 `.json`，非 JSON 响应保存为 `.txt`；非 200 响应也会保留正文，但不会被当作职位数据。
+可用环境变量：
 
-该功能默认关闭。原始响应可能包含 `security_id`、`lid` 和其他来源追踪字段，只能用于本地调试：
+- `INFORMATION_HUB_ENABLED`
+- `INFORMATION_HUB_URL`
+- `INFORMATION_HUB_COLLECTOR_TOKEN`
+- `INFORMATION_HUB_CONNECT_TIMEOUT_SECONDS`
+- `INFORMATION_HUB_READ_TIMEOUT_SECONDS`
 
-- 不要提交到 Git；
-- 不要直接发送到 Information Hub；
-- 不要分享包含真实来源标识的数据文件；
-- 使用后按需清理，避免长期积累；
-- 脚本不会为此功能采集请求头、响应头、Cookie、Authorization 或 Chrome Profile。
+### 6.3 采集并自动提交
 
-## Information Hub 本地 Outbox
+默认配置文件是 `config/collector.ini`，启用后原采集命令无需增加参数：
 
-当 Hub 返回 5xx 或非预期状态，或者发生超时、连接/请求失败时，Collector 不会让已经完成的本地采集失败，而是将当前及尚未发送的安全 Envelope 原子保存到：
+```powershell
+python scripts/boss_cdp_raw.py --keyword "Java 后端" --city 成都 --pages 1
+```
+
+也可以使用仓库外的配置：
+
+```powershell
+python scripts/boss_cdp_raw.py `
+  --config C:\secure\collector.ini `
+  --keyword "Java 后端" `
+  --city 成都 `
+  --pages 1
+```
+
+实际顺序：
 
 ```text
-result/outbox/pending/
+列表和详情本地保存成功
+→ 安全映射 InformationEnvelope
+→ 单条 POST 到 Information Hub
 ```
 
-Information Hub 恢复并且 `config/collector.ini` 中的 Hub 配置有效后执行：
+提交规则：
+
+- 2xx：成功；
+- 4xx / 413：当前数据或配置的永久问题，记录失败后继续，不进入 Outbox；
+- 5xx、超时、连接失败或非预期响应：停止本批后续 HTTP 请求，把当前及剩余安全 Envelope 写入 Outbox；
+- Hub 配置、映射或网络错误不会改变已完成的本地采集结果。
+
+### 6.4 Hub 恢复后补传
 
 ```powershell
 python scripts/boss_cdp_raw.py --flush-outbox
 ```
 
-如果使用其他配置文件：
+指定其他配置：
 
 ```powershell
 python scripts/boss_cdp_raw.py --flush-outbox --config C:\secure\collector.ini
 ```
 
-补传命令不需要启动 Chrome，也不会访问 BOSS；可以从任意工作目录用脚本绝对路径执行。成功项会从 `pending/` 删除，损坏文件隔离到 `result/outbox/quarantine/`，补传时收到 4xx/413 等永久失败响应的文件移到 `result/outbox/rejected/`。
+补传命令不会启动 Chrome，也不会访问 BOSS。成功文件从 `pending/` 删除；损坏文件移入 `quarantine/`；4xx/413 等永久失败移入 `rejected/`。可重试失败使用从 60 秒到最多 1 小时的指数退避。
 
-新入队项立即可补传。再次遇到可重试失败时，重试间隔从 60 秒开始指数增长，最大 1 小时；尚未到期的项会跳过。Outbox 只保存 Mapper 已清理的 InformationEnvelope 和重试元数据，不保存 Token、Cookie、请求头或配置内容。同一业务键重复补传由 Information Hub 的幂等写入保证安全。
+同一职位重复补传是安全的，Information Hub 使用来源与 `sourceItemId` 做幂等写入。
 
-4xx、413、配置错误和映射错误不会自动进入 Outbox，需要根据错误原因修正请求或配置。
+详细字段映射、Outbox 语义和 Python 调用方式参见 [`INTEGRATION.md`](./INTEGRATION.md)。
 
-## 抓取后摘要与提示词
+## 7. 离线摘要与提示词
 
-`scripts/job_summary.py` 只读取已抓取的 `boss_jobs_*.json` 和 `boss_details_*.json`，做简单聚合分析并生成一段可复制提示词。它不读取本地简历文件，不引入 PDF 依赖，也不给个人与岗位做分数判断。
+`job_summary.py` 只读取已保存的职位列表和详情，不访问 Chrome、BOSS 或 Information Hub，也不读取本地简历。
 
-```bash
-# 读取默认结果目录下最新的 boss_jobs_*.json，并自动匹配同时间戳或最新详情文件
-python3 scripts/job_summary.py
+```powershell
+# 自动读取 result/job-result 下最新结果
+python scripts/job_summary.py
 
-# 指定列表和详情文件
-python3 scripts/job_summary.py \
-  --input ~/.boss-zhipin-scraper/job-result/boss_jobs_20260625_1200.json \
-  --details ~/.boss-zhipin-scraper/job-result/boss_details_20260625_1200.json \
+# 指定输入
+python scripts/job_summary.py `
+  --input result/job-result/java-jobs.json `
+  --details result/job-result/java-details.json `
   --top 15
 
-# 只输出提示词
-python3 scripts/job_summary.py --prompt-only
+# 只输出摘要或提示词
+python scripts/job_summary.py --summary-only
+python scripts/job_summary.py --prompt-only
 ```
 
-打包安装后也可以使用入口命令：
+安装为包后也可以使用：
 
-```bash
-uv run boss-summary --top 15
+```powershell
+boss-scraper --help
+boss-summary --top 15
 ```
 
-摘要会覆盖这些维度：薪资区间、经验要求、学历要求、地区分布、高频公司、技能标签、JD 高频词。提示词会要求模型基于这些统计去做简历关键词补齐、项目经历改写方向和面试准备清单，但明确要求不要虚构经历。
+## 8. 原始响应诊断
 
-## 文件结构
+仅在核对 BOSS 来源字段或排查接口响应时开启：
 
-```
-boss-zhipin-scraper/
-├── SKILL.md              # Hermes Skill 定义
-├── README.md
-├── CHANGELOG.md
-├── LICENSE
-├── pyproject.toml
-├── scripts/
-│   ├── boss_cdp_raw.py   # 抓取主脚本
-│   └── job_summary.py    # 抓取后摘要 + 提示词
-└── requirements.txt
+```powershell
+python scripts/boss_cdp_raw.py `
+  --keyword "Java 后端" `
+  --city 成都 `
+  --pages 1 `
+  --no-detail `
+  --capture-raw-response
 ```
 
-## 工作原理
+原始响应保存到 `result/job-result/raw-responses/`。它可能包含 `security_id`、`lid` 等来源追踪字段：
 
-这是一个基于 Chrome CDP 的 BOSS直聘爬虫，核心流程：
+- 不要提交 Git；
+- 不要直接发送到 Information Hub；
+- 不要对外分享；
+- 排查完成后按需清理。
 
-1. 通过 Chrome DevTools Protocol (CDP) 连接到已打开的 Chrome
-2. 在 BOSS直聘页面内注入 JS，用同步 XHR 调用搜索 API
-3. API 返回明文 `salaryDesc`，绕过前端字体反爬
-4. 列表 API 保留 `securityId` / `lid` 等上下文，进入详情页时带上这些参数
-5. 每页抓完立即写入文件，按 `job_id` 去重
+脚本不会为此功能采集请求头、响应头、Cookie、Authorization 或完整 Chrome Profile。
 
-默认不会使用 DOM 提取列表，因为 DOM 薪资可能受字体反爬影响。只有明确传 `--allow-dom-fallback` 时，API 无数据才会降级 DOM。
+## 9. 参数速查
 
-详情页只从包含“职位描述”的详情区提取 JD，整页 `body` 仅用于识别登录墙和导航页，不会直接写入结果。若页面出现“登录查看完整内容”，抓取会明确报错并停止，避免把截断正文、招聘者信息、公司介绍和推荐职位当成完整 JD 保存。
+| 参数 | 用途 |
+| --- | --- |
+| `--keyword` | 搜索关键词，默认 `AI Agent` |
+| `--city` | 中文城市名或城市代码，默认上海 |
+| `--pages` | 页数，默认 3，最大 10 |
+| `--detail` / `--no-detail` | 开启或关闭详情 JD；默认开启 |
+| `--max-details` | 限制详情数量 |
+| `--format json\|csv` | 输出格式；CSV 模式仍保留 JSON |
+| `--output` | 列表 JSON 输出路径 |
+| `--detail-output` | 详情 JSON 输出路径 |
+| `--analysis` | 在主命令结束时输出分析报告 |
+| `--input` | 读取已有列表 JSON，跳过列表采集 |
+| `--merge` | 按 `job_id` 合并已有列表 |
+| `--check` | 检查依赖、CDP 和登录状态 |
+| `--smoke-test` | 真实搜索接口检查，不写结果 |
+| `--setup-chrome` | 启动/复用专用 Chrome |
+| `--stop-chrome` | 只关闭专用 Profile 对应的 Chrome |
+| `--close-chrome` | 本次采集正常结束后关闭专用 Chrome |
+| `--cdp-port` | CDP 端口，默认 9222 |
+| `--list-cities [关键词]` | 查看本地城市码表 |
+| `--allow-dom-fallback` | API 无数据时允许 DOM 降级；默认关闭 |
+| `--capture-raw-response` | 保存原始搜索响应，仅用于本地诊断 |
+| `--config` | 指定 Collector INI 配置 |
+| `--flush-outbox` | 独立补传 Information Hub Outbox |
 
-`--input ... --analysis --no-detail` 会优先加载 `--detail-output`，其次加载与输入列表同目录、同时间戳的 `boss_details_*.json`，最后查找 `~/.boss-zhipin-scraper/job-result` 下最新详情文件。
+完整参数以实时帮助为准：
 
-## Chrome profile 安全策略
-
-`--setup-chrome` 默认使用持久隔离 profile，不软链接、不复制你的主 Chrome 数据。首次启动和后续重复启动都只是创建或复用这个专用 profile：
-
-- `~/.boss-zhipin-scraper/chrome-profile`
-
-未显式指定 `--output` 或 `--detail-output` 时，抓取结果默认保存到：
-
-- `~/.boss-zhipin-scraper/job-result`
-
-首次使用需要在这个专用 Chrome 中手动登录 BOSS直聘。`--setup-chrome` 会等待登录完成，并用搜索接口确认能拿到明文 `salaryDesc` 后再返回。登录态保存在专用 profile 内，重启机器后仍然保留；重复运行 `--setup-chrome` 不会清空它，也不会影响主 Chrome、Gmail、GitHub 等账号。
-
-登录探测每轮只发送一个搜索请求，并在不同关键词/城市之间轮换，等待间隔会从 3 秒逐步退避到最多 15 秒；这些请求同样计入单次 500 次的全局请求预算。未登录、探测样本为空、接口限制和响应异常会分别提示。遇到已确认的限制状态（例如 `code: 31`、`code: 37`「您的环境存在异常」）会立即停止探测，不会继续提示重复登录或密集重试；对未知风控码还会按 message 关键字（环境存在异常、访问频繁、安全校验等）兜底识别为限制状态，避免把「已登录但被风控」误判为登录失败。
-
-`--setup-chrome` 的交互式登录页是唯一会主动置前的临时页面；环境检查、列表/详情抓取和 smoke test 创建的临时标签页都会在后台运行，避免自动流程反复抢占当前窗口。这里的“后台”仅表示不激活标签页，专用 Chrome 仍以有界面模式运行，必要时可以手动打开检查。
-
-如确实需要从主 Chrome 手动导入 BOSS 登录态，可以显式运行：
-
-```bash
-python3 scripts/boss_cdp_raw.py --setup-chrome --copy-login-state
+```powershell
+python scripts/boss_cdp_raw.py --help
+python scripts/job_summary.py --help
 ```
 
-`--copy-login-state` 每次运行都会覆盖隔离 profile 内对应的 Cookie 相关文件；日常启动不要加这个参数。它只复制 `Local State` 和 `Default/Cookies*`、`Default/Network/Cookies*` 这类 Cookie 数据库相关文件，不复制密码库、历史记录、扩展或完整 profile。需要清空专用浏览器登录态时使用：
+## 10. 常见问题
 
-```bash
-python3 scripts/boss_cdp_raw.py --setup-chrome --reset-chrome-profile
+### 无法连接 `127.0.0.1:9222`
+
+```powershell
+python scripts/boss_cdp_raw.py --setup-chrome
+python scripts/boss_cdp_raw.py --check
 ```
 
-### 用完如何收尾
+如果端口被其他 CDP Chrome 占用，关闭旧实例，或为 setup、check 和采集统一指定其他端口，例如 `--cdp-port 9223`。
 
-抓取/分析结束后，专用 Chrome 不会自动关闭（默认保留登录态，方便你接着跑下一条抓取）。确认不再使用时，可以手动收尾：
+### 显示未登录
 
-```bash
-python3 scripts/boss_cdp_raw.py --stop-chrome
+打开采集器启动的专用 Chrome，在其中完成 BOSS 登录或安全验证，然后重新执行 `--check`。不要因为“未登录”提示而反复重建 Profile。
+
+### 显示环境异常、访问频繁或需要安全验证
+
+采集器会停止，不会自动绕过风控。请在专用 Chrome 中完成平台要求的验证，降低执行频率并稍后重试。不要连续运行登录探测或强制 DOM 降级。
+
+### 搜索没有数据
+
+先用 `--smoke-test` 和常见关键词/城市验证登录态，再检查筛选条件。默认不使用 DOM fallback；只有明确接受薪资可能不可靠时才使用 `--allow-dom-fallback`。
+
+### Hub 没有收到数据
+
+依次检查：
+
+1. `config/collector.ini` 的 `enabled = true`；
+2. URL 是完整的 `/api/v1/collector/items`；
+3. Collector Token 与后端完全一致；
+4. 后端已启动且 Collector 所在机器可以访问；
+5. `result/outbox/pending/` 是否有待补传文件；
+6. 修复服务后运行 `--flush-outbox`。
+
+4xx/413 不会自动进入 Outbox，应根据后端错误码修正 Token、URL、payload 或请求体上限。
+
+### 如何安全关闭 Chrome
+
+```powershell
+python scripts/boss_cdp_raw.py --stop-chrome
 ```
 
-`--stop-chrome` 只关闭 scraper 隔离 profile（`--user-data-dir`）对应的 Chrome 进程，**绝不**按端口或进程名去 kill，因此不会误伤你正在用的主 Chrome、Gmail、GitHub 等账号。
+该命令按采集器独立 Profile 精确匹配进程，不会关闭主 Chrome。
 
-如果你希望某次抓取正常结束后就顺手关掉 Chrome，可以加 `--close-chrome`：
+### 能否从任意工作目录启动
 
-```bash
-python3 scripts/boss_cdp_raw.py --keyword "AI Agent" --city 上海 --pages 3 --close-chrome
+可以。脚本会按自身路径定位采集器根目录。Windows 示例：
+
+```powershell
+& 'D:\0.project\information-platform\collectors\boss-zhipin-scraper\.venv\Scripts\python.exe' `
+  'D:\0.project\information-platform\collectors\boss-zhipin-scraper\scripts\boss_cdp_raw.py' `
+  --keyword "Java 后端" `
+  --city 成都 `
+  --pages 1
 ```
 
-`--close-chrome` 默认不开启；且只在抓取走完的**成功路径**上触发，登录失败、异常退出等情况不会关闭 Chrome，登录态得以保留。
+## 11. 测试
 
-## 📌 TODO
+本模块使用标准库 `unittest`，大多数测试通过 mock 隔离真实 Chrome 和网络：
 
-- [ ] 详情页抓取补强 Referer 与请求指纹，进一步降低风控触发概率
+```powershell
+Set-Location collectors/boss-zhipin-scraper
+python -m unittest discover -s tests -p "test_*.py"
+```
+
+修改采集器前请先阅读 [`AGENTS.md`](./AGENTS.md)。Chrome/CDP、登录、请求、翻页、去重和本地输出属于保护区域；Information Hub 接入通过 `integrations/` 保持解耦。
+
+## 12. 安全边界
+
+- 只使用 BOSS 专用 Chrome Profile；不要把 CDP 端口暴露到公网。
+- `collector.ini`、Token、Cookie、Profile 和采集结果不得提交 Git。
+- 发往 Hub 的 `rawPayload` 会递归移除 `security_id`、`lid` 和凭证类字段。
+- Information Hub 只接收统一协议；Collector 不连接主数据库。
+- 不把登录墙、截断详情、公司介绍或推荐职位误当成完整 JD。
+- 不自动绕过验证码、登录限制或平台风控。
+
+## 13. 相关文档
+
+- [`INTEGRATION.md`](./INTEGRATION.md)：字段映射、Hub Client 和 Outbox 详细语义
+- [`AGENTS.md`](./AGENTS.md)：采集器开发边界
+- [`CHANGELOG.md`](./CHANGELOG.md)：版本变更
+- [`../../backend/information-hub/CONFIGURATION.md`](../../backend/information-hub/CONFIGURATION.md)：Information Hub 服务端配置
+- [`README.en.md`](./README.en.md)：上游英文说明；部分路径和集成信息可能未同步，以本中文 README 和实际代码为准
 
 ## License
 
 MIT
-
-## 友情链接
-
-- [LINUX DO](https://linux.do/) — 真诚、友善、充满活力的技术社区，本项目认可并推荐。
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=eatmoreduck/boss-zhipin-scraper&type=Date)](https://star-history.com/#eatmoreduck/boss-zhipin-scraper&Date)
