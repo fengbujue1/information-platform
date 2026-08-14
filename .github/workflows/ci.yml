@@ -48,6 +48,30 @@ jobs:
   backend:
     name: Backend tests
     runs-on: ubuntu-latest
+    env:
+      SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/information_hub_backend_test?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true&useUnicode=true&characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: information_hub_backend
+      SPRING_DATASOURCE_PASSWORD: backend-tests-db-only
+      SPRING_FLYWAY_ENABLED: "true"
+      INFORMATION_HUB_TEST_DB_URL: jdbc:mysql://127.0.0.1:3306/information_hub_backend_test?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true&useUnicode=true&characterEncoding=UTF-8
+      INFORMATION_HUB_TEST_DB_USERNAME: information_hub_backend
+      INFORMATION_HUB_TEST_DB_PASSWORD: backend-tests-db-only
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: information_hub_backend_test
+          MYSQL_USER: information_hub_backend
+          MYSQL_PASSWORD: backend-tests-db-only
+          MYSQL_ROOT_PASSWORD: backend-tests-root-only
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pbackend-tests-root-only"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
     defaults:
       run:
         working-directory: backend/information-hub
@@ -62,6 +86,22 @@ jobs:
           java-version: "21"
           cache: maven
           cache-dependency-path: backend/information-hub/pom.xml
+
+      - name: Verify backend datasource environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          : "${SPRING_DATASOURCE_URL:?SPRING_DATASOURCE_URL is required}"
+          : "${SPRING_DATASOURCE_USERNAME:?SPRING_DATASOURCE_USERNAME is required}"
+          : "${SPRING_DATASOURCE_PASSWORD:?SPRING_DATASOURCE_PASSWORD is required}"
+          case "$SPRING_DATASOURCE_URL" in
+            jdbc:mysql://127.0.0.1:3306/information_hub_backend_test\?*) ;;
+            *)
+              echo "Backend datasource preflight failed: expected the job-local MySQL service on 127.0.0.1:3306."
+              exit 1
+              ;;
+          esac
+          echo "Backend datasource preflight passed: URL is set; host=127.0.0.1; port=3306; database=information_hub_backend_test."
 
       - name: Run Maven tests
         shell: bash
