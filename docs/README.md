@@ -117,7 +117,7 @@ TASK-033～TASK-044（含 TASK-034A）均已完成。Phase 4 的 Generic Core + 
 
 状态：**进行中。**
 
-Phase 5 采用 Rolling / Just-in-Time Task Planning，不预先创建完整 TASK 列表。`TASK-045`～`TASK-047` 已完成，`TASK-048` 正在执行 Baseline 验证，状态为 `VERIFYING`；当前没有 Active / DEFERRED TASK，下一个任务编号为 `TASK-049`。
+Phase 5 采用 Rolling / Just-in-Time Task Planning，不预先创建完整 TASK 列表。`TASK-045`～`TASK-048` 均已完成，`v0.1.0-beta.1` Baseline Preparation 已完成；当前没有 Active / VERIFYING / DEFERRED TASK，下一个任务编号为 `TASK-049`，Git Tag / GitHub Release 尚未创建。
 
 - [TASK-045：Phase 3 AI 页面中文化与展示文案统一](tasks/TASK-045.md)
 - [TASK-046：统一全局操作反馈与公共 API 中文错误消息](tasks/TASK-046.md)

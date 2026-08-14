@@ -96,7 +96,7 @@
 - [x] README、docs README、ROADMAP、根 AGENTS、CURRENT_STATUS 与 Task Index 的 Phase 5 事实一致。
 - [x] 当前没有未说明的 Active / DEFERRED TASK，TASK-048 经最终 GitHub CI 验证后进入 `DONE`，Next Task Number 为 `TASK-049`。
 - [x] 当前环境可执行的 Phase 4 Full-stack E2E 通过；Phase 3 E2E 如受专用环境限制则如实记录。
-- [x] GitHub Actions Run #48 的 Repository、Backend、Collector、Frontend、Phase 3 full-stack E2E 与 Web deployment 六项 Job 全部通过，Baseline blocker 已全部清除。
+- [x] GitHub CI release gate 的 Repository checks、Backend tests、Collector tests、Frontend checks、Phase 3 full-stack E2E 与 Web deployment configuration 六项 Job 全部通过，Baseline blocker 已全部清除。
 - [x] `git diff --check` 与 `git diff --cached --check` 通过。
 
 ## 8. Adjustment Log
@@ -111,7 +111,8 @@
 - 最终将 Backend Job 改为直接注入 `SPRING_DATASOURCE_URL`、`SPRING_DATASOURCE_USERNAME`、`SPRING_DATASOURCE_PASSWORD` 与 `SPRING_FLYWAY_ENABLED`，绕过对被遮蔽主配置占位符的依赖；`INFORMATION_HUB_TEST_DB_*` 继续保留给现有条件数据库测试及 `DynamicPropertySource`。未修改主/测试 `application.yml`、SpringBootTest、MyBatis 或 Migration。
 - Surefire 实际 test runtime classpath 已确认包含 `mysql-connector-j 9.7.0`；本地使用标准 datasource 变量后，Hikari 成功进入 MySQL Driver 建连并按预期失败于未运行的本机端口，而不再报“无法确定驱动”，因此无需显式设置 `SPRING_DATASOURCE_DRIVER_CLASS_NAME`。
 - Backend Job 增加无密码 datasource preflight：强制检查标准 URL、用户名和密码变量存在，只输出固定的 CI host、port 与 database，不输出密码或完整 URL；Repository checks 在所有检查成功后显式 `exit 0`，避免任何已处理的原生命令退出码成为最终 Job 状态。
-- GitHub Actions Run #48 最终验证上述 CI Adjustment 有效：Repository checks、Backend tests、Collector tests、Frontend checks、Phase 3 full-stack E2E 和 Web deployment configuration 全部通过。
+- GitHub CI release gate 已验证上述 CI Adjustment 有效：Repository checks、Backend tests、Collector tests、Frontend checks、Phase 3 full-stack E2E 和 Web deployment configuration 全部通过。
+- 最终 candidate commit 与对应 CI Run 由发布前 Release Validation 动态读取 GitHub 实际状态，不在版本库文档中固化 Run 编号。
 - 所有 Adjustment 均已完成并纳入最终验证，没有遗留项需要拆分为后续 TASK；`v0.1.0-beta.1` Baseline Preparation 的已知 blocker 已全部清除。
 
 ## 9. Test / Verification Record
@@ -136,10 +137,10 @@
 - classpath / 配置复核：`target/test-classes/application.yml` 不含 datasource，且 Surefire classpath 顺序为 `target/test-classes` 先于 `target/classes`；主配置占位符因此不能承担 CI test 的间接映射。测试目录不存在其它 datasource 配置，`@TestPropertySource` 未覆盖 datasource，数据库集成测试的 `DynamicPropertySource` 只使用 `INFORMATION_HUB_TEST_DB_*`。
 - Surefire runtime 复核：测试报告中的 `surefire.test.class.path` 包含 `com/mysql/mysql-connector-j/9.7.0/mysql-connector-j-9.7.0.jar`；MySQL Connector 可用于 test runtime。
 - 设置 `SPRING_DATASOURCE_*` / `SPRING_FLYWAY_ENABLED=true` 并清除 `INFORMATION_HUB_DB_*` 后执行 `backend/information-hub/mvnw.cmd -Dtest=InformationHubApplicationTests test`：按当前本机环境预期未通过，1 test、1 error；日志显示 Hikari 启动、`com.mysql.cj.jdbc.NonRegisteringDriver.connect` 被调用，并最终在 `127.0.0.1:3306` 报 `Connection refused`。该证据确认标准变量已被 Surefire fork 继承且有效形成 DataSource，失败点已越过 driver 判定。
-- 本地调整阶段无法验证 MySQL 8.4 Service 与 datasource preflight 的最终连通，因此当时保留给 GitHub Actions 且未伪造 PASS；该门禁随后已由 Run #48 验证通过。
+- 本地调整阶段无法验证 MySQL 8.4 Service 与 datasource preflight 的最终连通，因此当时保留给 GitHub Actions 且未伪造 PASS；该门禁随后已由 GitHub CI release gate 验证通过。
 - `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\verify-project.ps1`：再次通过并明确返回 exit code `0`。
 - 使用项目现有 Frontend `yaml` 依赖再次解析 `.github/workflows/ci.yml`，断言 4 个 Spring 标准变量、3 个数据库集成测试变量、MySQL 8.4 Service、固定 CI datasource 目标、无遗留 `INFORMATION_HUB_DB_URL`，并确认 preflight 脚本不包含密码值：通过。
-- GitHub Actions Run #48：通过；Repository checks、Backend tests、Collector tests、Frontend checks、Phase 3 full-stack E2E、Web deployment configuration 均为 PASS。该结果完成了本地无法复刻的临时 MySQL、Flyway V1～V4、标准 DataSource 注入与 Phase 3 全栈发布门禁验证。
+- GitHub CI release gate：`PASS`；Repository checks、Backend tests、Collector tests、Frontend checks、Phase 3 full-stack E2E、Web deployment configuration 均为 `PASS`。该结果完成了本地无法复刻的临时 MySQL、Flyway V1～V4、标准 DataSource 注入与 Phase 3 全栈发布门禁验证。
 - `git diff --check`：通过。
 - `git diff --cached --check`：通过。
 
@@ -180,7 +181,7 @@
 - `.github/workflows/ci.yml` 的 Backend tests Job 使用 `mysql:8.4` Service、健康检查、独立测试库与 CI-only 账号；最终直接注入 Spring Boot 标准 datasource / Flyway 变量，同时保留数据库集成测试变量，并在 Maven 前执行不泄露密码的固定目标 preflight。本地默认配置、生产部署配置和 Secret 边界均未改变。
 - 未显式配置 MySQL driver class；现有 runtime Connector 和标准 JDBC URL 已能自动完成驱动识别，避免用 driver 配置掩盖缺失 URL。
 - `scripts/verify-project.ps1` 对 `git grep` 使用局部的原生命令退出码处理，明确区分匹配、无匹配和扫描异常，并在所有检查通过后显式 `exit 0`；既消除合法退出码 `1` 的 Repository checks 误报，也保留敏感内容阻断能力。
-- GitHub Actions Run #48 已对最终代码和 CI 配置完成全套验证，六项 Job 全部通过；结合既有本地 Backend、Frontend、Collector、Phase 4 E2E 与 Flyway 验证，TASK-048 的 Acceptance Criteria 和所有 Adjustment 均已闭环。
+- GitHub CI release gate 已对代码和 CI 配置完成全套验证，六项 Job 全部通过；结合既有本地 Backend、Frontend、Collector、Phase 4 E2E 与 Flyway 验证，TASK-048 的 Acceptance Criteria 和所有 Adjustment 均已闭环。
 - `v0.1.0-beta.1` Baseline Preparation 已完成，当前没有遗留发布 blocker；Git Tag 与 GitHub Release 尚未创建，仍由后续经用户确认的发布流程处理。
 - 未修改生产业务功能、数据库、API Contract、Architecture、ADR 或安全边界；未执行 commit、push、merge、tag 或 GitHub Release。
 

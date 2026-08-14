@@ -133,7 +133,7 @@ ai_model_invocation
 
 ## 当前任务
 
-`TASK-048` 已完成 `v0.1.0-beta.1` Baseline Preparation；本地验证与 GitHub Actions Run #48 最终 CI 均已通过，状态为 `DONE`，已知 Baseline blocker 已全部清除。
+`TASK-048` 已完成 `v0.1.0-beta.1` Baseline Preparation；本地验证与 GitHub CI release gate 均已通过，状态为 `DONE`，已知 Baseline blocker 已全部清除。
 
 当前没有 Active / VERIFYING / DEFERRED TASK；下一个任务编号为 `TASK-049`。任务状态与编号以 [Phase 5 Task Index](PHASE5_TASK_INDEX.md) 为准。
 
@@ -185,7 +185,7 @@ Phase 5：Product Refinement & Stabilization 已进入进行中状态，采用 R
 - `TASK-045` 已完成 Phase 3 AI 页面域及推荐画像复用术语的中文化，自动化测试、Fixture Browser E2E 与人工验证均已通过，状态为 `DONE`；
 - `TASK-046` 已统一浏览器操作反馈与公共 API 中文错误消息，自动化验证与人工验收均已通过，状态为 `DONE`；
 - `TASK-047` 已将 Manual / Schedule 的候选窗口、候选数量和预估 Token 预算改为统一服务端配置，并提供认证只读限制 API；Web 已使用动态默认值与上限，超限旧 Schedule 会明确提示并阻止新执行，自动化检查与人工验收均已完成，状态为 `DONE`；
-- `TASK-048` 已完成测试断言与 V3 Migration 跨平台校验修复、Baseline 组件版本和发布文档对齐，以及自包含 Backend MySQL CI 与 Repository checks 稳定化；本地门禁和 GitHub Actions Run #48 六项 Job 均已通过，状态为 `DONE`；
+- `TASK-048` 已完成测试断言与 V3 Migration 跨平台校验修复、Baseline 组件版本和发布文档对齐，以及自包含 Backend MySQL CI 与 Repository checks 稳定化；本地门禁和 GitHub CI release gate 六项 Job 均已通过，状态为 `DONE`；
 - 当前没有 Active / VERIFYING / DEFERRED TASK；
 - 下一个任务编号为 `TASK-049`；
 - 不预先创建空的后续 TASK 或完整任务列表；
@@ -204,7 +204,16 @@ Phase 5：Product Refinement & Stabilization 已进入进行中状态，采用 R
 
 TASK-048 本地 Backend 276 tests 与 package、Frontend typecheck / 95 tests / build、Collector 144 tests、Phase 4 Full-stack E2E、Flyway V1～V4 和 `git diff --check` 均已通过。
 
-GitHub Actions Run #48 的 Repository checks、Backend tests、Collector tests、Frontend checks、Phase 3 full-stack E2E 和 Web deployment configuration 全部通过；`v0.1.0-beta.1` Baseline Preparation 的 CI 门禁与已知 blocker 已全部闭环。
+GitHub CI release gate：`PASS`。
+
+- Repository checks：`PASS`；
+- Backend tests：`PASS`；
+- Collector tests：`PASS`；
+- Frontend checks：`PASS`；
+- Phase 3 full-stack E2E：`PASS`；
+- Web deployment configuration：`PASS`。
+
+最终 candidate commit 与对应 CI Run 由发布前 Release Validation 动态读取 GitHub 实际状态，不在版本库文档中固化 Run 编号；`v0.1.0-beta.1` Baseline Preparation 的 CI 门禁与已知 blocker 已全部闭环。
 
 ## 下一步
 
