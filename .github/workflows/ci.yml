@@ -48,6 +48,22 @@ jobs:
   backend:
     name: Backend tests
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: information_hub_backend_test
+          MYSQL_USER: information_hub_backend
+          MYSQL_PASSWORD: backend-tests-db-only
+          MYSQL_ROOT_PASSWORD: backend-tests-root-only
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pbackend-tests-root-only"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
     defaults:
       run:
         working-directory: backend/information-hub
@@ -65,6 +81,14 @@ jobs:
 
       - name: Run Maven tests
         shell: bash
+        env:
+          INFORMATION_HUB_DB_URL: jdbc:mysql://127.0.0.1:3306/information_hub_backend_test?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true&useUnicode=true&characterEncoding=UTF-8
+          INFORMATION_HUB_DB_USERNAME: information_hub_backend
+          INFORMATION_HUB_DB_PASSWORD: backend-tests-db-only
+          INFORMATION_HUB_FLYWAY_ENABLED: "true"
+          INFORMATION_HUB_TEST_DB_URL: jdbc:mysql://127.0.0.1:3306/information_hub_backend_test?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true&useUnicode=true&characterEncoding=UTF-8
+          INFORMATION_HUB_TEST_DB_USERNAME: information_hub_backend
+          INFORMATION_HUB_TEST_DB_PASSWORD: backend-tests-db-only
         run: |
           chmod +x ./mvnw
           ./mvnw test

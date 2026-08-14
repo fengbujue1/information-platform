@@ -66,11 +66,22 @@ if ($bad.Count -gt 0) {
     Write-Error ("Potentially sensitive/runtime files are tracked:`n" + (($bad | Sort-Object -Unique) -join "`n"))
 }
 
-$privateKeyMarkers = @(git grep -n -I -E -- "-----BEGIN (OPENSSH|RSA|EC|DSA|PRIVATE) PRIVATE KEY-----")
-if ($LASTEXITCODE -eq 0 -and $privateKeyMarkers.Count -gt 0) {
+# git grep 返回 1 表示没有匹配项，是敏感信息扫描的正常成功结果。
+# 显式关闭原生命令非零退出码到 PowerShell 错误的转换，避免 CI 在读取退出码前终止。
+$previousNativeCommandUseErrorActionPreference = $PSNativeCommandUseErrorActionPreference
+try {
+    $PSNativeCommandUseErrorActionPreference = $false
+    $privateKeyMarkers = @(git grep -n -I -E -- "-----BEGIN (OPENSSH|RSA|EC|DSA|PRIVATE) PRIVATE KEY-----")
+    $gitGrepExitCode = $LASTEXITCODE
+}
+finally {
+    $PSNativeCommandUseErrorActionPreference = $previousNativeCommandUseErrorActionPreference
+}
+
+if ($gitGrepExitCode -eq 0 -and $privateKeyMarkers.Count -gt 0) {
     Write-Error ("Private key material appears in tracked files:`n" + ($privateKeyMarkers -join "`n"))
 }
-if ($LASTEXITCODE -gt 1) {
+if ($gitGrepExitCode -ne 0 -and $gitGrepExitCode -ne 1) {
     throw "Unable to scan tracked files for private key material."
 }
 

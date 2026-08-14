@@ -102,6 +102,10 @@
 
 - Phase 4 Full-stack E2E 首次运行虽然通过，但日志显示它启动了遗留的 `information-hub-0.0.1-SNAPSHOT.jar`。已将 Phase 3 / Phase 4 E2E 启动器同步到 `information-hub-0.1.0-beta.1.jar`，并重新运行 Phase 4 E2E；新日志确认实际启动 `InformationHubApplication v0.1.0-beta.1`，测试通过。
 - 该调整是 Backend Artifact 版本切换的必要配套，不新增产品功能，无需拆分后续 TASK。
+- Baseline Candidate 的 GitHub `Backend tests` Job 原先没有 MySQL Service，也没有注入 `INFORMATION_HUB_DB_*` / `INFORMATION_HUB_TEST_DB_*`。普通 Spring 上下文会保留开发库默认地址，真实数据库集成测试则因缺少测试库环境变量而不能作为可靠门禁；现已复用 Phase 3 E2E 验证过的 `mysql:8.4` Service 模式，为该 Job 增加 Runner 生命周期内的独立 `information_hub_backend_test` 临时库和仅限 CI 的固定凭据。
+- Maven 测试同时通过 `INFORMATION_HUB_DB_*` 与 `INFORMATION_HUB_TEST_DB_*` 连接上述临时测试库，并显式启用 Flyway，使空库按当前 V1～V4 正常初始化。该 Job 不读取个人 MySQL、SSH Tunnel、云数据库或数据库 Secret；Runner 销毁时 Service 与数据一并销毁，且未修改业务 `application.yml` 默认开发配置。
+- Repository checks 中 `git grep` 的退出码 `1` 表示“没有匹配项”，但新版 PowerShell 的原生命令错误转换可能在脚本读取 `$LASTEXITCODE` 前按 `$ErrorActionPreference = 'Stop'` 终止 Job。现仅在该扫描调用期间关闭转换并保存退出码：`0` 仍检查并阻止私钥内容，`1` 视为正常，其他非零值仍作为扫描失败。
+- 上述两项均为本 TASK 的 Baseline CI Adjustment，不改变业务功能、数据库 Schema、API Contract 或安全边界，无需创建新 TASK；TASK-048 保持 `VERIFYING`。
 
 ## 9. Test / Verification Record
 
@@ -116,6 +120,12 @@
 - `collectors/boss-zhipin-scraper/python -m unittest discover -s tests -p "test_*.py"`：通过，144 tests。
 - `frontend/information-hub-web/npm.cmd run test:e2e:phase4`：通过，Chromium 1/1；重新运行时确认启动的是 `information-hub-0.1.0-beta.1.jar`，完整推荐生命周期证据已输出。
 - `frontend/information-hub-web/npm.cmd run test:e2e:phase3`：未进入测试执行；预检因缺少 `INFORMATION_HUB_E2E_DB_URL` 退出，未标记为 PASS，保留给 GitHub CI 最终发布门禁。
+- `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\verify-project.ps1`：通过；当前仓库私钥标记扫描无匹配，实际覆盖 `git grep` 合法退出码 `1`，脚本正常返回 `0`。
+- 使用项目现有 Frontend `yaml` 依赖解析 `.github/workflows/ci.yml`，并断言 Backend Service 镜像、测试库名称及 Maven 的 7 个数据库 / Flyway 环境变量：通过。
+- 本地按 CI 环境变量映射执行 `backend/information-hub/mvnw.cmd test`：未通过，268 tests、0 failures、39 errors、2 skipped；首个真实错误为当前本机 `127.0.0.1:13306/information_hub_test` 无 MySQL 监听导致 `Communications link failure`，后续 38 项为 Spring Context 级联错误。该结果未标记为 PASS，也未发现 SQL、Migration 或业务断言失败；GitHub Job 将使用自身健康检查通过的 MySQL 8.4 Service 完成最终验证。
+- 当前机器未另外启动或修改个人 MySQL；CI 自包含数据库的最终运行结果需在本次修改 push 后由 GitHub Actions 验证。
+- 清除当前 Maven 进程的主库、测试库和 Flyway 环境变量后再次执行 `backend/information-hub/mvnw.cmd test`：未通过，276 tests、0 failures、15 errors、34 skipped；首个错误仍为默认本地 MySQL 未监听导致 Flyway `Communications link failure`，其余为 Context 级联错误，说明本地现有测试仍按原配置工作但当前缺少其数据库前置条件。
+- 本机 Docker Desktop Linux Engine 未运行，无法在本地启动等价 MySQL Service；未将该环境限制伪报为 CI PASS。
 - `git diff --check`：通过。
 - `git diff --cached --check`：通过。
 
@@ -153,6 +163,8 @@
 - Backend Maven 版本由 `0.0.1-SNAPSHOT` 更新为 `0.1.0-beta.1`；Frontend package 与 lockfile 由 `0.1.0` 更新为 `0.1.0-beta.1`；Phase 3 / Phase 4 E2E 启动器同步到新 JAR 名称。
 - Collector 未修改并保持独立版本 `2.1.0`；Flyway 仍为 V4，未新增或修改 Migration。
 - README、docs README、ROADMAP、根 AGENTS、CURRENT_STATUS 与 Task Index 已同步 TASK-045～TASK-048、`VERIFYING`、Next Task `TASK-049` 和版本策略事实。
+- `.github/workflows/ci.yml` 的 Backend tests Job 新增 `mysql:8.4` Service、健康检查、独立测试库与 CI-only 账号，并只在 Maven test Step 注入主 DataSource 和数据库集成测试所需环境变量；本地默认配置、生产部署配置和 Secret 边界均未改变。
+- `scripts/verify-project.ps1` 对 `git grep` 使用局部的原生命令退出码处理，明确区分匹配、无匹配和扫描异常，消除合法退出码 `1` 的 Repository checks 误报，同时保留敏感内容阻断能力。
 - 未修改生产业务功能、数据库、API Contract、Architecture、ADR 或安全边界；未执行 commit、push、merge、tag 或 GitHub Release。
 
 ## 13. Commit
