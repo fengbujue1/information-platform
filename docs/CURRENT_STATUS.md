@@ -133,9 +133,9 @@ ai_model_invocation
 
 ## 当前任务
 
-`TASK-048`：`v0.1.0-beta.1` Baseline Candidate 的已知发布 blocker 已完成修复，本地自动化验证已通过，状态为 `VERIFYING`。
+`TASK-048` 已完成 `v0.1.0-beta.1` Baseline Preparation；本地验证与 GitHub Actions Run #48 最终 CI 均已通过，状态为 `DONE`，已知 Baseline blocker 已全部清除。
 
-当前没有 Active / DEFERRED TASK；下一个任务编号为 `TASK-049`。任务状态与编号以 [Phase 5 Task Index](PHASE5_TASK_INDEX.md) 为准。
+当前没有 Active / VERIFYING / DEFERRED TASK；下一个任务编号为 `TASK-049`。任务状态与编号以 [Phase 5 Task Index](PHASE5_TASK_INDEX.md) 为准。
 
 `TASK-033`～`TASK-044`（含数据模型通用化纠偏 `TASK-034A`）均已完成，Phase 4 保持已完成和已归档状态。
 
@@ -185,8 +185,8 @@ Phase 5：Product Refinement & Stabilization 已进入进行中状态，采用 R
 - `TASK-045` 已完成 Phase 3 AI 页面域及推荐画像复用术语的中文化，自动化测试、Fixture Browser E2E 与人工验证均已通过，状态为 `DONE`；
 - `TASK-046` 已统一浏览器操作反馈与公共 API 中文错误消息，自动化验证与人工验收均已通过，状态为 `DONE`；
 - `TASK-047` 已将 Manual / Schedule 的候选窗口、候选数量和预估 Token 预算改为统一服务端配置，并提供认证只读限制 API；Web 已使用动态默认值与上限，超限旧 Schedule 会明确提示并阻止新执行，自动化检查与人工验收均已完成，状态为 `DONE`；
-- `TASK-048` 已同步 TASK-046 正式中文认证错误行为的测试断言，将 V3 Migration 不可变测试改为跨平台换行规范化校验，并对齐 Baseline 组件版本、E2E 启动产物与发布事实文档；本地 Backend、Frontend、Collector 和 Phase 4 Full-stack E2E 已通过，状态为 `VERIFYING`；
-- 当前没有 Active / DEFERRED TASK；
+- `TASK-048` 已完成测试断言与 V3 Migration 跨平台校验修复、Baseline 组件版本和发布文档对齐，以及自包含 Backend MySQL CI 与 Repository checks 稳定化；本地门禁和 GitHub Actions Run #48 六项 Job 均已通过，状态为 `DONE`；
+- 当前没有 Active / VERIFYING / DEFERRED TASK；
 - 下一个任务编号为 `TASK-049`；
 - 不预先创建空的后续 TASK 或完整任务列表；
 - 仅针对已确认的产品完善、缺陷、联调、稳定性、测试、CI、安全、可靠性或生产准备问题创建任务；
@@ -202,10 +202,10 @@ Phase 5：Product Refinement & Stabilization 已进入进行中状态，采用 R
 
 ## CI
 
-TASK-048 本地可执行的 Backend、Frontend、Collector 与 Phase 4 Full-stack E2E 均已通过。Phase 3 Full-stack E2E 在本机因缺少 `INFORMATION_HUB_E2E_DB_URL` 等专用环境变量停在预检阶段，未标记为 PASS，保留给 GitHub CI 作为最终发布门禁。
+TASK-048 本地 Backend 276 tests 与 package、Frontend typecheck / 95 tests / build、Collector 144 tests、Phase 4 Full-stack E2E、Flyway V1～V4 和 `git diff --check` 均已通过。
 
-CI 的后续改进仍按 Phase 5 Rolling Task Model 管理，不影响 Phase 4 已完成的结论。
+GitHub Actions Run #48 的 Repository checks、Backend tests、Collector tests、Frontend checks、Phase 3 full-stack E2E 和 Web deployment configuration 全部通过；`v0.1.0-beta.1` Baseline Preparation 的 CI 门禁与已知 blocker 已全部闭环。
 
 ## 下一步
 
-重新执行 Baseline Release Validation；通过后由用户确认 TASK-048 验收与后续 `dev` → `main` → `v0.1.0-beta.1` 发布流程。本 TASK 不执行 commit、push、merge、tag 或 GitHub Release。
+Phase 5 保持进行中，等待确认新的独立问题后使用 `TASK-049`。`v0.1.0-beta.1` Baseline Preparation 已完成，但 Git Tag 与 GitHub Release 尚未创建；后续 `dev` → `main` → tag → release 流程须由用户另行确认。

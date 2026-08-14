@@ -1,6 +1,6 @@
 # TASK-048：Prepare v0.1.0-beta.1 Baseline
 
-状态：VERIFYING
+状态：DONE
 
 所属阶段：Phase 5
 
@@ -29,7 +29,7 @@
 - README、docs README、ROADMAP、根 AGENTS、CURRENT_STATUS 与 PHASE5_TASK_INDEX 对 Phase 5 的任务事实保持一致；
 - 仓库 / GitHub Release 版本为 `v0.1.0-beta.1`；Backend 和 Frontend 组件版本均为 `0.1.0-beta.1`；
 - Collector 保持独立组件版本 `2.1.0`；Flyway Schema Version 保持 `V4`；
-- 本地可执行的完整自动化测试和构建通过，TASK 最终进入 `VERIFYING`，等待 Baseline Release Validation 或用户验收，不直接标记 `DONE`。
+- 本地可执行的完整自动化测试和构建通过后，TASK 先进入 `VERIFYING`；最终 Baseline Release Validation 和用户验收通过后再标记 `DONE`。
 
 ## 3. Scope
 
@@ -94,8 +94,9 @@
 - [x] Frontend Version 与 lockfile 均为 `0.1.0-beta.1`，typecheck、unit tests 和 build 通过。
 - [x] Collector Version 仍为 `2.1.0`，完整自动化测试通过。
 - [x] README、docs README、ROADMAP、根 AGENTS、CURRENT_STATUS 与 Task Index 的 Phase 5 事实一致。
-- [x] 当前没有未说明的 Active / DEFERRED TASK，TASK-048 进入 `VERIFYING`，Next Task Number 为 `TASK-049`。
+- [x] 当前没有未说明的 Active / DEFERRED TASK，TASK-048 经最终 GitHub CI 验证后进入 `DONE`，Next Task Number 为 `TASK-049`。
 - [x] 当前环境可执行的 Phase 4 Full-stack E2E 通过；Phase 3 E2E 如受专用环境限制则如实记录。
+- [x] GitHub Actions Run #48 的 Repository、Backend、Collector、Frontend、Phase 3 full-stack E2E 与 Web deployment 六项 Job 全部通过，Baseline blocker 已全部清除。
 - [x] `git diff --check` 与 `git diff --cached --check` 通过。
 
 ## 8. Adjustment Log
@@ -105,11 +106,13 @@
 - Baseline Candidate 的 GitHub `Backend tests` Job 原先没有 MySQL Service，也没有注入 `INFORMATION_HUB_DB_*` / `INFORMATION_HUB_TEST_DB_*`。普通 Spring 上下文会保留开发库默认地址，真实数据库集成测试则因缺少测试库环境变量而不能作为可靠门禁；现已复用 Phase 3 E2E 验证过的 `mysql:8.4` Service 模式，为该 Job 增加 Runner 生命周期内的独立 `information_hub_backend_test` 临时库和仅限 CI 的固定凭据。
 - Maven 测试同时通过 `INFORMATION_HUB_DB_*` 与 `INFORMATION_HUB_TEST_DB_*` 连接上述临时测试库，并显式启用 Flyway，使空库按当前 V1～V4 正常初始化。该 Job 不读取个人 MySQL、SSH Tunnel、云数据库或数据库 Secret；Runner 销毁时 Service 与数据一并销毁，且未修改业务 `application.yml` 默认开发配置。
 - Repository checks 中 `git grep` 的退出码 `1` 表示“没有匹配项”，但新版 PowerShell 的原生命令错误转换可能在脚本读取 `$LASTEXITCODE` 前按 `$ErrorActionPreference = 'Stop'` 终止 Job。现仅在该扫描调用期间关闭转换并保存退出码：`0` 仍检查并阻止私钥内容，`1` 视为正常，其他非零值仍作为扫描失败。
-- 上述两项均为本 TASK 的 Baseline CI Adjustment，不改变业务功能、数据库 Schema、API Contract 或安全边界，无需创建新 TASK；TASK-048 保持 `VERIFYING`。
+- 上述两项均为本 TASK 的 Baseline CI Adjustment，不改变业务功能、数据库 Schema、API Contract 或安全边界，无需创建新 TASK；完成该轮调整时 TASK-048 保持 `VERIFYING`，等待最终 CI。
 - GitHub Backend CI 的后续日志将根因进一步定位为 `Failed to determine a suitable driver class`。`src/test/resources/application.yml` 与主配置同名且在 Surefire test classpath 中优先，因此测试只加载了不含 datasource 的测试配置；主 `application.yml` 中负责把 `INFORMATION_HUB_DB_*` 映射到 `spring.datasource.*` 的占位符没有生效。环境变量本身已传入 Maven，但没有形成 Spring 标准 datasource 属性。
 - 最终将 Backend Job 改为直接注入 `SPRING_DATASOURCE_URL`、`SPRING_DATASOURCE_USERNAME`、`SPRING_DATASOURCE_PASSWORD` 与 `SPRING_FLYWAY_ENABLED`，绕过对被遮蔽主配置占位符的依赖；`INFORMATION_HUB_TEST_DB_*` 继续保留给现有条件数据库测试及 `DynamicPropertySource`。未修改主/测试 `application.yml`、SpringBootTest、MyBatis 或 Migration。
 - Surefire 实际 test runtime classpath 已确认包含 `mysql-connector-j 9.7.0`；本地使用标准 datasource 变量后，Hikari 成功进入 MySQL Driver 建连并按预期失败于未运行的本机端口，而不再报“无法确定驱动”，因此无需显式设置 `SPRING_DATASOURCE_DRIVER_CLASS_NAME`。
 - Backend Job 增加无密码 datasource preflight：强制检查标准 URL、用户名和密码变量存在，只输出固定的 CI host、port 与 database，不输出密码或完整 URL；Repository checks 在所有检查成功后显式 `exit 0`，避免任何已处理的原生命令退出码成为最终 Job 状态。
+- GitHub Actions Run #48 最终验证上述 CI Adjustment 有效：Repository checks、Backend tests、Collector tests、Frontend checks、Phase 3 full-stack E2E 和 Web deployment configuration 全部通过。
+- 所有 Adjustment 均已完成并纳入最终验证，没有遗留项需要拆分为后续 TASK；`v0.1.0-beta.1` Baseline Preparation 的已知 blocker 已全部清除。
 
 ## 9. Test / Verification Record
 
@@ -133,9 +136,10 @@
 - classpath / 配置复核：`target/test-classes/application.yml` 不含 datasource，且 Surefire classpath 顺序为 `target/test-classes` 先于 `target/classes`；主配置占位符因此不能承担 CI test 的间接映射。测试目录不存在其它 datasource 配置，`@TestPropertySource` 未覆盖 datasource，数据库集成测试的 `DynamicPropertySource` 只使用 `INFORMATION_HUB_TEST_DB_*`。
 - Surefire runtime 复核：测试报告中的 `surefire.test.class.path` 包含 `com/mysql/mysql-connector-j/9.7.0/mysql-connector-j-9.7.0.jar`；MySQL Connector 可用于 test runtime。
 - 设置 `SPRING_DATASOURCE_*` / `SPRING_FLYWAY_ENABLED=true` 并清除 `INFORMATION_HUB_DB_*` 后执行 `backend/information-hub/mvnw.cmd -Dtest=InformationHubApplicationTests test`：按当前本机环境预期未通过，1 test、1 error；日志显示 Hikari 启动、`com.mysql.cj.jdbc.NonRegisteringDriver.connect` 被调用，并最终在 `127.0.0.1:3306` 报 `Connection refused`。该证据确认标准变量已被 Surefire fork 继承且有效形成 DataSource，失败点已越过 driver 判定。
-- CI 的 MySQL 8.4 Service 与 datasource preflight 仍需在 push 后由 GitHub Actions 完成最终连通和全量 Maven 验证，本地未伪造 PASS。
+- 本地调整阶段无法验证 MySQL 8.4 Service 与 datasource preflight 的最终连通，因此当时保留给 GitHub Actions 且未伪造 PASS；该门禁随后已由 Run #48 验证通过。
 - `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\verify-project.ps1`：再次通过并明确返回 exit code `0`。
 - 使用项目现有 Frontend `yaml` 依赖再次解析 `.github/workflows/ci.yml`，断言 4 个 Spring 标准变量、3 个数据库集成测试变量、MySQL 8.4 Service、固定 CI datasource 目标、无遗留 `INFORMATION_HUB_DB_URL`，并确认 preflight 脚本不包含密码值：通过。
+- GitHub Actions Run #48：通过；Repository checks、Backend tests、Collector tests、Frontend checks、Phase 3 full-stack E2E、Web deployment configuration 均为 PASS。该结果完成了本地无法复刻的临时 MySQL、Flyway V1～V4、标准 DataSource 注入与 Phase 3 全栈发布门禁验证。
 - `git diff --check`：通过。
 - `git diff --cached --check`：通过。
 
@@ -172,10 +176,12 @@
 - `V3MigrationImmutabilityTest` 改为按 UTF-8 读取 SQL，把 CRLF 和孤立 CR 统一为 LF 后再计算原 Accepted SHA-256。该方案仅消除 checkout 换行差异，任何非换行 SQL 内容变化仍会改变 Hash；V3 Migration 文件本身未修改。
 - Backend Maven 版本由 `0.0.1-SNAPSHOT` 更新为 `0.1.0-beta.1`；Frontend package 与 lockfile 由 `0.1.0` 更新为 `0.1.0-beta.1`；Phase 3 / Phase 4 E2E 启动器同步到新 JAR 名称。
 - Collector 未修改并保持独立版本 `2.1.0`；Flyway 仍为 V4，未新增或修改 Migration。
-- README、docs README、ROADMAP、根 AGENTS、CURRENT_STATUS 与 Task Index 已同步 TASK-045～TASK-048、`VERIFYING`、Next Task `TASK-049` 和版本策略事实。
+- README、docs README、ROADMAP 与根 AGENTS 已同步 Baseline 版本策略；最终 CURRENT_STATUS 与 Task Index 已同步 TASK-048 `DONE`、当前无 Active / VERIFYING / DEFERRED TASK 及 Next Task `TASK-049`。
 - `.github/workflows/ci.yml` 的 Backend tests Job 使用 `mysql:8.4` Service、健康检查、独立测试库与 CI-only 账号；最终直接注入 Spring Boot 标准 datasource / Flyway 变量，同时保留数据库集成测试变量，并在 Maven 前执行不泄露密码的固定目标 preflight。本地默认配置、生产部署配置和 Secret 边界均未改变。
 - 未显式配置 MySQL driver class；现有 runtime Connector 和标准 JDBC URL 已能自动完成驱动识别，避免用 driver 配置掩盖缺失 URL。
 - `scripts/verify-project.ps1` 对 `git grep` 使用局部的原生命令退出码处理，明确区分匹配、无匹配和扫描异常，并在所有检查通过后显式 `exit 0`；既消除合法退出码 `1` 的 Repository checks 误报，也保留敏感内容阻断能力。
+- GitHub Actions Run #48 已对最终代码和 CI 配置完成全套验证，六项 Job 全部通过；结合既有本地 Backend、Frontend、Collector、Phase 4 E2E 与 Flyway 验证，TASK-048 的 Acceptance Criteria 和所有 Adjustment 均已闭环。
+- `v0.1.0-beta.1` Baseline Preparation 已完成，当前没有遗留发布 blocker；Git Tag 与 GitHub Release 尚未创建，仍由后续经用户确认的发布流程处理。
 - 未修改生产业务功能、数据库、API Contract、Architecture、ADR 或安全边界；未执行 commit、push、merge、tag 或 GitHub Release。
 
 ## 13. Commit
@@ -183,5 +189,5 @@
 建议提交信息：
 
 ```text
-完成 TASK-048：准备 v0.1.0-beta.1 Baseline
+完成 TASK-048：清除 v0.1.0-beta.1 Baseline 发布阻塞
 ```

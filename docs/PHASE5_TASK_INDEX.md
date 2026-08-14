@@ -38,14 +38,17 @@ TASK-049
 
 ## VERIFYING
 
+当前为空。
+
 | Task | Title | Type | Priority | Status |
 |---|---|---|---|---|
-| [TASK-048](tasks/TASK-048.md) | Prepare v0.1.0-beta.1 Baseline | Integration | P1 | VERIFYING |
+| - | - | - | - | - |
 
 ## DONE
 
 | Task | Title | Type | Priority | Completed |
 |---|---|---|---|---|
+| [TASK-048](tasks/TASK-048.md) | Prepare v0.1.0-beta.1 Baseline | Integration | P1 | 2026-08-14 |
 | [TASK-047](tasks/TASK-047.md) | Analysis 批次限制配置化与预览结果文案澄清 | Integration | P2 | 2026-08-13 |
 | [TASK-046](tasks/TASK-046.md) | 统一全局操作反馈与公共 API 中文错误消息 | Integration | P2 | 2026-08-13 |
 | [TASK-045](tasks/TASK-045.md) | Phase 3 AI 页面中文化与展示文案统一 | Frontend | P2 | 2026-08-13 |
