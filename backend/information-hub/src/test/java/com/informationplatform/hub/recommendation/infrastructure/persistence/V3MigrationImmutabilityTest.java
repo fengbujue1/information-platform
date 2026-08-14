@@ -2,6 +2,7 @@ package com.informationplatform.hub.recommendation.infrastructure.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
@@ -16,10 +17,13 @@ class V3MigrationImmutabilityTest {
 
     @Test
     void v3MigrationChecksumRemainsUnchanged() throws Exception {
-        byte[] content = Files.readAllBytes(Path.of(
-                "src/main/resources/db/migration/V3__create_phase4_recommendation_tables.sql"));
+        String content = Files.readString(Path.of(
+                "src/main/resources/db/migration/V3__create_phase4_recommendation_tables.sql"),
+                StandardCharsets.UTF_8);
+        String normalizedContent = content.replace("\r\n", "\n").replace('\r', '\n');
         String actual = HexFormat.of().formatHex(
-                MessageDigest.getInstance("SHA-256").digest(content));
+                MessageDigest.getInstance("SHA-256")
+                        .digest(normalizedContent.getBytes(StandardCharsets.UTF_8)));
 
         assertThat(actual).isEqualTo(ACCEPTED_V3_SHA256);
     }

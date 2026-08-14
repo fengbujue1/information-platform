@@ -117,7 +117,12 @@ TASK-033～TASK-044（含 TASK-034A）均已完成。Phase 4 的 Generic Core + 
 
 状态：**进行中。**
 
-Phase 5 采用 Rolling / Just-in-Time Task Planning，不预先创建完整 TASK 列表。任务编号从 `TASK-045` 开始；当前没有 Active TASK，`TASK-045` 尚未创建。
+Phase 5 采用 Rolling / Just-in-Time Task Planning，不预先创建完整 TASK 列表。`TASK-045`～`TASK-047` 已完成，`TASK-048` 正在执行 Baseline 验证，状态为 `VERIFYING`；当前没有 Active / DEFERRED TASK，下一个任务编号为 `TASK-049`。
+
+- [TASK-045：Phase 3 AI 页面中文化与展示文案统一](tasks/TASK-045.md)
+- [TASK-046：统一全局操作反馈与公共 API 中文错误消息](tasks/TASK-046.md)
+- [TASK-047：Analysis 批次限制配置化与预览结果文案澄清](tasks/TASK-047.md)
+- [TASK-048：Prepare v0.1.0-beta.1 Baseline](tasks/TASK-048.md)
 
 - [Phase 5 正式规划包](../PHASE5_PACKAGE_MANIFEST.md)
 - [Phase 5 Scope](PHASE5_SCOPE.md)

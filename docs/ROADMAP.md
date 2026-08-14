@@ -155,7 +155,7 @@ Phase 5 不采用预先冻结完整 TASK 列表的方式，而是围绕真实使
 - 测试、CI、安全、可靠性与生产准备；
 - 为解决已确认问题所必需的小规模重构。
 
-任务编号从 `TASK-045` 开始。当前没有 Active TASK，`TASK-045` 尚未创建。Phase 4 保持已完成和已归档状态；Phase 5 不重新打开 Phase 4，也不改变既有架构、数据模型、ADR 与 Contract 的冻结语义。
+任务编号从 `TASK-045` 开始。`TASK-045`～`TASK-047` 已完成，`TASK-048` 正在准备仓库首个 `v0.1.0-beta.1` Baseline，状态为 `VERIFYING`；当前没有 Active / DEFERRED TASK，下一个任务编号为 `TASK-049`。Phase 4 保持已完成和已归档状态；Phase 5 不重新打开 Phase 4，也不改变既有架构、数据模型、ADR 与 Contract 的冻结语义。
 
 ## Future：Retrieval / Semantic Search
 

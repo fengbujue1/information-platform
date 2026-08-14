@@ -17,7 +17,7 @@ const playwrightCli = fileURLToPath(
 const backendJar = join(
   backendDirectory,
   'target',
-  'information-hub-0.0.1-SNAPSHOT.jar',
+  'information-hub-0.1.0-beta.1.jar',
 )
 const javaExecutable = process.env.JAVA_HOME
   ? join(

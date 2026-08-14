@@ -108,7 +108,7 @@ class IdentitySecurityIntegrationTest {
                                 """))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("AUTHENTICATION_FAILED"))
-                .andExpect(jsonPath("$.message").value("Invalid username or password"));
+                .andExpect(jsonPath("$.message").value("用户名或密码错误"));
     }
 
     @Test
@@ -123,7 +123,7 @@ class IdentitySecurityIntegrationTest {
                         .content(loginBody()))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("AUTHENTICATION_FAILED"))
-                .andExpect(jsonPath("$.message").value("Invalid username or password"));
+                .andExpect(jsonPath("$.message").value("用户名或密码错误"));
     }
 
     @Test
@@ -140,7 +140,7 @@ class IdentitySecurityIntegrationTest {
                         .content(loginBody()))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("AUTHENTICATION_FAILED"))
-                .andExpect(jsonPath("$.message").value("Invalid username or password"));
+                .andExpect(jsonPath("$.message").value("用户名或密码错误"));
     }
 
     @Test

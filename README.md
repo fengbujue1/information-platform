@@ -46,13 +46,17 @@
 
 Phase 5 采用 Rolling / Just-in-Time Task Planning，只为已经确认且可以独立验收的问题创建 TASK。
 
-截至 2026-08-13：
+截至 2026-08-14：
 
 - `TASK-045` 已完成 Phase 3 AI 页面域及推荐画像相关术语中文化；
 - `TASK-046` 已完成全局操作反馈和浏览器公共 API 错误消息中文化；
-- 当前没有 Active TASK；
-- 下一个任务编号为 `TASK-047`；
-- 当前数据库结构为 Flyway `V4`：Generic Recommendation Core + JOB Extension。
+- `TASK-047` 已完成 Analysis 批次限制配置化与预览结果文案澄清；
+- `TASK-048` 已清除 `v0.1.0-beta.1` Baseline Candidate 的已知发布 blocker，本地自动化验证已通过，状态为 `VERIFYING`；
+- 当前没有 Active / DEFERRED TASK；
+- 下一个任务编号为 `TASK-049`；
+- 仓库首个整体 Baseline 版本为 `v0.1.0-beta.1`；Backend 与 Frontend 组件版本为 `0.1.0-beta.1`；
+- Collector 保持独立组件版本 `2.1.0`，不随仓库 Baseline 版本降级；
+- 当前数据库结构仍为 Flyway `V4`：Generic Recommendation Core + JOB Extension。
 
 最新事实以 [当前开发状态](docs/CURRENT_STATUS.md) 和 [Phase 5 Task Index](docs/PHASE5_TASK_INDEX.md) 为准。
 

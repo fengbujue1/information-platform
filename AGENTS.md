@@ -124,8 +124,8 @@ Java 代码注释要求：
 ## Phase 5 实施约束
 
 - Phase 5 采用 Rolling / Just-in-Time Task Planning，不预先创建完整任务清单。
-- 下一个任务编号为 `TASK-045`；具体编号与状态以 `docs/PHASE5_TASK_INDEX.md` 为准。
-- 当前没有 Active TASK；未确认独立问题前，不创建空的 `TASK-045`。
+- 下一个任务编号为 `TASK-049`；具体编号与状态以 `docs/PHASE5_TASK_INDEX.md` 为准。
+- `TASK-048` 当前处于 `VERIFYING`，当前没有 Active TASK；未确认独立问题前，不创建空的 `TASK-049`。
 - 同一任务验收中的反馈继续记录在原 TASK，不为每轮调整创建新的 FIX TASK。
 - 只有边界清晰、可独立实现和验收的问题才创建新 TASK；零散微调应归入当前任务。
 - 只实施当前 TASK 的范围，不借完善或稳定化名义扩大功能边界。

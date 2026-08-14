@@ -4,12 +4,12 @@
 
 阶段：Phase 5 — Product Refinement & Stabilization
 
-更新时间：2026-08-13
+更新时间：2026-08-14
 
 ## Next Task Number
 
 ```text
-TASK-048
+TASK-049
 ```
 
 只有真正确认新的独立问题后才创建对应 TASK。
@@ -38,11 +38,9 @@ TASK-048
 
 ## VERIFYING
 
-当前为空。
-
 | Task | Title | Type | Priority | Status |
 |---|---|---|---|---|
-| - | - | - | - | - |
+| [TASK-048](tasks/TASK-048.md) | Prepare v0.1.0-beta.1 Baseline | Integration | P1 | VERIFYING |
 
 ## DONE
 
