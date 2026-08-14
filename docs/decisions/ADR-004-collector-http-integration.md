@@ -1,7 +1,7 @@
 # ADR-004：Collector 通过 HTTP 接入
 
-状态：Accepted  
-日期：2026-07-23  
+状态：Accepted
+日期：2026-07-23
 决策人：项目负责人
 
 ## 背景

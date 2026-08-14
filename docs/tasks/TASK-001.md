@@ -1,7 +1,7 @@
 # TASK-001：分析 BOSS 采集器输出结构
 
-状态：DONE  
-所属阶段：Phase 1  
+状态：DONE
+所属阶段：Phase 1
 优先级：P0
 
 ## 目标

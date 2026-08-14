@@ -3,8 +3,8 @@
 设计版本：4.0
 状态：Accepted
 当前阶段：Phase 4 已完成；V4 Recommendation 通用 Core + JOB Extension 为当前事实
-数据库：MySQL 8.x  
-字符集：utf8mb4  
+数据库：MySQL 8.x
+字符集：utf8mb4
 时间存储：UTC
 
 ## 1. 设计目标

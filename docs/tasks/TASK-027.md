@@ -1,8 +1,8 @@
 # TASK-027：实现单条 Information Analysis
 
 状态：DONE
-所属阶段：Phase 3  
-优先级：P0  
+所属阶段：Phase 3
+优先级：P0
 负责人：User + Codex
 
 ## 1. 目标

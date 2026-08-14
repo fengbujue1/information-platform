@@ -1,7 +1,7 @@
 # TASK-003：创建 Information Hub 后端项目
 
 状态：DONE
-所属阶段：Phase 1  
+所属阶段：Phase 1
 优先级：P0
 
 ## 目标

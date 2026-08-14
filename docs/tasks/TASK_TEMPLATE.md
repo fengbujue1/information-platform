@@ -1,8 +1,8 @@
 # TASK-XXX：任务名称
 
-状态：TODO  
-所属阶段：Phase X  
-优先级：P0 / P1 / P2  
+状态：TODO
+所属阶段：Phase X
+优先级：P0 / P1 / P2
 负责人：User + Codex
 
 ## 1. 目标

@@ -1,7 +1,7 @@
 # ADR-XXX：决策标题
 
-状态：Proposed / Accepted / Deprecated / Superseded  
-日期：YYYY-MM-DD  
+状态：Proposed / Accepted / Deprecated / Superseded
+日期：YYYY-MM-DD
 决策人：项目负责人
 
 ## 背景

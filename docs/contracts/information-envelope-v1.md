@@ -1,7 +1,7 @@
 # InformationEnvelope V1 接入协议
 
-协议版本：1  
-接口版本：v1  
+协议版本：1
+接口版本：v1
 状态：Accepted
 实施状态：TASK-002 冻结协议，TASK-005～TASK-010 已完成接入链路与端到端验收。
 

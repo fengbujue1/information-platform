@@ -1,7 +1,7 @@
 # TASK-006B：接入 BOSS 招聘者在线观测时间
 
 状态：DONE
-所属阶段：Phase 1  
+所属阶段：Phase 1
 优先级：P0
 
 ## 前置依赖
@@ -240,4 +240,3 @@ TASK-006 Mapper 后续至少覆盖：
 - `mvnw.cmd test`（JDK 21）：24 项、0 失败；普通运行中 11 项远程数据库条件测试按既有配置跳过。
 - 通过既有 SSH 隧道连接共享测试库执行 `InformationIngestionIntegrationTest`：5 项全部通过、0 跳过。
 - `git diff --check`：通过；Chrome Profile、原始响应和运行结果未进入 Git。
-

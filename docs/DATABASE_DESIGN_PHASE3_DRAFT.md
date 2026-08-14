@@ -3,8 +3,8 @@
 设计版本：1.1 Accepted / Implemented
 状态：Accepted，已由 TASK-024 实施
 接受日期：2026-08-03
-数据库：MySQL 8.x  
-字符集：utf8mb4  
+数据库：MySQL 8.x
+字符集：utf8mb4
 时间存储：UTC
 
 > 文件名保留 `_DRAFT` 以维持既有链接。本文已经 TASK-020 真实仓库审查并由用户确认，并已由 TASK-024 严格实现。

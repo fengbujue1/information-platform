@@ -1,8 +1,8 @@
 # TASK-017：完善交互、响应式和健壮性
 
-状态：DONE  
-所属阶段：Phase 2  
-优先级：P1  
+状态：DONE
+所属阶段：Phase 2
+优先级：P1
 负责人：User + Codex
 
 ## 1. 目标

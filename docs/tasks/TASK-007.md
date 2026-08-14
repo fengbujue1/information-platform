@@ -1,7 +1,7 @@
 # TASK-007：实现 Information Hub Client
 
 状态：DONE
-所属阶段：Phase 1  
+所属阶段：Phase 1
 优先级：P0
 
 ## 前置依赖

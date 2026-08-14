@@ -1,8 +1,8 @@
 # TASK-013：实现 API Client、类型与环境配置
 
 状态：DONE
-所属阶段：Phase 2  
-优先级：P0  
+所属阶段：Phase 2
+优先级：P0
 负责人：User + Codex
 
 ## 1. 目标

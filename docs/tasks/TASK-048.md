@@ -113,6 +113,8 @@
 - Backend Job 增加无密码 datasource preflight：强制检查标准 URL、用户名和密码变量存在，只输出固定的 CI host、port 与 database，不输出密码或完整 URL；Repository checks 在所有检查成功后显式 `exit 0`，避免任何已处理的原生命令退出码成为最终 Job 状态。
 - GitHub CI release gate 已验证上述 CI Adjustment 有效：Repository checks、Backend tests、Collector tests、Frontend checks、Phase 3 full-stack E2E 和 Web deployment configuration 全部通过。
 - 最终 candidate commit 与对应 CI Run 由发布前 Release Validation 动态读取 GitHub 实际状态，不在版本库文档中固化 Run 编号。
+- `main` 在本次发布前长期停留于 `e0563dc`。第一次将 `dev` fast-forward 到 Baseline 后，Repository checks 按 `git diff --check "$BEFORE_SHA" "$HEAD_SHA"` 检查完整历史增量，从而暴露 `e0563dc` 到 Baseline HEAD 之间既有 Markdown 文档的 trailing whitespace debt。
+- 本次发布前 housekeeping 仅清理该范围报告的行尾空格和一个 EOF 多余空行；不修改业务逻辑、版本号、CI whitespace gate 或历史 Flyway Migration。TASK-048 保持 `DONE`，不创建 TASK-049。
 - 所有 Adjustment 均已完成并纳入最终验证，没有遗留项需要拆分为后续 TASK；`v0.1.0-beta.1` Baseline Preparation 的已知 blocker 已全部清除。
 
 ## 9. Test / Verification Record

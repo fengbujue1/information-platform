@@ -1,9 +1,9 @@
 # TASK-032：真实模型、定时任务与 Phase 3 E2E 验收
 
-状态：DONE  
-所属阶段：Phase 3  
-优先级：P0  
-负责人：User + Codex  
+状态：DONE
+所属阶段：Phase 3
+优先级：P0
+负责人：User + Codex
 完成日期：2026-08-07
 
 ## 1. 目标

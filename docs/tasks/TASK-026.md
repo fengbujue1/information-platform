@@ -1,8 +1,8 @@
 # TASK-026：实现 Prompt Assembly 与结构化输出校验
 
 状态：DONE
-所属阶段：Phase 3  
-优先级：P0  
+所属阶段：Phase 3
+优先级：P0
 负责人：User + Codex
 
 ## 1. 目标
