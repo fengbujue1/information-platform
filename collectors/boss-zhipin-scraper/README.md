@@ -158,6 +158,7 @@ result/job-result/boss_details_YYYYMMDD_HHMM.json
 ```powershell
 # 三页职位，详情默认开启
 python scripts/boss_cdp_raw.py --keyword "Java 后端" --city 成都 --pages 3
+python scripts/boss_cdp_raw.py --keyword "Java 远程 居家" --city 全国 --pages 5
 
 # 仅列表，不打开职位详情
 python scripts/boss_cdp_raw.py --keyword "Java 后端" --city 成都 --pages 3 --no-detail
